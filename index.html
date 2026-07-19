@@ -147,6 +147,11 @@
     font-family:var(--font-mono); font-size:1.18em; line-height:1.6; color:var(--ink);
     margin-top:6px; white-space:pre-wrap;
   }
+  .grafico-wrap{margin-top:16px; text-align:center;}
+  #grafico-canvas{
+    max-width:100%; height:auto; border:2px solid var(--ink); border-radius:10px;
+    background:var(--paper); display:inline-block;
+  }
   .respuesta-row{display:flex; gap:10px; margin-top:18px;}
   input#respuesta-input{
     flex:1; font-family:var(--font-mono); font-size:1.15em; padding:11px 14px;
@@ -256,6 +261,9 @@
       <div class="hoja">
         <div class="etiqueta-nivel" id="hoja-etiqueta">Nivel 1</div>
         <div class="enunciado" id="enunciado-txt">Cargando...</div>
+        <div class="grafico-wrap" id="grafico-wrap" style="display:none;">
+          <canvas id="grafico-canvas" width="280" height="200"></canvas>
+        </div>
         <div class="respuesta-row">
           <input id="respuesta-input" type="text" inputmode="decimal" placeholder="Tu respuesta" autocomplete="off">
           <button class="btn-primario" id="btn-comprobar">Comprobar</button>
@@ -478,15 +486,18 @@
       generar(nivel){
         if(nivel===1){
           const m=randInt(-6,6)||2, b=randInt(-8,8), x=randInt(-6,6);
-          return { enunciado:`f(x) = ${m}x + (${b})\nf(${x}) = ?`, tipo:'numero', respuesta:m*x+b, tolerancia:0 };
+          return { enunciado:`f(x) = ${m}x + (${b})\nf(${x}) = ?`, tipo:'numero', respuesta:m*x+b, tolerancia:0,
+            grafico:{ tipo:'lineal', m, b, marcaX:x } };
         } else if(nivel===2){
           const m=randInt(2,8), b=randInt(-10,10), x=randInt(-8,8);
           const y = m*x+b;
-          return { enunciado:`f(x) = ${m}x + (${b})\n¿Para qué valor de x, f(x) = ${y}?`, tipo:'numero', respuesta:x, tolerancia:0 };
+          return { enunciado:`f(x) = ${m}x + (${b})\n¿Para qué valor de x, f(x) = ${y}?`, tipo:'numero', respuesta:x, tolerancia:0,
+            grafico:{ tipo:'lineal', m, b, marcaY:y } };
         } else {
           const a=randInt(1,4), b=randInt(-6,6), c=randInt(-6,6), x=randInt(-4,4);
           const r = a*x*x + b*x + c;
-          return { enunciado:`f(x) = ${a}x² + ${b}x + (${c})\nf(${x}) = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+          return { enunciado:`f(x) = ${a}x² + ${b}x + (${c})\nf(${x}) = ?`, tipo:'numero', respuesta:r, tolerancia:0,
+            grafico:{ tipo:'cuadratica', a, b, c, marcaX:x } };
         }
       }
     },
@@ -497,25 +508,30 @@
         if(nivel===1){
           const b=randInt(3,20), h=randInt(3,20);
           const usarArea = Math.random()<0.5;
-          if(usarArea) return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:b*h, tolerancia:0 };
-          return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:2*(b+h), tolerancia:0 };
+          const g = { tipo:'rectangulo', base:b, altura:h };
+          if(usarArea) return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:b*h, tolerancia:0, grafico:g };
+          return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:2*(b+h), tolerancia:0, grafico:g };
         } else if(nivel===2){
           const usarTriangulo = Math.random()<0.5;
           if(usarTriangulo){
             const b=randInt(4,20), h=randInt(4,20);
-            return { enunciado:`Triángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:(b*h)/2, tolerancia:0.05 };
+            return { enunciado:`Triángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:(b*h)/2, tolerancia:0.05,
+              grafico:{ tipo:'triangulo', base:b, altura:h } };
           } else {
             const r=randInt(2,12);
-            return { enunciado:`Círculo de radio ${r}. Usá π ≈ 3.14\n¿Cuál es su área? (redondeá a 2 decimales)`, tipo:'numero', respuesta:3.14*r*r, tolerancia:0.5 };
+            return { enunciado:`Círculo de radio ${r}. Usá π ≈ 3.14\n¿Cuál es su área? (redondeá a 2 decimales)`, tipo:'numero', respuesta:3.14*r*r, tolerancia:0.5,
+              grafico:{ tipo:'circulo', radio:r } };
           }
         } else {
           const ternas = [[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15],[7,24,25]];
           const t = ternas[randInt(0,ternas.length-1)];
           const faltaHipotenusa = Math.random()<0.6;
           if(faltaHipotenusa){
-            return { enunciado:`Triángulo rectángulo con catetos ${t[0]} y ${t[1]}.\n¿Cuánto mide la hipotenusa?`, tipo:'numero', respuesta:t[2], tolerancia:0.05 };
+            return { enunciado:`Triángulo rectángulo con catetos ${t[0]} y ${t[1]}.\n¿Cuánto mide la hipotenusa?`, tipo:'numero', respuesta:t[2], tolerancia:0.05,
+              grafico:{ tipo:'triangulo-rectangulo', catA:t[0], catB:t[1], hip:t[2], incognita:'hip' } };
           } else {
-            return { enunciado:`Triángulo rectángulo con hipotenusa ${t[2]} y un cateto ${t[0]}.\n¿Cuánto mide el otro cateto?`, tipo:'numero', respuesta:t[1], tolerancia:0.05 };
+            return { enunciado:`Triángulo rectángulo con hipotenusa ${t[2]} y un cateto ${t[0]}.\n¿Cuánto mide el otro cateto?`, tipo:'numero', respuesta:t[1], tolerancia:0.05,
+              grafico:{ tipo:'triangulo-rectangulo', catA:t[0], catB:t[1], hip:t[2], incognita:'catB' } };
           }
         }
       }
@@ -574,6 +590,214 @@
   ];
 
   const NOMBRES_NIVEL = ['Fácil','Medio','Difícil'];
+
+  // ===== Dibujo de gráficos (canvas) =====
+  function getCSSVar(nombre){
+    return getComputedStyle(document.body).getPropertyValue(nombre).trim();
+  }
+  function limpiarCanvas(ctx, w, h){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = getCSSVar('--paper');
+    ctx.fillRect(0,0,w,h);
+  }
+  function dibujarEjes(ctx, w, h, pad, xMin, xMax, yMin, yMax){
+    const sx = (w-2*pad)/(xMax-xMin);
+    const sy = (h-2*pad)/(yMax-yMin);
+    const toPx = (x) => pad + (x-xMin)*sx;
+    const toPy = (y) => h-pad-(y-yMin)*sy;
+    ctx.strokeStyle = getCSSVar('--grid');
+    ctx.lineWidth = 1;
+    const pasoX = Math.max(1, Math.round((xMax-xMin)/10));
+    const pasoY = Math.max(1, Math.round((yMax-yMin)/8));
+    for(let gx=Math.ceil(xMin/pasoX)*pasoX; gx<=xMax; gx+=pasoX){
+      ctx.beginPath(); ctx.moveTo(toPx(gx),pad); ctx.lineTo(toPx(gx),h-pad); ctx.stroke();
+    }
+    for(let gy=Math.ceil(yMin/pasoY)*pasoY; gy<=yMax; gy+=pasoY){
+      ctx.beginPath(); ctx.moveTo(pad,toPy(gy)); ctx.lineTo(w-pad,toPy(gy)); ctx.stroke();
+    }
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2;
+    if(yMin<=0 && yMax>=0){
+      ctx.beginPath(); ctx.moveTo(pad,toPy(0)); ctx.lineTo(w-pad,toPy(0)); ctx.stroke();
+    }
+    if(xMin<=0 && xMax>=0){
+      ctx.beginPath(); ctx.moveTo(toPx(0),pad); ctx.lineTo(toPx(0),h-pad); ctx.stroke();
+    }
+    return { toPx, toPy };
+  }
+  function dibujarFuncionLineal(ctx, w, h, m, b, marcaX, marcaY){
+    const xMin=-10, xMax=10;
+    let yMin = Math.min(m*xMin+b, m*xMax+b);
+    let yMax = Math.max(m*xMin+b, m*xMax+b);
+    if(marcaY!==undefined){ yMin=Math.min(yMin,marcaY); yMax=Math.max(yMax,marcaY); }
+    const padY = (yMax-yMin)*0.15 || 2;
+    yMin -= padY; yMax += padY;
+    limpiarCanvas(ctx,w,h);
+    const pad=30;
+    const {toPx,toPy} = dibujarEjes(ctx,w,h,pad,xMin,xMax,yMin,yMax);
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(toPx(xMin), toPy(m*xMin+b));
+    ctx.lineTo(toPx(xMax), toPy(m*xMax+b));
+    ctx.stroke();
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle = getCSSVar('--ink-soft');
+    ctx.lineWidth = 1.5;
+    if(marcaX!==undefined){
+      ctx.beginPath(); ctx.moveTo(toPx(marcaX),toPy(yMin)); ctx.lineTo(toPx(marcaX),toPy(yMax)); ctx.stroke();
+    }
+    if(marcaY!==undefined){
+      ctx.beginPath(); ctx.moveTo(toPx(xMin),toPy(marcaY)); ctx.lineTo(toPx(xMax),toPy(marcaY)); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  function dibujarFuncionCuadratica(ctx, w, h, a, b, c, marcaX){
+    const xMin=-10, xMax=10;
+    let yMin=Infinity, yMax=-Infinity;
+    for(let x=xMin; x<=xMax; x+=0.5){
+      const y = a*x*x + b*x + c;
+      if(y<yMin) yMin=y;
+      if(y>yMax) yMax=y;
+    }
+    const padY = (yMax-yMin)*0.15 || 2;
+    yMin -= padY; yMax += padY;
+    limpiarCanvas(ctx,w,h);
+    const pad=30;
+    const {toPx,toPy} = dibujarEjes(ctx,w,h,pad,xMin,xMax,yMin,yMax);
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let first=true;
+    for(let x=xMin; x<=xMax; x+=0.25){
+      const y = a*x*x + b*x + c;
+      const px=toPx(x), py=toPy(y);
+      if(first){ ctx.moveTo(px,py); first=false; } else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    if(marcaX!==undefined){
+      ctx.setLineDash([4,3]);
+      ctx.strokeStyle = getCSSVar('--ink-soft');
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(toPx(marcaX),toPy(yMin)); ctx.lineTo(toPx(marcaX),toPy(yMax)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+  function dibujarRectangulo(ctx, w, h, base, altura){
+    limpiarCanvas(ctx,w,h);
+    const pad=40;
+    const escala = Math.min((w-2*pad)/base, (h-2*pad)/altura);
+    const rw=base*escala, rh=altura*escala;
+    const x0=(w-rw)/2, y0=(h-rh)/2;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(x0,y0,rw,rh);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = '13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(base, x0+rw/2, y0+rh+18);
+    ctx.save();
+    ctx.translate(x0-16, y0+rh/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText(altura, 0, 0);
+    ctx.restore();
+  }
+  function dibujarTriangulo(ctx, w, h, base, altura){
+    limpiarCanvas(ctx,w,h);
+    const pad=40;
+    const escala = Math.min((w-2*pad)/base, (h-2*pad)/altura);
+    const bw=base*escala, bh=altura*escala;
+    const x0=(w-bw)/2, baseY=(h+bh)/2, topY=baseY-bh;
+    const apexX = x0+bw*0.3;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(apexX, topY);
+    ctx.lineTo(x0, baseY);
+    ctx.lineTo(x0+bw, baseY);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle = getCSSVar('--ink-soft');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(apexX, topY);
+    ctx.lineTo(apexX, baseY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = '13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(base, x0+bw/2, baseY+18);
+    ctx.fillText('h='+altura, apexX+22, (topY+baseY)/2);
+  }
+  function dibujarCirculo(ctx, w, h, radio){
+    limpiarCanvas(ctx,w,h);
+    const pad=40;
+    const rMax = Math.min(w,h)/2 - pad/2;
+    const escala = rMax/radio;
+    const r = radio*escala;
+    const cx=w/2, cy=h/2;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+r,cy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = '13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('r='+radio, cx+r/2, cy-8);
+  }
+  function dibujarTrianguloRectangulo(ctx, w, h, catA, catB, hip, incognita){
+    limpiarCanvas(ctx,w,h);
+    const pad=40;
+    const escala = Math.min((w-2*pad)/catB, (h-2*pad)/catA);
+    const bw=catB*escala, bh=catA*escala;
+    const x0=pad, y0=h-pad-bh, xB=x0+bw, yB=h-pad;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x0,y0);
+    ctx.lineTo(x0,yB);
+    ctx.lineTo(xB,yB);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x0,yB-10,10,10);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = '13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    const labelCatA = incognita==='catA' ? '?' : catA;
+    const labelCatB = incognita==='catB' ? '?' : catB;
+    const labelHip = incognita==='hip' ? '?' : hip;
+    ctx.save();
+    ctx.translate(x0-16, (y0+yB)/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText(labelCatA, 0, 0);
+    ctx.restore();
+    ctx.fillText(labelCatB, (x0+xB)/2, yB+18);
+    ctx.fillText(labelHip, (x0+xB)/2 - 6, (y0+yB)/2 - 10);
+  }
+  function dibujarGrafico(g){
+    const wrap = document.getElementById('grafico-wrap');
+    const canvas = document.getElementById('grafico-canvas');
+    if(!g){ wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    switch(g.tipo){
+      case 'lineal': dibujarFuncionLineal(ctx,w,h,g.m,g.b,g.marcaX,g.marcaY); break;
+      case 'cuadratica': dibujarFuncionCuadratica(ctx,w,h,g.a,g.b,g.c,g.marcaX); break;
+      case 'rectangulo': dibujarRectangulo(ctx,w,h,g.base,g.altura); break;
+      case 'triangulo': dibujarTriangulo(ctx,w,h,g.base,g.altura); break;
+      case 'circulo': dibujarCirculo(ctx,w,h,g.radio); break;
+      case 'triangulo-rectangulo': dibujarTrianguloRectangulo(ctx,w,h,g.catA,g.catB,g.hip,g.incognita); break;
+    }
+  }
 
   // ===== Estado / progreso =====
   function estadoInicial(){
@@ -729,6 +953,7 @@
   function nuevoProblema(){
     problemaActual = temaActivo.generar(nivelActivo);
     enunciadoTxt.textContent = problemaActual.enunciado;
+    dibujarGrafico(problemaActual.grafico);
     respuestaInput.value = '';
     respuestaInput.disabled = false;
     feedbackBox.className = 'feedback';
@@ -814,6 +1039,7 @@
   switchContraste.addEventListener('click', () => {
     ajustes.contraste = !ajustes.contraste;
     aplicarAjustes(); guardarAjustes();
+    if(problemaActual && problemaActual.grafico) dibujarGrafico(problemaActual.grafico);
   });
   switchGrande.addEventListener('click', () => {
     ajustes.grande = !ajustes.grande;
