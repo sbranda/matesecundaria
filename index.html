@@ -37,6 +37,23 @@
   body.contraste{
     --paper:#FFFFFF; --paper-alt:#FFFFFF; --grid:#8A8A8A; --ink:#000000; --ink-soft:#000000;
   }
+  body.tema-oscuro{
+    --paper:#1E2430; --paper-alt:#262E3D; --grid:#3A4358; --ink:#F2F0E6; --ink-soft:#B7BECF;
+    --marker-green:#6FCB82; --marker-red:#FF6B5B;
+  }
+  body.tema-menta{
+    --paper:#F3FBF6; --paper-alt:#E3F5EA; --grid:#BFE3CC; --ink:#1F4436; --ink-soft:#4F7A67;
+  }
+  body.tema-coral{
+    --paper:#FFF6F2; --paper-alt:#FEE7DC; --grid:#F6C9B4; --ink:#5C2A1F; --ink-soft:#8A5A48;
+    --marker-red:#D64545;
+  }
+  body.movimiento-reducido *, body.movimiento-reducido *::before, body.movimiento-reducido *::after{
+    animation-duration:0.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.001ms !important;
+    scroll-behavior:auto !important;
+  }
   html,body{margin:0;padding:0;height:100%;}
   body{
     font-family:var(--font-body);
@@ -251,10 +268,25 @@
   .modal-fondo.abierto{display:flex;}
   .modal{
     background:var(--paper); border:2.5px solid var(--ink); border-radius:var(--radius);
-    padding:22px; max-width:380px; width:100%;
+    padding:22px; max-width:380px; width:100%; max-height:85vh; overflow-y:auto;
   }
   .modal h3{font-family:var(--font-display); margin-top:0; font-size:1.4em;}
   .fila-ajuste{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--grid);}
+  .fila-ajuste.columna{flex-direction:column; align-items:stretch; gap:8px;}
+  .fila-ajuste label.titulo-ajuste, .fila-ajuste span.titulo-ajuste{font-weight:700; font-size:0.95em;}
+  .input-texto{
+    font-family:var(--font-body); font-size:1em; padding:9px 12px;
+    border:2.5px solid var(--ink); border-radius:8px; background:var(--paper); color:var(--ink);
+  }
+  .input-texto:focus{outline:3px solid var(--highlight); outline-offset:1px;}
+  .apariencia-grupo{display:flex; flex-wrap:wrap; gap:10px;}
+  .apariencia-opt{
+    display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none;
+    cursor:pointer; padding:5px; border-radius:8px; font-family:var(--font-body); color:var(--ink);
+  }
+  .apariencia-opt[aria-checked="true"]{outline:2.5px solid var(--highlight); outline-offset:1px;}
+  .apariencia-swatch{width:30px; height:30px; border-radius:50%; border:2.5px solid; display:block;}
+  .apariencia-nombre{font-size:0.66em; font-weight:700;}
   .switch{
     width:46px; height:26px; background:#DCD8C8; border-radius:20px; position:relative; cursor:pointer; border:2px solid var(--ink);
   }
@@ -427,13 +459,49 @@
 <div class="modal-fondo" id="modal-ajustes">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ajustes-titulo">
     <h3 id="ajustes-titulo">Ajustes</h3>
-    <div class="fila-ajuste">
-      <span id="label-contraste">Alto contraste</span>
-      <div class="switch" id="switch-contraste" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-contraste"><div class="bolita"></div></div>
+
+    <div class="fila-ajuste columna">
+      <span class="titulo-ajuste" id="label-apariencia">Apariencia</span>
+      <div class="apariencia-grupo" role="radiogroup" aria-labelledby="label-apariencia">
+        <button type="button" class="apariencia-opt" data-tema="clasico" role="radio" aria-checked="true">
+          <span class="apariencia-swatch" style="background:#FEFCF6; border-color:#2B3A55;"></span>
+          <span class="apariencia-nombre">Clásico</span>
+        </button>
+        <button type="button" class="apariencia-opt" data-tema="oscuro" role="radio" aria-checked="false">
+          <span class="apariencia-swatch" style="background:#1E2430; border-color:#F2F0E6;"></span>
+          <span class="apariencia-nombre">Oscuro</span>
+        </button>
+        <button type="button" class="apariencia-opt" data-tema="menta" role="radio" aria-checked="false">
+          <span class="apariencia-swatch" style="background:#F3FBF6; border-color:#1F4436;"></span>
+          <span class="apariencia-nombre">Menta</span>
+        </button>
+        <button type="button" class="apariencia-opt" data-tema="coral" role="radio" aria-checked="false">
+          <span class="apariencia-swatch" style="background:#FFF6F2; border-color:#5C2A1F;"></span>
+          <span class="apariencia-nombre">Coral</span>
+        </button>
+        <button type="button" class="apariencia-opt" data-tema="contraste" role="radio" aria-checked="false">
+          <span class="apariencia-swatch" style="background:#FFFFFF; border-color:#000000;"></span>
+          <span class="apariencia-nombre">Alto contraste</span>
+        </button>
+      </div>
     </div>
+
+    <div class="fila-ajuste columna">
+      <label class="titulo-ajuste" for="input-nombre">Tu nombre (opcional)</label>
+      <input type="text" id="input-nombre" class="input-texto" maxlength="20" placeholder="¿Cómo te llamás?" autocomplete="off">
+    </div>
+
     <div class="fila-ajuste">
       <span id="label-grande">Texto grande</span>
       <div class="switch" id="switch-grande" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-grande"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste">
+      <span id="label-sonido">Sonido de efectos</span>
+      <div class="switch" id="switch-sonido" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-sonido"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste">
+      <span id="label-animaciones">Reducir animaciones</span>
+      <div class="switch" id="switch-animaciones" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-animaciones"><div class="bolita"></div></div>
     </div>
     <div class="fila-ajuste" style="border-bottom:none;">
       <span>Reiniciar progreso</span>
@@ -470,8 +538,12 @@
   const btnAjustes = document.getElementById('btn-ajustes');
   const modalAjustes = document.getElementById('modal-ajustes');
   const btnCerrarAjustes = document.getElementById('btn-cerrar-ajustes');
-  const switchContraste = document.getElementById('switch-contraste');
   const switchGrande = document.getElementById('switch-grande');
+  const switchSonido = document.getElementById('switch-sonido');
+  const switchAnimaciones = document.getElementById('switch-animaciones');
+  const inputNombre = document.getElementById('input-nombre');
+  const aparienciaOpts = Array.from(document.querySelectorAll('.apariencia-opt'));
+  const subt = document.querySelector('.subt');
   const btnReiniciar = document.getElementById('btn-reiniciar');
   const btnToggleBorrador = document.getElementById('btn-toggle-borrador');
   const borradorPanel = document.getElementById('borrador-panel');
@@ -1146,23 +1218,74 @@
   }
 
   // ===== Ajustes =====
+  const TEMAS_DISPONIBLES = ['clasico','oscuro','menta','coral','contraste'];
   function cargarAjustes(){
+    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'' };
     try{
       const raw = localStorage.getItem(AJUSTES_KEY);
-      return raw ? JSON.parse(raw) : { contraste:false, grande:false };
-    }catch(e){ return { contraste:false, grande:false }; }
+      if(!raw) return base;
+      const data = JSON.parse(raw);
+      // migración desde el formato anterior { contraste, grande }
+      if(data.apariencia === undefined && data.contraste !== undefined){
+        data.apariencia = data.contraste ? 'contraste' : 'clasico';
+      }
+      return { ...base, ...data };
+    }catch(e){ return base; }
   }
   let ajustes = cargarAjustes();
+  function aplicarApariencia(tema){
+    document.body.classList.remove('tema-oscuro','tema-menta','tema-coral','contraste');
+    if(tema==='oscuro') document.body.classList.add('tema-oscuro');
+    else if(tema==='menta') document.body.classList.add('tema-menta');
+    else if(tema==='coral') document.body.classList.add('tema-coral');
+    else if(tema==='contraste') document.body.classList.add('contraste');
+    aparienciaOpts.forEach(opt => opt.setAttribute('aria-checked', opt.dataset.tema===tema ? 'true' : 'false'));
+  }
+  function actualizarSaludo(){
+    if(!subt) return;
+    subt.textContent = ajustes.nombre
+      ? `¡Hola, ${ajustes.nombre}! Elegí un tema y practicá a tu ritmo.`
+      : 'Elegí un tema y practicá a tu ritmo. Cada nivel superado suma un sello.';
+  }
   function aplicarAjustes(){
-    document.body.classList.toggle('contraste', ajustes.contraste);
+    if(!TEMAS_DISPONIBLES.includes(ajustes.apariencia)) ajustes.apariencia = 'clasico';
+    aplicarApariencia(ajustes.apariencia);
     document.body.classList.toggle('grande', ajustes.grande);
-    switchContraste.classList.toggle('on', ajustes.contraste);
+    document.body.classList.toggle('movimiento-reducido', ajustes.movimientoReducido);
     switchGrande.classList.toggle('on', ajustes.grande);
-    switchContraste.setAttribute('aria-checked', ajustes.contraste ? 'true' : 'false');
     switchGrande.setAttribute('aria-checked', ajustes.grande ? 'true' : 'false');
+    switchSonido.classList.toggle('on', ajustes.sonido);
+    switchSonido.setAttribute('aria-checked', ajustes.sonido ? 'true' : 'false');
+    switchAnimaciones.classList.toggle('on', ajustes.movimientoReducido);
+    switchAnimaciones.setAttribute('aria-checked', ajustes.movimientoReducido ? 'true' : 'false');
+    if(inputNombre.value !== ajustes.nombre) inputNombre.value = ajustes.nombre;
+    actualizarSaludo();
   }
   function guardarAjustes(){
     try{ localStorage.setItem(AJUSTES_KEY, JSON.stringify(ajustes)); }catch(e){}
+  }
+
+  // ===== Sonido de efectos =====
+  let audioCtx = null;
+  function reproducirSonido(tipo){
+    if(!ajustes.sonido) return;
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      if(tipo === 'correcto'){
+        osc.frequency.setValueAtTime(660, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(990, audioCtx.currentTime + 0.12);
+      } else {
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+      }
+      gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.28);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    }catch(e){}
   }
 
   // ===== Animaciones auxiliares =====
@@ -1356,6 +1479,7 @@
     if(esCorrecta){
       feedbackBox.className = 'feedback correcto';
       feedbackBox.innerHTML = '¡Correcto! 🎉';
+      reproducirSonido('correcto');
       progreso.xp += 10;
       if(!yaCompletado) p.correctas[idx] += 1;
       actualizarRacha();
@@ -1370,6 +1494,7 @@
       guardarProgreso();
     } else {
       feedbackBox.className = 'feedback incorrecto';
+      reproducirSonido('incorrecto');
       const respuestaMostrada = problemaActual.tipo==='fraccion'
         ? fmtFraccion(problemaActual.respuesta[0], problemaActual.respuesta[1])
         : (Number.isInteger(problemaActual.respuesta) ? problemaActual.respuesta : problemaActual.respuesta.toFixed(2));
@@ -1413,7 +1538,7 @@
   function abrirModalAjustes(){
     elementoConFocoPrevio = document.activeElement;
     modalAjustes.classList.add('abierto');
-    switchContraste.focus();
+    aparienciaOpts[0].focus();
     document.addEventListener('keydown', manejarTeclaModal);
   }
   function cerrarModalAjustes(){
@@ -1424,7 +1549,7 @@
   function manejarTeclaModal(e){
     if(e.key === 'Escape'){ cerrarModalAjustes(); return; }
     if(e.key === 'Tab'){
-      const focosVisibles = modalAjustes.querySelectorAll('button, [tabindex="0"]');
+      const focosVisibles = modalAjustes.querySelectorAll('button, input, [tabindex="0"]');
       const lista = Array.from(focosVisibles);
       if(lista.length === 0) return;
       const primero = lista[0], ultimo = lista[lista.length-1];
@@ -1454,14 +1579,31 @@
     });
   }
 
-  alternarSwitch(switchContraste, () => {
-    ajustes.contraste = !ajustes.contraste;
-    aplicarAjustes(); guardarAjustes();
-    if(problemaActual && problemaActual.grafico) dibujarGrafico(problemaActual.grafico);
+  aparienciaOpts.forEach(opt => {
+    opt.addEventListener('click', () => {
+      ajustes.apariencia = opt.dataset.tema;
+      aplicarAjustes(); guardarAjustes();
+      if(problemaActual && problemaActual.grafico) dibujarGrafico(problemaActual.grafico);
+    });
   });
+
   alternarSwitch(switchGrande, () => {
     ajustes.grande = !ajustes.grande;
     aplicarAjustes(); guardarAjustes();
+  });
+  alternarSwitch(switchSonido, () => {
+    ajustes.sonido = !ajustes.sonido;
+    aplicarAjustes(); guardarAjustes();
+    if(ajustes.sonido) reproducirSonido('correcto');
+  });
+  alternarSwitch(switchAnimaciones, () => {
+    ajustes.movimientoReducido = !ajustes.movimientoReducido;
+    aplicarAjustes(); guardarAjustes();
+  });
+  inputNombre.addEventListener('input', () => {
+    ajustes.nombre = inputNombre.value.trim();
+    guardarAjustes();
+    actualizarSaludo();
   });
   btnReiniciar.addEventListener('click', () => {
     if(confirm('¿Seguro que querés borrar todo tu progreso? Esta acción no se puede deshacer.')){
