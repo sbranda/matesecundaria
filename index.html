@@ -180,6 +180,11 @@
     width:30px; height:30px; border-radius:50%; border:2.5px solid var(--ink); cursor:pointer; padding:0;
   }
   .color-swatch[aria-pressed="true"]{outline:3px solid var(--highlight); outline-offset:2px;}
+  .btn-goma{
+    width:34px; height:34px; border-radius:50%; border:2.5px solid var(--ink); cursor:pointer;
+    background:var(--paper); font-size:1.05em; display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .btn-goma[aria-pressed="true"]{background:var(--ink); outline:3px solid var(--highlight); outline-offset:2px;}
   .borrador-toolbar button.btn-mini{
     font-family:var(--font-body); font-weight:800; font-size:0.85em; padding:7px 12px;
     border-radius:8px; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
@@ -397,9 +402,10 @@
               <button type="button" class="color-swatch" data-color="#2B3A55" style="background:#2B3A55;" aria-pressed="true" aria-label="Color azul tinta"></button>
               <button type="button" class="color-swatch" data-color="#C0392B" style="background:#C0392B;" aria-pressed="false" aria-label="Color rojo"></button>
               <button type="button" class="color-swatch" data-color="#4C9A5B" style="background:#4C9A5B;" aria-pressed="false" aria-label="Color verde"></button>
+              <button type="button" class="btn-goma" id="btn-goma" aria-pressed="false" aria-label="Goma de borrar: borra solo lo que toques">🧽</button>
               <button type="button" class="btn-mini" id="btn-borrador-borrar">🗑️ Borrar hoja</button>
             </div>
-            <p class="borrador-hint">Arrastrá la esquina inferior derecha para agrandar o achicar la hoja, o usá los botones.</p>
+            <p class="borrador-hint">Elegí un color o tocá 🧽 para borrar solo una parte del dibujo. Para el tamaño, arrastrá la esquina inferior derecha o usá los botones de abajo.</p>
             <div class="borrador-canvas-wrap" id="borrador-canvas-wrap">
               <canvas id="borrador-canvas" width="600" height="440" role="img" aria-label="Área para escribir o dibujar a mano alzada con el dedo, mouse o lápiz óptico. No es obligatoria para responder."></canvas>
             </div>
@@ -472,6 +478,7 @@
   const borradorCanvasWrap = document.getElementById('borrador-canvas-wrap');
   const borradorCanvas = document.getElementById('borrador-canvas');
   const btnBorradorBorrar = document.getElementById('btn-borrador-borrar');
+  const btnGoma = document.getElementById('btn-goma');
   const btnBorradorMas = document.getElementById('btn-borrador-mas');
   const btnBorradorMenos = document.getElementById('btn-borrador-menos');
   const borradorTamStatus = document.getElementById('borrador-tam-status');
@@ -743,6 +750,7 @@
   const NOMBRES_NIVEL = ['Fácil','Medio','Difícil'];
   const borradorCtx = borradorCanvas.getContext('2d');
   let colorTrazo = '#2B3A55';
+  let modoGoma = false;
   let dibujando = false;
   let ultimoPunto = null;
 
@@ -781,7 +789,14 @@
   function continuarTrazo(e){
     if(!dibujando) return;
     const p = posDesdeEvento(e);
-    borradorCtx.strokeStyle = colorTrazo;
+    if(modoGoma){
+      borradorCtx.globalCompositeOperation = 'destination-out';
+      borradorCtx.lineWidth = 22;
+    } else {
+      borradorCtx.globalCompositeOperation = 'source-over';
+      borradorCtx.lineWidth = 2.5;
+      borradorCtx.strokeStyle = colorTrazo;
+    }
     borradorCtx.beginPath();
     borradorCtx.moveTo(ultimoPunto.x, ultimoPunto.y);
     borradorCtx.lineTo(p.x, p.y);
@@ -807,7 +822,14 @@
     sw.addEventListener('click', () => {
       colorTrazo = sw.dataset.color;
       swatches.forEach(s => s.setAttribute('aria-pressed', s===sw ? 'true' : 'false'));
+      modoGoma = false;
+      btnGoma.setAttribute('aria-pressed', 'false');
     });
+  });
+
+  btnGoma.addEventListener('click', () => {
+    modoGoma = !modoGoma;
+    btnGoma.setAttribute('aria-pressed', modoGoma ? 'true' : 'false');
   });
 
   btnBorradorBorrar.addEventListener('click', limpiarBorrador);
