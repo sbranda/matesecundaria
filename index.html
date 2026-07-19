@@ -185,10 +185,23 @@
     border-radius:8px; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
     cursor:pointer;
   }
-  #borrador-canvas{
-    width:100%; height:220px; display:block; touch-action:none;
+  .borrador-hint{font-size:0.78em; color:var(--ink-soft); margin:0 0 8px 0;}
+  .borrador-canvas-wrap{
+    position:relative; resize:vertical; overflow:hidden;
+    height:220px; min-height:140px; max-height:640px;
     border:2.5px dashed var(--ink-soft); border-radius:10px; background:var(--paper);
   }
+  .borrador-canvas-wrap::after{
+    content:''; position:absolute; right:4px; bottom:4px; width:12px; height:12px;
+    background:
+      linear-gradient(135deg, transparent 0 40%, var(--ink-soft) 40% 55%, transparent 55% 100%),
+      linear-gradient(135deg, transparent 0 65%, var(--ink-soft) 65% 80%, transparent 80% 100%);
+    pointer-events:none; opacity:0.6;
+  }
+  #borrador-canvas{
+    display:block; touch-action:none; width:100%; height:100%;
+  }
+  .borrador-resize-controls{display:flex; gap:8px; margin-top:8px;}
   .respuesta-row{display:flex; gap:10px; margin-top:18px;}
   input#respuesta-input{
     flex:1; font-family:var(--font-mono); font-size:1.15em; padding:11px 14px;
@@ -386,7 +399,15 @@
               <button type="button" class="color-swatch" data-color="#4C9A5B" style="background:#4C9A5B;" aria-pressed="false" aria-label="Color verde"></button>
               <button type="button" class="btn-mini" id="btn-borrador-borrar">🗑️ Borrar hoja</button>
             </div>
-            <canvas id="borrador-canvas" width="600" height="440" role="img" aria-label="Área para escribir o dibujar a mano alzada con el dedo, mouse o lápiz óptico. No es obligatoria para responder."></canvas>
+            <p class="borrador-hint">Arrastrá la esquina inferior derecha para agrandar o achicar la hoja, o usá los botones.</p>
+            <div class="borrador-canvas-wrap" id="borrador-canvas-wrap">
+              <canvas id="borrador-canvas" width="600" height="440" role="img" aria-label="Área para escribir o dibujar a mano alzada con el dedo, mouse o lápiz óptico. No es obligatoria para responder."></canvas>
+            </div>
+            <div class="borrador-resize-controls">
+              <button type="button" class="btn-mini" id="btn-borrador-menos" aria-label="Achicar la hoja de borrador">🔽 Más chica</button>
+              <button type="button" class="btn-mini" id="btn-borrador-mas" aria-label="Agrandar la hoja de borrador">🔼 Más grande</button>
+              <span class="visually-hidden" id="borrador-tam-status" role="status" aria-live="polite"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -448,8 +469,12 @@
   const btnReiniciar = document.getElementById('btn-reiniciar');
   const btnToggleBorrador = document.getElementById('btn-toggle-borrador');
   const borradorPanel = document.getElementById('borrador-panel');
+  const borradorCanvasWrap = document.getElementById('borrador-canvas-wrap');
   const borradorCanvas = document.getElementById('borrador-canvas');
   const btnBorradorBorrar = document.getElementById('btn-borrador-borrar');
+  const btnBorradorMas = document.getElementById('btn-borrador-mas');
+  const btnBorradorMenos = document.getElementById('btn-borrador-menos');
+  const borradorTamStatus = document.getElementById('borrador-tam-status');
   const swatches = Array.from(document.querySelectorAll('.color-swatch'));
 
   const STORAGE_KEY = 'mateSecundaria_progreso_v1';
@@ -721,17 +746,26 @@
   let dibujando = false;
   let ultimoPunto = null;
 
-  function ajustarTamanoBorrador(){
-    const rectW = borradorCanvas.clientWidth || 600;
-    const rectH = borradorCanvas.clientHeight || 220;
+  function ajustarTamanoBorrador(preservarDibujo){
+    const cssW = borradorCanvasWrap.clientWidth || 600;
+    const cssH = borradorCanvasWrap.clientHeight || 220;
     const ratio = window.devicePixelRatio || 1;
-    const imgPrevia = borradorCanvas.width>0 ? borradorCtx.getImageData(0,0,borradorCanvas.width,borradorCanvas.height) : null;
-    borradorCanvas.width = rectW*ratio;
-    borradorCanvas.height = rectH*ratio;
+    const huboDibujoAntes = borradorCanvas.width>0 && borradorCanvas.height>0;
+    let imgPrevia = null;
+    if(preservarDibujo && huboDibujoAntes){
+      try{ imgPrevia = borradorCanvas.toDataURL('image/png'); }catch(e){ imgPrevia = null; }
+    }
+    borradorCanvas.width = Math.max(1, Math.round(cssW*ratio));
+    borradorCanvas.height = Math.max(1, Math.round(cssH*ratio));
     borradorCtx.setTransform(ratio,0,0,ratio,0,0);
     borradorCtx.lineCap = 'round';
     borradorCtx.lineJoin = 'round';
     borradorCtx.lineWidth = 2.5;
+    if(imgPrevia){
+      const img = new Image();
+      img.onload = () => { borradorCtx.drawImage(img, 0, 0, cssW, cssH); };
+      img.src = imgPrevia;
+    }
   }
 
   function posDesdeEvento(e){
@@ -783,7 +817,6 @@
     if(abierto){
       borradorPanel.removeAttribute('hidden');
       btnToggleBorrador.setAttribute('aria-expanded','true');
-      requestAnimationFrame(ajustarTamanoBorrador);
     } else {
       borradorPanel.setAttribute('hidden','');
       btnToggleBorrador.setAttribute('aria-expanded','false');
@@ -791,8 +824,36 @@
   });
 
   window.addEventListener('resize', () => {
-    if(!borradorPanel.hasAttribute('hidden')) ajustarTamanoBorrador();
+    if(!borradorPanel.hasAttribute('hidden')) ajustarTamanoBorrador(true);
   });
+
+  // Redimensionado con la esquina nativa (mouse/touch/pen) y con botones (teclado)
+  if('ResizeObserver' in window){
+    const observador = new ResizeObserver(() => {
+      if(borradorPanel.hasAttribute('hidden')) return;
+      ajustarTamanoBorrador(true);
+    });
+    observador.observe(borradorCanvasWrap);
+  } else {
+    // Sin ResizeObserver disponible: al menos ajustar al abrir el panel
+    btnToggleBorrador.addEventListener('click', () => {
+      if(!borradorPanel.hasAttribute('hidden')) requestAnimationFrame(() => ajustarTamanoBorrador(true));
+    });
+  }
+
+  function anunciarTamanoBorrador(){
+    const alto = Math.round(borradorCanvasWrap.getBoundingClientRect().height);
+    borradorTamStatus.textContent = `Altura de la hoja de borrador: ${alto} píxeles.`;
+  }
+  function cambiarAlturaBorrador(delta){
+    const actual = borradorCanvasWrap.getBoundingClientRect().height;
+    const nueva = Math.min(640, Math.max(140, actual + delta));
+    borradorCanvasWrap.style.height = nueva + 'px';
+    ajustarTamanoBorrador(true);
+    anunciarTamanoBorrador();
+  }
+  btnBorradorMas.addEventListener('click', () => cambiarAlturaBorrador(60));
+  btnBorradorMenos.addEventListener('click', () => cambiarAlturaBorrador(-60));
 
   // ===== Dibujo de gráficos (canvas) =====
   function getCSSVar(nombre){
