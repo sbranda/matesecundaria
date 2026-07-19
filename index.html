@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mate Secundaria - Ejercitador</title>
+<meta name="theme-color" content="#2B3A55">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon192.png">
+<link rel="apple-touch-icon" href="icon192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FEFCF6;
+    --paper-alt:#F7F3E8;
+    --grid:#CBD9E8;
+    --ink:#2B3A55;
+    --ink-soft:#5C6B85;
+    --highlight:#FFD23F;
+    --marker-green:#4C9A5B;
+    --marker-red:#C0392B;
+    --nivel1:#6FA287;
+    --nivel2:#D89A3E;
+    --nivel3:#8B6BA8;
+    --radius:14px;
+    --font-display:'Kalam', cursive;
+    --font-body:'Nunito', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body.contraste{
+    --paper:#FFFFFF; --paper-alt:#FFFFFF; --grid:#8A8A8A; --ink:#000000; --ink-soft:#000000;
+  }
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:var(--font-body);
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+    min-height:100vh;
+    overflow-x:hidden;
+    font-size:var(--fs, 16px);
+  }
+  body.grande{ --fs:19px; }
+  #app{max-width:520px; margin:0 auto; padding:0 0 40px 0; min-height:100vh;}
+
+  /* HEADER */
+  header.topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px 10px 18px;
+  }
+  .marca{display:flex; align-items:center; gap:10px;}
+  .marca h1{
+    font-family:var(--font-display); font-size:1.6em; margin:0; color:var(--ink);
+    transform:rotate(-1deg);
+  }
+  .marca .sello-mini{
+    width:34px;height:34px;border-radius:50%;border:2.5px solid var(--marker-red);
+    display:flex;align-items:center;justify-content:center;color:var(--marker-red);
+    font-weight:800; transform:rotate(-8deg); flex-shrink:0;
+  }
+  .stats-top{display:flex; gap:10px;}
+  .chip{
+    background:var(--paper-alt); border:2px solid var(--ink); border-radius:20px;
+    padding:5px 11px; font-size:0.82em; font-weight:800; display:flex; align-items:center; gap:4px;
+  }
+  .chip.xp{color:var(--ink);}
+  .chip.racha{color:var(--marker-red);}
+  button.icon-btn{
+    background:none; border:2px solid var(--ink); border-radius:50%; width:38px;height:38px;
+    font-size:1.1em; cursor:pointer; color:var(--ink);
+  }
+
+  /* PESTAÑAS DE CARPETA (vista inicio) */
+  .subt{padding:0 18px; color:var(--ink-soft); font-size:0.95em; margin-top:-4px;}
+  .grid-temas{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:16px 18px 8px 18px;
+  }
+  .tema-card{
+    background:var(--paper-alt); border:2.5px solid var(--ink); border-radius:var(--radius);
+    padding:14px 12px; cursor:pointer; position:relative; transition:transform .12s ease;
+    text-align:left;
+  }
+  .tema-card:active{transform:scale(0.96);}
+  .tema-card .icono{font-size:1.8em;}
+  .tema-card .nombre{font-weight:800; font-size:0.98em; margin-top:6px; line-height:1.15; color:var(--ink);}
+  .tema-card .anio-tag{
+    font-family:var(--font-mono); font-size:0.68em; color:var(--ink-soft); margin-top:2px; display:block;
+  }
+  .barra-mini{height:7px; background:#E5E0D0; border-radius:6px; margin-top:9px; overflow:hidden;}
+  .barra-mini > div{height:100%; background:var(--marker-green); border-radius:6px; transition:width .3s ease;}
+  .tema-card .pin{
+    position:absolute; top:-8px; right:10px; width:16px; height:16px; border-radius:50%;
+    background:var(--highlight); border:2px solid var(--ink);
+  }
+
+  /* VISTA TEMA (camino de niveles) */
+  .volver{
+    display:flex; align-items:center; gap:8px; padding:14px 18px 0 18px; cursor:pointer;
+    color:var(--ink-soft); font-weight:700; font-size:0.92em; user-select:none;
+  }
+  .tema-header{padding:6px 18px 4px 18px;}
+  .tema-header h2{font-family:var(--font-display); font-size:1.7em; margin:4px 0 0 0; transform:rotate(-0.5deg);}
+  .tema-header p{color:var(--ink-soft); margin:2px 0 0 0; font-size:0.92em;}
+  .camino{padding:20px 40px; display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .nivel-nodo{
+    width:92px; height:92px; border-radius:50%; border:3px solid var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; position:relative; background:var(--paper-alt);
+  }
+  .nivel-nodo.n1{background:var(--nivel1); color:#fff;}
+  .nivel-nodo.n2{background:var(--nivel2); color:#fff;}
+  .nivel-nodo.n3{background:var(--nivel3); color:#fff;}
+  .nivel-nodo.bloqueado{background:#DCD8C8; color:var(--ink-soft); cursor:not-allowed; opacity:0.75;}
+  .nivel-nodo .etiqueta{font-family:var(--font-display); font-size:1.3em; font-weight:700;}
+  .nivel-nodo .sub{font-size:0.65em; font-weight:700; margin-top:-2px;}
+  .nivel-nodo .candado{font-size:1.4em;}
+  .conector{width:4px; height:26px; background:var(--ink); opacity:0.35;}
+  .sello-completado{
+    position:absolute; inset:-6px; border:3px solid var(--marker-red); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; transform:rotate(-10deg);
+    pointer-events:none;
+  }
+  .sello-completado span{
+    color:var(--marker-red); font-weight:800; font-size:0.6em; text-align:center; line-height:1;
+    font-family:var(--font-mono);
+  }
+
+  /* VISTA PRACTICA */
+  .practica-wrap{padding:14px 18px;}
+  .practica-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .progreso-nivel{font-size:0.82em; color:var(--ink-soft); font-weight:700;}
+  .hoja{
+    background:var(--paper-alt); border:2.5px solid var(--ink); border-radius:var(--radius);
+    padding:22px 18px; margin-top:12px; min-height:150px; position:relative;
+  }
+  .hoja .etiqueta-nivel{
+    position:absolute; top:-13px; left:16px; background:var(--ink); color:var(--paper);
+    padding:3px 12px; border-radius:10px; font-size:0.72em; font-weight:800;
+  }
+  .enunciado{
+    font-family:var(--font-mono); font-size:1.18em; line-height:1.6; color:var(--ink);
+    margin-top:6px; white-space:pre-wrap;
+  }
+  .respuesta-row{display:flex; gap:10px; margin-top:18px;}
+  input#respuesta-input{
+    flex:1; font-family:var(--font-mono); font-size:1.15em; padding:11px 14px;
+    border:2.5px solid var(--ink); border-radius:10px; background:var(--paper);
+    color:var(--ink); min-width:0;
+  }
+  input#respuesta-input:focus{outline:3px solid var(--highlight);}
+  button.btn-primario{
+    font-family:var(--font-body); font-weight:800; font-size:1em; padding:11px 20px;
+    border-radius:10px; border:2.5px solid var(--ink); background:var(--ink); color:var(--paper);
+    cursor:pointer;
+  }
+  button.btn-primario:active{transform:scale(0.97);}
+  button.btn-secundario{
+    font-family:var(--font-body); font-weight:800; font-size:0.95em; padding:10px 18px;
+    border-radius:10px; border:2.5px solid var(--ink); background:transparent; color:var(--ink);
+    cursor:pointer; width:100%; margin-top:12px;
+  }
+  .feedback{margin-top:16px; padding:14px; border-radius:10px; font-weight:700; display:none;}
+  .feedback.correcto{background:rgba(76,154,91,0.15); border:2px solid var(--marker-green); color:var(--marker-green); display:block;}
+  .feedback.incorrecto{background:rgba(192,57,43,0.1); border:2px solid var(--marker-red); color:var(--marker-red); display:block;}
+  .feedback .explicacion{font-weight:600; color:var(--ink); margin-top:6px; font-size:0.92em; font-family:var(--font-body);}
+  .stamp-anim{
+    position:fixed; top:40%; left:50%; transform:translate(-50%,-50%) rotate(-12deg) scale(0);
+    font-family:var(--font-mono); font-weight:800; color:var(--marker-red);
+    border:6px solid var(--marker-red); border-radius:16px; padding:14px 26px; font-size:1.6em;
+    background:rgba(254,252,246,0.92); z-index:50; pointer-events:none;
+    animation:sello 1.1s ease forwards;
+  }
+  @keyframes sello{
+    0%{transform:translate(-50%,-50%) rotate(-12deg) scale(2.4); opacity:0;}
+    30%{transform:translate(-50%,-50%) rotate(-12deg) scale(1); opacity:1;}
+    75%{transform:translate(-50%,-50%) rotate(-12deg) scale(1); opacity:1;}
+    100%{transform:translate(-50%,-50%) rotate(-12deg) scale(1); opacity:0;}
+  }
+
+  /* MODAL AJUSTES */
+  .modal-fondo{
+    display:none; position:fixed; inset:0; background:rgba(43,58,85,0.5); z-index:60;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-fondo.abierto{display:flex;}
+  .modal{
+    background:var(--paper); border:2.5px solid var(--ink); border-radius:var(--radius);
+    padding:22px; max-width:380px; width:100%;
+  }
+  .modal h3{font-family:var(--font-display); margin-top:0; font-size:1.4em;}
+  .fila-ajuste{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--grid);}
+  .switch{
+    width:46px; height:26px; background:#DCD8C8; border-radius:20px; position:relative; cursor:pointer; border:2px solid var(--ink);
+  }
+  .switch.on{background:var(--marker-green);}
+  .switch .bolita{width:18px; height:18px; background:#fff; border-radius:50%; position:absolute; top:2px; left:2px; transition:left .2s;}
+  .switch.on .bolita{left:22px;}
+
+  footer.credito{
+    text-align:center; padding:22px 18px 10px 18px; color:var(--ink-soft); font-size:0.78em;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .stamp-anim, .tema-card, button{animation:none !important; transition:none !important;}
+  }
+  :focus-visible{outline:3px solid var(--highlight); outline-offset:2px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== VISTA INICIO ===== -->
+  <div id="vista-inicio">
+    <header class="topbar">
+      <div class="marca">
+        <div class="sello-mini">M</div>
+        <h1>Mate Secundaria</h1>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="stats-top">
+          <div class="chip xp">⭐ <span id="xp-total">0</span></div>
+          <div class="chip racha">🔥 <span id="racha-total">0</span></div>
+        </div>
+        <button class="icon-btn" id="btn-ajustes" aria-label="Ajustes">⚙️</button>
+      </div>
+    </header>
+    <p class="subt">Elegí un tema y practicá a tu ritmo. Cada nivel superado suma un sello.</p>
+    <div class="grid-temas" id="grid-temas"></div>
+    <footer class="credito">Desarrollado por Seba Branda</footer>
+  </div>
+
+  <!-- ===== VISTA TEMA ===== -->
+  <div id="vista-tema" style="display:none;">
+    <div class="volver" id="btn-volver-tema">← Volver a los temas</div>
+    <div class="tema-header">
+      <h2 id="tema-titulo"></h2>
+      <p id="tema-desc"></p>
+    </div>
+    <div class="camino" id="camino-niveles"></div>
+  </div>
+
+  <!-- ===== VISTA PRACTICA ===== -->
+  <div id="vista-practica" style="display:none;">
+    <div class="volver" id="btn-volver-practica">← Volver al tema</div>
+    <div class="practica-wrap">
+      <div class="practica-top">
+        <div class="progreso-nivel" id="progreso-nivel-txt"></div>
+        <div class="chip xp">⭐ <span id="xp-total-2">0</span></div>
+      </div>
+      <div class="hoja">
+        <div class="etiqueta-nivel" id="hoja-etiqueta">Nivel 1</div>
+        <div class="enunciado" id="enunciado-txt">Cargando...</div>
+        <div class="respuesta-row">
+          <input id="respuesta-input" type="text" inputmode="decimal" placeholder="Tu respuesta" autocomplete="off">
+          <button class="btn-primario" id="btn-comprobar">Comprobar</button>
+        </div>
+        <div class="feedback" id="feedback-box"></div>
+      </div>
+      <button class="btn-secundario" id="btn-siguiente" style="display:none;">Siguiente ejercicio →</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL AJUSTES -->
+<div class="modal-fondo" id="modal-ajustes">
+  <div class="modal">
+    <h3>Ajustes</h3>
+    <div class="fila-ajuste">
+      <span>Alto contraste</span>
+      <div class="switch" id="switch-contraste"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste">
+      <span>Texto grande</span>
+      <div class="switch" id="switch-grande"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste" style="border-bottom:none;">
+      <span>Reiniciar progreso</span>
+      <button class="btn-secundario" style="width:auto; margin-top:0; padding:8px 14px; font-size:0.85em;" id="btn-reiniciar">Reiniciar</button>
+    </div>
+    <button class="btn-primario" style="width:100%; margin-top:14px;" id="btn-cerrar-ajustes">Cerrar</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ===== DOM refs (todo arriba para evitar TDZ) =====
+  const vistaInicio = document.getElementById('vista-inicio');
+  const vistaTema = document.getElementById('vista-tema');
+  const vistaPractica = document.getElementById('vista-practica');
+  const gridTemas = document.getElementById('grid-temas');
+  const xpTotalEl = document.getElementById('xp-total');
+  const xpTotalEl2 = document.getElementById('xp-total-2');
+  const rachaTotalEl = document.getElementById('racha-total');
+  const temaTitulo = document.getElementById('tema-titulo');
+  const temaDesc = document.getElementById('tema-desc');
+  const caminoNiveles = document.getElementById('camino-niveles');
+  const btnVolverTema = document.getElementById('btn-volver-tema');
+  const btnVolverPractica = document.getElementById('btn-volver-practica');
+  const progresoNivelTxt = document.getElementById('progreso-nivel-txt');
+  const hojaEtiqueta = document.getElementById('hoja-etiqueta');
+  const enunciadoTxt = document.getElementById('enunciado-txt');
+  const respuestaInput = document.getElementById('respuesta-input');
+  const btnComprobar = document.getElementById('btn-comprobar');
+  const feedbackBox = document.getElementById('feedback-box');
+  const btnSiguiente = document.getElementById('btn-siguiente');
+  const btnAjustes = document.getElementById('btn-ajustes');
+  const modalAjustes = document.getElementById('modal-ajustes');
+  const btnCerrarAjustes = document.getElementById('btn-cerrar-ajustes');
+  const switchContraste = document.getElementById('switch-contraste');
+  const switchGrande = document.getElementById('switch-grande');
+  const btnReiniciar = document.getElementById('btn-reiniciar');
+
+  const STORAGE_KEY = 'mateSecundaria_progreso_v1';
+  const AJUSTES_KEY = 'mateSecundaria_ajustes_v1';
+  const UMBRAL_APROBACION = 10; // respuestas correctas para superar un nivel
+
+  // ===== Utilidades numéricas =====
+  function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function randNZ(min, max){ // sin cero
+    let n = randInt(min,max);
+    while(n===0) n = randInt(min,max);
+    return n;
+  }
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a || 1; }
+  function simplificarFraccion(num, den){
+    if(den<0){ num=-num; den=-den; }
+    const g = gcd(num,den);
+    return [num/g, den/g];
+  }
+  function parseFraccionInput(str){
+    str = str.trim().replace(',', '.');
+    if(str.includes('/')){
+      const partes = str.split('/');
+      const n = parseFloat(partes[0]);
+      const d = parseFloat(partes[1]);
+      if(isNaN(n) || isNaN(d) || d===0) return null;
+      return [n,d];
+    }
+    const val = parseFloat(str);
+    if(isNaN(val)) return null;
+    return [val, 1];
+  }
+  function fraccionesIguales(a, b){
+    // a, b = [num,den]
+    return Math.abs(a[0]*b[1] - b[0]*a[1]) < 1e-9;
+  }
+  function fmtFraccion(num, den){
+    const [n,d] = simplificarFraccion(num,den);
+    if(d===1) return `${n}`;
+    return `${n}/${d}`;
+  }
+
+  // ===== Definición de temas y generadores =====
+  const TEMAS = [
+    {
+      id:'numeros', icono:'🔢', nombre:'Números enteros', rango:'1° - 2° año',
+      desc:'Operaciones combinadas con números enteros.',
+      generar(nivel){
+        if(nivel===1){
+          const a=randInt(1,20), b=randInt(1,20);
+          const op = Math.random()<0.5 ? '+' : '-';
+          const r = op==='+' ? a+b : a-b;
+          return { enunciado:`${a} ${op} ${b} = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+        } else if(nivel===2){
+          const a=randNZ(-20,20), b=randNZ(-20,20);
+          const ops = ['+','-','×'];
+          const op = ops[randInt(0,2)];
+          let r;
+          if(op==='+') r=a+b; else if(op==='-') r=a-b; else r=a*b;
+          return { enunciado:`(${a}) ${op} (${b}) = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+        } else {
+          const a=randNZ(-15,15), b=randNZ(-12,12), c=randNZ(2,9);
+          const r = (a+b)*c;
+          return { enunciado:`(${a} + ${b}) × ${c} = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+        }
+      }
+    },
+    {
+      id:'fracciones', icono:'🍰', nombre:'Fracciones', rango:'1° - 3° año',
+      desc:'Suma, resta, multiplicación y división de fracciones.',
+      generar(nivel){
+        if(nivel===1){
+          const den = randInt(2,10);
+          const n1 = randInt(1,den-1), n2 = randInt(1,den-1);
+          return { enunciado:`${n1}/${den} + ${n2}/${den} = ?  (simplificá si podés)`, tipo:'fraccion', respuesta:[n1+n2, den] };
+        } else if(nivel===2){
+          const d1=randInt(2,8), d2=randInt(2,8);
+          const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+          const num = n1*d2 + n2*d1, den = d1*d2;
+          return { enunciado:`${n1}/${d1} + ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num,den] };
+        } else {
+          const d1=randInt(2,7), d2=randInt(2,7);
+          const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+          const usarMult = Math.random()<0.5;
+          if(usarMult){
+            return { enunciado:`${n1}/${d1} × ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[n1*n2, d1*d2] };
+          } else {
+            return { enunciado:`${n1}/${d1} ÷ ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[n1*d2, d1*n2] };
+          }
+        }
+      }
+    },
+    {
+      id:'potencias', icono:'✳️', nombre:'Potencias y raíces', rango:'2° - 3° año',
+      desc:'Potenciación, radicación y propiedades.',
+      generar(nivel){
+        if(nivel===1){
+          const b=randInt(2,10), e=randInt(2,3);
+          return { enunciado:`${b}^${e} = ?`, tipo:'numero', respuesta:Math.pow(b,e), tolerancia:0 };
+        } else if(nivel===2){
+          const raiz = randInt(2,12);
+          const cuad = raiz*raiz;
+          return { enunciado:`√${cuad} = ?`, tipo:'numero', respuesta:raiz, tolerancia:0 };
+        } else {
+          const b=randInt(2,5), m=randInt(2,3), n=randInt(2,3);
+          return { enunciado:`(${b}^${m})^${n} = ?  (resolvé la potencia final)`, tipo:'numero', respuesta:Math.pow(b, m*n), tolerancia:0 };
+        }
+      }
+    },
+    {
+      id:'ecuaciones', icono:'⚖️', nombre:'Ecuaciones', rango:'2° - 4° año',
+      desc:'Resolución de ecuaciones de primer grado.',
+      generar(nivel){
+        if(nivel===1){
+          const a=randInt(2,9), x=randInt(-10,10), b=randInt(-15,15);
+          const c = a*x+b;
+          return { enunciado:`${a}x + (${b}) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0 };
+        } else if(nivel===2){
+          const a=randInt(2,6), b=randInt(-8,8), x=randInt(-10,10);
+          const c = a*(x+b);
+          return { enunciado:`${a}(x + (${b})) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0 };
+        } else {
+          const a = randInt(2,7);
+          let c = randInt(2,7);
+          if(c === a) c = (a >= 7) ? a - 1 : a + 1; // aseguramos a != c sin loops
+          const x=randInt(-10,10), b=randInt(-10,10);
+          const d = (a-c)*x + b; // ax+b = cx+d -> d = (a-c)x+b
+          return { enunciado:`${a}x + (${b}) = ${c}x + (${d})\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0 };
+        }
+      }
+    },
+    {
+      id:'polinomios', icono:'📐', nombre:'Polinomios', rango:'3° - 4° año',
+      desc:'Suma, resta y producto de polinomios (evaluados en un valor).',
+      generar(nivel){
+        const x = randInt(-3,4) || 2;
+        if(nivel===1){
+          const a1=randInt(-6,6), a0=randInt(-6,6);
+          const b1=randInt(-6,6), b0=randInt(-6,6);
+          const r = (a1+b1)*x + (a0+b0);
+          return { enunciado:`P(x) = ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) + Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0 };
+        } else if(nivel===2){
+          const a2=randInt(-4,4)||1, a1=randInt(-6,6), a0=randInt(-6,6);
+          const b1=randInt(-6,6), b0=randInt(-6,6);
+          const pVal = a2*x*x + a1*x + a0;
+          const qVal = b1*x + b0;
+          return { enunciado:`P(x) = ${a2}x² + ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) - Q(x)] para x = ${x}`, tipo:'numero', respuesta:pVal-qVal, tolerancia:0 };
+        } else {
+          const a=randInt(-5,5)||2, b=randInt(-5,5);
+          const k=randInt(-4,4)||3;
+          const r = k*(a*x+b);
+          return { enunciado:`P(x) = ${a}x + (${b})\nHallá [${k} · P(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0 };
+        }
+      }
+    },
+    {
+      id:'funciones', icono:'📈', nombre:'Funciones', rango:'4° - 5° año',
+      desc:'Funciones lineales y cuadráticas.',
+      generar(nivel){
+        if(nivel===1){
+          const m=randInt(-6,6)||2, b=randInt(-8,8), x=randInt(-6,6);
+          return { enunciado:`f(x) = ${m}x + (${b})\nf(${x}) = ?`, tipo:'numero', respuesta:m*x+b, tolerancia:0 };
+        } else if(nivel===2){
+          const m=randInt(2,8), b=randInt(-10,10), x=randInt(-8,8);
+          const y = m*x+b;
+          return { enunciado:`f(x) = ${m}x + (${b})\n¿Para qué valor de x, f(x) = ${y}?`, tipo:'numero', respuesta:x, tolerancia:0 };
+        } else {
+          const a=randInt(1,4), b=randInt(-6,6), c=randInt(-6,6), x=randInt(-4,4);
+          const r = a*x*x + b*x + c;
+          return { enunciado:`f(x) = ${a}x² + ${b}x + (${c})\nf(${x}) = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+        }
+      }
+    },
+    {
+      id:'geometria', icono:'📏', nombre:'Geometría', rango:'3° - 5° año',
+      desc:'Perímetros, áreas y Teorema de Pitágoras.',
+      generar(nivel){
+        if(nivel===1){
+          const b=randInt(3,20), h=randInt(3,20);
+          const usarArea = Math.random()<0.5;
+          if(usarArea) return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:b*h, tolerancia:0 };
+          return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:2*(b+h), tolerancia:0 };
+        } else if(nivel===2){
+          const usarTriangulo = Math.random()<0.5;
+          if(usarTriangulo){
+            const b=randInt(4,20), h=randInt(4,20);
+            return { enunciado:`Triángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:(b*h)/2, tolerancia:0.05 };
+          } else {
+            const r=randInt(2,12);
+            return { enunciado:`Círculo de radio ${r}. Usá π ≈ 3.14\n¿Cuál es su área? (redondeá a 2 decimales)`, tipo:'numero', respuesta:3.14*r*r, tolerancia:0.5 };
+          }
+        } else {
+          const ternas = [[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15],[7,24,25]];
+          const t = ternas[randInt(0,ternas.length-1)];
+          const faltaHipotenusa = Math.random()<0.6;
+          if(faltaHipotenusa){
+            return { enunciado:`Triángulo rectángulo con catetos ${t[0]} y ${t[1]}.\n¿Cuánto mide la hipotenusa?`, tipo:'numero', respuesta:t[2], tolerancia:0.05 };
+          } else {
+            return { enunciado:`Triángulo rectángulo con hipotenusa ${t[2]} y un cateto ${t[0]}.\n¿Cuánto mide el otro cateto?`, tipo:'numero', respuesta:t[1], tolerancia:0.05 };
+          }
+        }
+      }
+    },
+    {
+      id:'trigonometria', icono:'📐', nombre:'Trigonometría', rango:'5° - 6° año',
+      desc:'Razones trigonométricas en el triángulo rectángulo.',
+      generar(nivel){
+        if(nivel===1){
+          const angulos = [30,45,60];
+          const razones = ['sen','cos','tan'];
+          const ang = angulos[randInt(0,2)];
+          const raz = razones[randInt(0,2)];
+          const tabla = {
+            30:{sen:0.5, cos:0.87, tan:0.58},
+            45:{sen:0.71, cos:0.71, tan:1},
+            60:{sen:0.87, cos:0.5, tan:1.73}
+          };
+          return { enunciado:`${raz}(${ang}°) = ?  (redondeá a 2 decimales)`, tipo:'numero', respuesta:tabla[ang][raz], tolerancia:0.02 };
+        } else if(nivel===2){
+          const ang = [30,45,60][randInt(0,2)];
+          const hip = randInt(10,30);
+          const senTabla = {30:0.5, 45:0.71, 60:0.87};
+          const opuesto = senTabla[ang]*hip;
+          return { enunciado:`Triángulo rectángulo con hipotenusa ${hip} y ángulo de ${ang}°.\n¿Cuánto mide el cateto opuesto? (redondeá a 1 decimal)`, tipo:'numero', respuesta:opuesto, tolerancia:0.5 };
+        } else {
+          const catOpuesto = randInt(5,20);
+          const hip = catOpuesto + randInt(3,15);
+          const angulo = Math.asin(catOpuesto/hip) * (180/Math.PI);
+          return { enunciado:`Triángulo rectángulo: cateto opuesto = ${catOpuesto}, hipotenusa = ${hip}.\n¿Cuánto mide el ángulo? (en grados, redondeá a 1 decimal)`, tipo:'numero', respuesta:angulo, tolerancia:0.5 };
+        }
+      }
+    },
+    {
+      id:'estadistica', icono:'📊', nombre:'Estadística', rango:'Todos los años',
+      desc:'Medidas de posición: promedio, mediana, moda.',
+      generar(nivel){
+        if(nivel===1){
+          const datos = Array.from({length:5}, ()=>randInt(1,20));
+          const prom = datos.reduce((a,b)=>a+b,0)/datos.length;
+          return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es el promedio? (redondeá a 2 decimales si hace falta)`, tipo:'numero', respuesta:prom, tolerancia:0.02 };
+        } else if(nivel===2){
+          const n = 7;
+          const datos = Array.from({length:n}, ()=>randInt(1,30));
+          const ordenados = [...datos].sort((a,b)=>a-b);
+          const mediana = ordenados[Math.floor(n/2)];
+          return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es la mediana?`, tipo:'numero', respuesta:mediana, tolerancia:0 };
+        } else {
+          const total = randInt(4,10);
+          const favorables = randInt(1,total-1);
+          const prob = favorables/total;
+          return { enunciado:`En una bolsa hay ${total} bolitas, ${favorables} son rojas.\nSi sacás una al azar, ¿cuál es la probabilidad de que sea roja? (como decimal, redondeá a 2 decimales)`, tipo:'numero', respuesta:prob, tolerancia:0.02 };
+        }
+      }
+    }
+  ];
+
+  const NOMBRES_NIVEL = ['Fácil','Medio','Difícil'];
+
+  // ===== Estado / progreso =====
+  function estadoInicial(){
+    const temas = {};
+    TEMAS.forEach(t => {
+      temas[t.id] = { nivelActual:1, correctas:[0,0,0], completado:[false,false,false] };
+    });
+    return { xp:0, racha:0, ultimaFecha:null, temas };
+  }
+  let progreso = cargarProgreso();
+  function cargarProgreso(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return estadoInicial();
+      const data = JSON.parse(raw);
+      // asegurar que existan todos los temas (por si se agregan nuevos)
+      const base = estadoInicial();
+      TEMAS.forEach(t => { if(!data.temas[t.id]) data.temas[t.id] = base.temas[t.id]; });
+      return data;
+    }catch(e){ return estadoInicial(); }
+  }
+  function guardarProgreso(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(progreso)); }catch(e){}
+  }
+  function actualizarRacha(){
+    const hoy = new Date().toISOString().slice(0,10);
+    if(progreso.ultimaFecha === hoy) return;
+    if(progreso.ultimaFecha){
+      const ayer = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+      progreso.racha = (progreso.ultimaFecha === ayer) ? progreso.racha + 1 : 1;
+    } else {
+      progreso.racha = 1;
+    }
+    progreso.ultimaFecha = hoy;
+    guardarProgreso();
+  }
+
+  // ===== Ajustes =====
+  function cargarAjustes(){
+    try{
+      const raw = localStorage.getItem(AJUSTES_KEY);
+      return raw ? JSON.parse(raw) : { contraste:false, grande:false };
+    }catch(e){ return { contraste:false, grande:false }; }
+  }
+  let ajustes = cargarAjustes();
+  function aplicarAjustes(){
+    document.body.classList.toggle('contraste', ajustes.contraste);
+    document.body.classList.toggle('grande', ajustes.grande);
+    switchContraste.classList.toggle('on', ajustes.contraste);
+    switchGrande.classList.toggle('on', ajustes.grande);
+  }
+  function guardarAjustes(){
+    try{ localStorage.setItem(AJUSTES_KEY, JSON.stringify(ajustes)); }catch(e){}
+  }
+
+  // ===== Render vista inicio =====
+  function renderStatsTop(){
+    xpTotalEl.textContent = progreso.xp;
+    xpTotalEl2.textContent = progreso.xp;
+    rachaTotalEl.textContent = progreso.racha;
+  }
+  function renderTemas(){
+    gridTemas.innerHTML = '';
+    TEMAS.forEach(t => {
+      const p = progreso.temas[t.id];
+      const completados = p.completado.filter(Boolean).length;
+      const card = document.createElement('button');
+      card.className = 'tema-card';
+      card.setAttribute('aria-label', `${t.nombre}, ${completados} de 3 niveles completados`);
+      if(completados===3){
+        const pin = document.createElement('div');
+        pin.className='pin';
+        card.appendChild(pin);
+      }
+      card.innerHTML += `
+        <div class="icono">${t.icono}</div>
+        <div class="nombre">${t.nombre}</div>
+        <span class="anio-tag">${t.rango}</span>
+        <div class="barra-mini"><div style="width:${(completados/3)*100}%"></div></div>
+      `;
+      card.addEventListener('click', () => abrirTema(t.id));
+      gridTemas.appendChild(card);
+    });
+  }
+
+  // ===== Navegación =====
+  let temaActivo = null;
+  let nivelActivo = null;
+  let problemaActual = null;
+
+  function mostrarVista(vista){
+    vistaInicio.style.display = vista==='inicio' ? '' : 'none';
+    vistaTema.style.display = vista==='tema' ? '' : 'none';
+    vistaPractica.style.display = vista==='practica' ? '' : 'none';
+    window.scrollTo(0,0);
+  }
+
+  function abrirTema(id){
+    temaActivo = TEMAS.find(t => t.id===id);
+    temaTitulo.textContent = `${temaActivo.icono} ${temaActivo.nombre}`;
+    temaDesc.textContent = temaActivo.desc;
+    renderCamino();
+    mostrarVista('tema');
+  }
+
+  function renderCamino(){
+    caminoNiveles.innerHTML = '';
+    const p = progreso.temas[temaActivo.id];
+    for(let i=1;i<=3;i++){
+      const idx = i-1;
+      const bloqueado = i > p.nivelActual;
+      const completado = p.completado[idx];
+      const nodo = document.createElement('div');
+      nodo.className = `nivel-nodo ${bloqueado ? 'bloqueado' : 'n'+i}`;
+      nodo.innerHTML = bloqueado
+        ? `<span class="candado">🔒</span><span class="sub">${NOMBRES_NIVEL[idx]}</span>`
+        : `<span class="etiqueta">${i}</span><span class="sub">${NOMBRES_NIVEL[idx]}</span>`;
+      if(completado){
+        const sello = document.createElement('div');
+        sello.className = 'sello-completado';
+        sello.innerHTML = '<span>APRO<br>BADO</span>';
+        nodo.appendChild(sello);
+      }
+      if(!bloqueado){
+        nodo.addEventListener('click', () => abrirPractica(i));
+      }
+      caminoNiveles.appendChild(nodo);
+      if(i<3){
+        const conector = document.createElement('div');
+        conector.className='conector';
+        caminoNiveles.appendChild(conector);
+      }
+    }
+  }
+
+  function abrirPractica(nivel){
+    nivelActivo = nivel;
+    hojaEtiqueta.textContent = `Nivel ${nivel} · ${NOMBRES_NIVEL[nivel-1]}`;
+    actualizarProgresoTxt();
+    nuevoProblema();
+    mostrarVista('practica');
+  }
+
+  function actualizarProgresoTxt(){
+    const p = progreso.temas[temaActivo.id];
+    const correctas = p.correctas[nivelActivo-1];
+    const completado = p.completado[nivelActivo-1];
+    progresoNivelTxt.textContent = completado
+      ? `Nivel superado ✓ (${Math.min(correctas,UMBRAL_APROBACION)}/${UMBRAL_APROBACION})`
+      : `Progreso: ${Math.min(correctas,UMBRAL_APROBACION)}/${UMBRAL_APROBACION} correctas`;
+  }
+
+  function nuevoProblema(){
+    problemaActual = temaActivo.generar(nivelActivo);
+    enunciadoTxt.textContent = problemaActual.enunciado;
+    respuestaInput.value = '';
+    respuestaInput.disabled = false;
+    feedbackBox.className = 'feedback';
+    feedbackBox.style.display = 'none';
+    btnComprobar.style.display = '';
+    btnSiguiente.style.display = 'none';
+    respuestaInput.focus();
+  }
+
+  function comprobarRespuesta(){
+    const valorIngresado = respuestaInput.value.trim();
+    if(!valorIngresado) return;
+    let esCorrecta = false;
+
+    if(problemaActual.tipo === 'fraccion'){
+      const parsed = parseFraccionInput(valorIngresado);
+      if(parsed) esCorrecta = fraccionesIguales(parsed, problemaActual.respuesta);
+    } else {
+      const val = parseFloat(valorIngresado.replace(',', '.'));
+      if(!isNaN(val)){
+        const tol = problemaActual.tolerancia || 0;
+        esCorrecta = Math.abs(val - problemaActual.respuesta) <= (tol || 1e-9);
+      }
+    }
+
+    respuestaInput.disabled = true;
+    btnComprobar.style.display = 'none';
+    btnSiguiente.style.display = '';
+    feedbackBox.style.display = 'block';
+
+    const p = progreso.temas[temaActivo.id];
+    const idx = nivelActivo - 1;
+    const yaCompletado = p.completado[idx];
+
+    if(esCorrecta){
+      feedbackBox.className = 'feedback correcto';
+      feedbackBox.innerHTML = '¡Correcto! 🎉';
+      progreso.xp += 10;
+      if(!yaCompletado) p.correctas[idx] += 1;
+      actualizarRacha();
+      renderStatsTop();
+
+      if(!yaCompletado && p.correctas[idx] >= UMBRAL_APROBACION){
+        p.completado[idx] = true;
+        if(nivelActivo < 3) p.nivelActual = Math.max(p.nivelActual, nivelActivo+1);
+        mostrarSello();
+      }
+      guardarProgreso();
+    } else {
+      feedbackBox.className = 'feedback incorrecto';
+      const respuestaMostrada = problemaActual.tipo==='fraccion'
+        ? fmtFraccion(problemaActual.respuesta[0], problemaActual.respuesta[1])
+        : (Number.isInteger(problemaActual.respuesta) ? problemaActual.respuesta : problemaActual.respuesta.toFixed(2));
+      feedbackBox.innerHTML = `No es correcto. La respuesta era: <strong>${respuestaMostrada}</strong>`;
+    }
+    actualizarProgresoTxt();
+  }
+
+  function mostrarSello(){
+    const el = document.createElement('div');
+    el.className = 'stamp-anim';
+    el.textContent = '¡APROBADO!';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1150);
+  }
+
+  // ===== Eventos =====
+  btnComprobar.addEventListener('click', comprobarRespuesta);
+  respuestaInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter'){
+      if(btnComprobar.style.display !== 'none') comprobarRespuesta();
+      else nuevoProblema();
+    }
+  });
+  btnSiguiente.addEventListener('click', nuevoProblema);
+  btnVolverTema.addEventListener('click', () => { renderTemas(); mostrarVista('inicio'); });
+  btnVolverPractica.addEventListener('click', () => { renderCamino(); mostrarVista('tema'); });
+
+  btnAjustes.addEventListener('click', () => modalAjustes.classList.add('abierto'));
+  btnCerrarAjustes.addEventListener('click', () => modalAjustes.classList.remove('abierto'));
+  modalAjustes.addEventListener('click', (e) => { if(e.target===modalAjustes) modalAjustes.classList.remove('abierto'); });
+
+  switchContraste.addEventListener('click', () => {
+    ajustes.contraste = !ajustes.contraste;
+    aplicarAjustes(); guardarAjustes();
+  });
+  switchGrande.addEventListener('click', () => {
+    ajustes.grande = !ajustes.grande;
+    aplicarAjustes(); guardarAjustes();
+  });
+  btnReiniciar.addEventListener('click', () => {
+    if(confirm('¿Seguro que querés borrar todo tu progreso? Esta acción no se puede deshacer.')){
+      progreso = estadoInicial();
+      guardarProgreso();
+      renderStatsTop();
+      renderTemas();
+      modalAjustes.classList.remove('abierto');
+    }
+  });
+
+  // ===== Inicialización =====
+  aplicarAjustes();
+  renderStatsTop();
+  renderTemas();
+  mostrarVista('inicio');
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    });
+  }
+})();
+</script>
+</body>
+</html>
