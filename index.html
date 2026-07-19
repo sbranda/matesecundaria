@@ -127,10 +127,15 @@
   .nivel-nodo .sub{font-size:0.65em; font-weight:700; margin-top:-2px;}
   .nivel-nodo .candado{font-size:1.4em;}
   .conector{width:4px; height:26px; background:var(--ink); opacity:0.35;}
+  @keyframes selloIn{
+    0%{transform:rotate(-10deg) scale(0.7); opacity:0;}
+    60%{transform:rotate(-10deg) scale(1.08); opacity:1;}
+    100%{transform:rotate(-10deg) scale(1); opacity:1;}
+  }
   .sello-completado{
     position:absolute; inset:-6px; border:3px solid var(--marker-red); border-radius:50%;
     display:flex; align-items:center; justify-content:center; transform:rotate(-10deg);
-    pointer-events:none;
+    pointer-events:none; animation:selloIn .4s ease;
   }
   .sello-completado span{
     color:var(--marker-red); font-weight:800; font-size:0.6em; text-align:center; line-height:1;
@@ -243,8 +248,74 @@
     text-align:center; padding:22px 18px 10px 18px; color:var(--ink-soft); font-size:0.78em;
   }
 
+  /* ===== ANIMACIONES ===== */
+  @keyframes vistaIn{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .vista-anim{animation:vistaIn .32s ease;}
+
+  @keyframes aparecerCard{
+    from{opacity:0; transform:translateY(14px) scale(0.97);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .tema-card{animation:aparecerCard .4s ease both;}
+  @media (hover:hover){
+    .tema-card:hover{transform:translateY(-3px);}
+  }
+
+  @keyframes pulsoNivel{
+    0%,100%{box-shadow:0 0 0 0 rgba(43,58,85,0.32);}
+    50%{box-shadow:0 0 0 9px rgba(43,58,85,0);}
+  }
+  .nivel-nodo.activo{animation:pulsoNivel 2.4s ease-in-out infinite;}
+
+  @keyframes bounceIn{
+    0%{transform:scale(0.85); opacity:0;}
+    60%{transform:scale(1.04); opacity:1;}
+    100%{transform:scale(1); opacity:1;}
+  }
+  @keyframes shake{
+    10%,90%{transform:translateX(-2px);}
+    20%,80%{transform:translateX(4px);}
+    30%,50%,70%{transform:translateX(-6px);}
+    40%,60%{transform:translateX(6px);}
+  }
+  .feedback.correcto{animation:bounceIn .4s ease;}
+  .feedback.incorrecto{animation:shake .4s ease;}
+
+  @keyframes bump{
+    0%{transform:scale(1);}
+    35%{transform:scale(1.28);}
+    65%{transform:scale(0.95);}
+    100%{transform:scale(1);}
+  }
+  .chip.bump{animation:bump .5s ease;}
+
+  @keyframes confettiCaida{
+    0%{transform:translateY(-10px) rotate(0deg); opacity:1;}
+    100%{transform:translateY(220px) rotate(360deg); opacity:0;}
+  }
+  .confeti-part{
+    position:fixed; top:35%; font-size:1.4em; pointer-events:none; z-index:55;
+    animation:confettiCaida 950ms ease-in forwards;
+  }
+
+  @keyframes modalIn{
+    from{opacity:0; transform:scale(0.92) translateY(6px);}
+    to{opacity:1; transform:scale(1) translateY(0);}
+  }
+  .modal{animation:modalIn .22s ease;}
+
+  .switch{transition:background-color .2s ease;}
+
   @media (prefers-reduced-motion:reduce){
-    .stamp-anim, .tema-card, button{animation:none !important; transition:none !important;}
+    *, *::before, *::after{
+      animation-duration:0.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:0.001ms !important;
+      scroll-behavior:auto !important;
+    }
   }
   :focus-visible{outline:3px solid var(--highlight); outline-offset:2px;}
 </style>
@@ -1011,19 +1082,58 @@
     try{ localStorage.setItem(AJUSTES_KEY, JSON.stringify(ajustes)); }catch(e){}
   }
 
+  // ===== Animaciones auxiliares =====
+  function prefiereMovimientoReducido(){
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+  function animarNumero(el, valorNuevo){
+    const inicio = parseInt(el.textContent, 10) || 0;
+    if(valorNuevo === inicio){ el.textContent = valorNuevo; return; }
+    if(prefiereMovimientoReducido()){ el.textContent = valorNuevo; return; }
+    const duracion = 500;
+    const t0 = performance.now();
+    function paso(t){
+      const p = Math.min(1, (t-t0)/duracion);
+      el.textContent = Math.round(inicio + (valorNuevo-inicio)*p);
+      if(p<1) requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
+  }
+  function bumpChip(el){
+    if(!el || prefiereMovimientoReducido()) return;
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+  }
+  function lanzarConfeti(){
+    if(prefiereMovimientoReducido()) return;
+    const emojis = ['⭐','✨','🎉'];
+    for(let i=0;i<8;i++){
+      const p = document.createElement('span');
+      p.className = 'confeti-part';
+      p.setAttribute('aria-hidden','true');
+      p.textContent = emojis[randInt(0,2)];
+      p.style.left = (45 + randInt(-22,22)) + '%';
+      p.style.animationDelay = randInt(0,150) + 'ms';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1300);
+    }
+  }
+
   // ===== Render vista inicio =====
   function renderStatsTop(){
-    xpTotalEl.textContent = progreso.xp;
-    xpTotalEl2.textContent = progreso.xp;
-    rachaTotalEl.textContent = progreso.racha;
+    animarNumero(xpTotalEl, progreso.xp);
+    animarNumero(xpTotalEl2, progreso.xp);
+    animarNumero(rachaTotalEl, progreso.racha);
   }
   function renderTemas(){
     gridTemas.innerHTML = '';
-    TEMAS.forEach(t => {
+    TEMAS.forEach((t, idx) => {
       const p = progreso.temas[t.id];
       const completados = p.completado.filter(Boolean).length;
       const card = document.createElement('button');
       card.className = 'tema-card';
+      card.style.animationDelay = `${idx*45}ms`;
       card.setAttribute('aria-label', `${t.nombre}, ${completados} de 3 niveles completados`);
       if(completados===3){
         const pin = document.createElement('div');
@@ -1051,6 +1161,10 @@
     vistaTema.style.display = vista==='tema' ? '' : 'none';
     vistaPractica.style.display = vista==='practica' ? '' : 'none';
     window.scrollTo(0,0);
+    const activa = vista==='inicio' ? vistaInicio : (vista==='tema' ? vistaTema : vistaPractica);
+    activa.classList.remove('vista-anim');
+    void activa.offsetWidth; // fuerza reflow para reiniciar la animación
+    activa.classList.add('vista-anim');
   }
 
   function abrirTema(id){
@@ -1064,13 +1178,16 @@
   function renderCamino(){
     caminoNiveles.innerHTML = '';
     const p = progreso.temas[temaActivo.id];
+    let yaMarcoActivo = false;
     for(let i=1;i<=3;i++){
       const idx = i-1;
       const bloqueado = i > p.nivelActual;
       const completado = p.completado[idx];
+      const esActivo = !bloqueado && !completado && !yaMarcoActivo;
+      if(esActivo) yaMarcoActivo = true;
       const nodo = document.createElement('button');
       nodo.type = 'button';
-      nodo.className = `nivel-nodo ${bloqueado ? 'bloqueado' : 'n'+i}`;
+      nodo.className = `nivel-nodo ${bloqueado ? 'bloqueado' : 'n'+i}${esActivo ? ' activo' : ''}`;
       nodo.disabled = bloqueado;
       const estadoTxt = completado ? 'nivel superado' : (bloqueado ? 'bloqueado' : 'disponible');
       nodo.setAttribute('aria-label', `Nivel ${i}, ${NOMBRES_NIVEL[idx]}, ${estadoTxt}`);
@@ -1160,6 +1277,7 @@
       if(!yaCompletado) p.correctas[idx] += 1;
       actualizarRacha();
       renderStatsTop();
+      bumpChip(xpTotalEl2.closest('.chip'));
 
       if(!yaCompletado && p.correctas[idx] >= UMBRAL_APROBACION){
         p.completado[idx] = true;
@@ -1178,6 +1296,7 @@
   }
 
   function mostrarSello(){
+    lanzarConfeti();
     const el = document.createElement('div');
     el.className = 'stamp-anim';
     el.setAttribute('role','status');
