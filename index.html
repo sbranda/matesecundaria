@@ -30,6 +30,10 @@
     --font-mono:'JetBrains Mono', monospace;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  .visually-hidden{
+    position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
   body.contraste{
     --paper:#FFFFFF; --paper-alt:#FFFFFF; --grid:#8A8A8A; --ink:#000000; --ink-soft:#000000;
   }
@@ -112,7 +116,9 @@
     width:92px; height:92px; border-radius:50%; border:3px solid var(--ink);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     cursor:pointer; position:relative; background:var(--paper-alt);
+    font-family:var(--font-body); padding:0;
   }
+  .nivel-nodo:disabled{cursor:not-allowed;}
   .nivel-nodo.n1{background:var(--nivel1); color:#fff;}
   .nivel-nodo.n2{background:var(--nivel2); color:#fff;}
   .nivel-nodo.n3{background:var(--nivel3); color:#fff;}
@@ -151,6 +157,32 @@
   #grafico-canvas{
     max-width:100%; height:auto; border:2px solid var(--ink); border-radius:10px;
     background:var(--paper); display:inline-block;
+  }
+  .borrador-wrap{margin-top:18px;}
+  .borrador-header{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+  }
+  .borrador-toggle{
+    font-family:var(--font-body); font-weight:800; font-size:0.88em; padding:8px 14px;
+    border-radius:10px; border:2.5px solid var(--ink); background:transparent; color:var(--ink);
+    cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+  .borrador-toggle[aria-expanded="true"]{background:var(--ink); color:var(--paper);}
+  .borrador-panel{margin-top:10px;}
+  .borrador-panel[hidden]{display:none;}
+  .borrador-toolbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
+  .color-swatch{
+    width:30px; height:30px; border-radius:50%; border:2.5px solid var(--ink); cursor:pointer; padding:0;
+  }
+  .color-swatch[aria-pressed="true"]{outline:3px solid var(--highlight); outline-offset:2px;}
+  .borrador-toolbar button.btn-mini{
+    font-family:var(--font-body); font-weight:800; font-size:0.85em; padding:7px 12px;
+    border-radius:8px; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer;
+  }
+  #borrador-canvas{
+    width:100%; height:220px; display:block; touch-action:none;
+    border:2.5px dashed var(--ink-soft); border-radius:10px; background:var(--paper);
   }
   .respuesta-row{display:flex; gap:10px; margin-top:18px;}
   input#respuesta-input{
@@ -242,7 +274,7 @@
 
   <!-- ===== VISTA TEMA ===== -->
   <div id="vista-tema" style="display:none;">
-    <div class="volver" id="btn-volver-tema">← Volver a los temas</div>
+    <div class="volver" id="btn-volver-tema" role="button" tabindex="0">← Volver a los temas</div>
     <div class="tema-header">
       <h2 id="tema-titulo"></h2>
       <p id="tema-desc"></p>
@@ -252,7 +284,7 @@
 
   <!-- ===== VISTA PRACTICA ===== -->
   <div id="vista-practica" style="display:none;">
-    <div class="volver" id="btn-volver-practica">← Volver al tema</div>
+    <div class="volver" id="btn-volver-practica" role="button" tabindex="0">← Volver al tema</div>
     <div class="practica-wrap">
       <div class="practica-top">
         <div class="progreso-nivel" id="progreso-nivel-txt"></div>
@@ -265,10 +297,27 @@
           <canvas id="grafico-canvas" width="280" height="200"></canvas>
         </div>
         <div class="respuesta-row">
+          <label for="respuesta-input" class="visually-hidden">Tu respuesta</label>
           <input id="respuesta-input" type="text" inputmode="decimal" placeholder="Tu respuesta" autocomplete="off">
           <button class="btn-primario" id="btn-comprobar">Comprobar</button>
         </div>
-        <div class="feedback" id="feedback-box"></div>
+        <div class="feedback" id="feedback-box" role="status" aria-live="polite"></div>
+        <div class="borrador-wrap">
+          <div class="borrador-header">
+            <button class="borrador-toggle" id="btn-toggle-borrador" aria-expanded="false" aria-controls="borrador-panel">
+              ✏️ <span>Hoja de borrador</span>
+            </button>
+          </div>
+          <div class="borrador-panel" id="borrador-panel" hidden>
+            <div class="borrador-toolbar" role="toolbar" aria-label="Herramientas de dibujo">
+              <button type="button" class="color-swatch" data-color="#2B3A55" style="background:#2B3A55;" aria-pressed="true" aria-label="Color azul tinta"></button>
+              <button type="button" class="color-swatch" data-color="#C0392B" style="background:#C0392B;" aria-pressed="false" aria-label="Color rojo"></button>
+              <button type="button" class="color-swatch" data-color="#4C9A5B" style="background:#4C9A5B;" aria-pressed="false" aria-label="Color verde"></button>
+              <button type="button" class="btn-mini" id="btn-borrador-borrar">🗑️ Borrar hoja</button>
+            </div>
+            <canvas id="borrador-canvas" width="600" height="440" role="img" aria-label="Área para escribir o dibujar a mano alzada con el dedo, mouse o lápiz óptico. No es obligatoria para responder."></canvas>
+          </div>
+        </div>
       </div>
       <button class="btn-secundario" id="btn-siguiente" style="display:none;">Siguiente ejercicio →</button>
     </div>
@@ -278,15 +327,15 @@
 
 <!-- MODAL AJUSTES -->
 <div class="modal-fondo" id="modal-ajustes">
-  <div class="modal">
-    <h3>Ajustes</h3>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ajustes-titulo">
+    <h3 id="ajustes-titulo">Ajustes</h3>
     <div class="fila-ajuste">
-      <span>Alto contraste</span>
-      <div class="switch" id="switch-contraste"><div class="bolita"></div></div>
+      <span id="label-contraste">Alto contraste</span>
+      <div class="switch" id="switch-contraste" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-contraste"><div class="bolita"></div></div>
     </div>
     <div class="fila-ajuste">
-      <span>Texto grande</span>
-      <div class="switch" id="switch-grande"><div class="bolita"></div></div>
+      <span id="label-grande">Texto grande</span>
+      <div class="switch" id="switch-grande" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-grande"><div class="bolita"></div></div>
     </div>
     <div class="fila-ajuste" style="border-bottom:none;">
       <span>Reiniciar progreso</span>
@@ -326,6 +375,11 @@
   const switchContraste = document.getElementById('switch-contraste');
   const switchGrande = document.getElementById('switch-grande');
   const btnReiniciar = document.getElementById('btn-reiniciar');
+  const btnToggleBorrador = document.getElementById('btn-toggle-borrador');
+  const borradorPanel = document.getElementById('borrador-panel');
+  const borradorCanvas = document.getElementById('borrador-canvas');
+  const btnBorradorBorrar = document.getElementById('btn-borrador-borrar');
+  const swatches = Array.from(document.querySelectorAll('.color-swatch'));
 
   const STORAGE_KEY = 'mateSecundaria_progreso_v1';
   const AJUSTES_KEY = 'mateSecundaria_ajustes_v1';
@@ -589,7 +643,85 @@
     }
   ];
 
+  // ===== Hoja de borrador (dibujo a mano alzada) =====
   const NOMBRES_NIVEL = ['Fácil','Medio','Difícil'];
+  const borradorCtx = borradorCanvas.getContext('2d');
+  let colorTrazo = '#2B3A55';
+  let dibujando = false;
+  let ultimoPunto = null;
+
+  function ajustarTamanoBorrador(){
+    const rectW = borradorCanvas.clientWidth || 600;
+    const rectH = borradorCanvas.clientHeight || 220;
+    const ratio = window.devicePixelRatio || 1;
+    const imgPrevia = borradorCanvas.width>0 ? borradorCtx.getImageData(0,0,borradorCanvas.width,borradorCanvas.height) : null;
+    borradorCanvas.width = rectW*ratio;
+    borradorCanvas.height = rectH*ratio;
+    borradorCtx.setTransform(ratio,0,0,ratio,0,0);
+    borradorCtx.lineCap = 'round';
+    borradorCtx.lineJoin = 'round';
+    borradorCtx.lineWidth = 2.5;
+  }
+
+  function posDesdeEvento(e){
+    const rect = borradorCanvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function iniciarTrazo(e){
+    dibujando = true;
+    ultimoPunto = posDesdeEvento(e);
+    borradorCanvas.setPointerCapture(e.pointerId);
+  }
+  function continuarTrazo(e){
+    if(!dibujando) return;
+    const p = posDesdeEvento(e);
+    borradorCtx.strokeStyle = colorTrazo;
+    borradorCtx.beginPath();
+    borradorCtx.moveTo(ultimoPunto.x, ultimoPunto.y);
+    borradorCtx.lineTo(p.x, p.y);
+    borradorCtx.stroke();
+    ultimoPunto = p;
+  }
+  function finalizarTrazo(){
+    dibujando = false;
+    ultimoPunto = null;
+  }
+
+  borradorCanvas.addEventListener('pointerdown', iniciarTrazo);
+  borradorCanvas.addEventListener('pointermove', continuarTrazo);
+  borradorCanvas.addEventListener('pointerup', finalizarTrazo);
+  borradorCanvas.addEventListener('pointerleave', finalizarTrazo);
+  borradorCanvas.addEventListener('pointercancel', finalizarTrazo);
+
+  function limpiarBorrador(){
+    borradorCtx.clearRect(0,0,borradorCanvas.width,borradorCanvas.height);
+  }
+
+  swatches.forEach(sw => {
+    sw.addEventListener('click', () => {
+      colorTrazo = sw.dataset.color;
+      swatches.forEach(s => s.setAttribute('aria-pressed', s===sw ? 'true' : 'false'));
+    });
+  });
+
+  btnBorradorBorrar.addEventListener('click', limpiarBorrador);
+
+  btnToggleBorrador.addEventListener('click', () => {
+    const abierto = borradorPanel.hasAttribute('hidden');
+    if(abierto){
+      borradorPanel.removeAttribute('hidden');
+      btnToggleBorrador.setAttribute('aria-expanded','true');
+      requestAnimationFrame(ajustarTamanoBorrador);
+    } else {
+      borradorPanel.setAttribute('hidden','');
+      btnToggleBorrador.setAttribute('aria-expanded','false');
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if(!borradorPanel.hasAttribute('hidden')) ajustarTamanoBorrador();
+  });
 
   // ===== Dibujo de gráficos (canvas) =====
   function getCSSVar(nombre){
@@ -789,14 +921,38 @@
     wrap.style.display = 'block';
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
+    let desc = 'Gráfico ilustrativo del ejercicio.';
     switch(g.tipo){
-      case 'lineal': dibujarFuncionLineal(ctx,w,h,g.m,g.b,g.marcaX,g.marcaY); break;
-      case 'cuadratica': dibujarFuncionCuadratica(ctx,w,h,g.a,g.b,g.c,g.marcaX); break;
-      case 'rectangulo': dibujarRectangulo(ctx,w,h,g.base,g.altura); break;
-      case 'triangulo': dibujarTriangulo(ctx,w,h,g.base,g.altura); break;
-      case 'circulo': dibujarCirculo(ctx,w,h,g.radio); break;
-      case 'triangulo-rectangulo': dibujarTrianguloRectangulo(ctx,w,h,g.catA,g.catB,g.hip,g.incognita); break;
+      case 'lineal':
+        dibujarFuncionLineal(ctx,w,h,g.m,g.b,g.marcaX,g.marcaY);
+        desc = `Gráfico de la recta f de x igual ${g.m}x más (${g.b}).` +
+          (g.marcaX!==undefined ? ` Se marca con línea punteada el valor x = ${g.marcaX}.` : '') +
+          (g.marcaY!==undefined ? ` Se marca con línea punteada el valor y = ${g.marcaY}.` : '');
+        break;
+      case 'cuadratica':
+        dibujarFuncionCuadratica(ctx,w,h,g.a,g.b,g.c,g.marcaX);
+        desc = `Gráfico de la parábola f de x igual ${g.a}x cuadrado más ${g.b}x más (${g.c}).` +
+          (g.marcaX!==undefined ? ` Se marca con línea punteada el valor x = ${g.marcaX}.` : '');
+        break;
+      case 'rectangulo':
+        dibujarRectangulo(ctx,w,h,g.base,g.altura);
+        desc = `Rectángulo con base ${g.base} y altura ${g.altura}.`;
+        break;
+      case 'triangulo':
+        dibujarTriangulo(ctx,w,h,g.base,g.altura);
+        desc = `Triángulo con base ${g.base} y altura ${g.altura} marcada con línea punteada.`;
+        break;
+      case 'circulo':
+        dibujarCirculo(ctx,w,h,g.radio);
+        desc = `Círculo con radio ${g.radio}.`;
+        break;
+      case 'triangulo-rectangulo':
+        dibujarTrianguloRectangulo(ctx,w,h,g.catA,g.catB,g.hip,g.incognita);
+        desc = `Triángulo rectángulo con cateto ${g.incognita==='catA' ? 'desconocido' : g.catA}, cateto ${g.incognita==='catB' ? 'desconocido' : g.catB} e hipotenusa ${g.incognita==='hip' ? 'desconocida' : g.hip}.`;
+        break;
     }
+    canvas.setAttribute('role','img');
+    canvas.setAttribute('aria-label', desc);
   }
 
   // ===== Estado / progreso =====
@@ -848,6 +1004,8 @@
     document.body.classList.toggle('grande', ajustes.grande);
     switchContraste.classList.toggle('on', ajustes.contraste);
     switchGrande.classList.toggle('on', ajustes.grande);
+    switchContraste.setAttribute('aria-checked', ajustes.contraste ? 'true' : 'false');
+    switchGrande.setAttribute('aria-checked', ajustes.grande ? 'true' : 'false');
   }
   function guardarAjustes(){
     try{ localStorage.setItem(AJUSTES_KEY, JSON.stringify(ajustes)); }catch(e){}
@@ -910,14 +1068,19 @@
       const idx = i-1;
       const bloqueado = i > p.nivelActual;
       const completado = p.completado[idx];
-      const nodo = document.createElement('div');
+      const nodo = document.createElement('button');
+      nodo.type = 'button';
       nodo.className = `nivel-nodo ${bloqueado ? 'bloqueado' : 'n'+i}`;
+      nodo.disabled = bloqueado;
+      const estadoTxt = completado ? 'nivel superado' : (bloqueado ? 'bloqueado' : 'disponible');
+      nodo.setAttribute('aria-label', `Nivel ${i}, ${NOMBRES_NIVEL[idx]}, ${estadoTxt}`);
       nodo.innerHTML = bloqueado
-        ? `<span class="candado">🔒</span><span class="sub">${NOMBRES_NIVEL[idx]}</span>`
-        : `<span class="etiqueta">${i}</span><span class="sub">${NOMBRES_NIVEL[idx]}</span>`;
+        ? `<span class="candado" aria-hidden="true">🔒</span><span class="sub">${NOMBRES_NIVEL[idx]}</span>`
+        : `<span class="etiqueta" aria-hidden="true">${i}</span><span class="sub">${NOMBRES_NIVEL[idx]}</span>`;
       if(completado){
         const sello = document.createElement('div');
         sello.className = 'sello-completado';
+        sello.setAttribute('aria-hidden','true');
         sello.innerHTML = '<span>APRO<br>BADO</span>';
         nodo.appendChild(sello);
       }
@@ -928,6 +1091,7 @@
       if(i<3){
         const conector = document.createElement('div');
         conector.className='conector';
+        conector.setAttribute('aria-hidden','true');
         caminoNiveles.appendChild(conector);
       }
     }
@@ -954,6 +1118,7 @@
     problemaActual = temaActivo.generar(nivelActivo);
     enunciadoTxt.textContent = problemaActual.enunciado;
     dibujarGrafico(problemaActual.grafico);
+    limpiarBorrador();
     respuestaInput.value = '';
     respuestaInput.disabled = false;
     feedbackBox.className = 'feedback';
@@ -1015,7 +1180,9 @@
   function mostrarSello(){
     const el = document.createElement('div');
     el.className = 'stamp-anim';
-    el.textContent = '¡APROBADO!';
+    el.setAttribute('role','status');
+    el.setAttribute('aria-live','assertive');
+    el.textContent = '¡APROBADO! Nivel superado.';
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1150);
   }
@@ -1031,17 +1198,66 @@
   btnSiguiente.addEventListener('click', nuevoProblema);
   btnVolverTema.addEventListener('click', () => { renderTemas(); mostrarVista('inicio'); });
   btnVolverPractica.addEventListener('click', () => { renderCamino(); mostrarVista('tema'); });
+  [btnVolverTema, btnVolverPractica].forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        el.click();
+      }
+    });
+  });
 
-  btnAjustes.addEventListener('click', () => modalAjustes.classList.add('abierto'));
-  btnCerrarAjustes.addEventListener('click', () => modalAjustes.classList.remove('abierto'));
-  modalAjustes.addEventListener('click', (e) => { if(e.target===modalAjustes) modalAjustes.classList.remove('abierto'); });
+  let elementoConFocoPrevio = null;
+  function abrirModalAjustes(){
+    elementoConFocoPrevio = document.activeElement;
+    modalAjustes.classList.add('abierto');
+    switchContraste.focus();
+    document.addEventListener('keydown', manejarTeclaModal);
+  }
+  function cerrarModalAjustes(){
+    modalAjustes.classList.remove('abierto');
+    document.removeEventListener('keydown', manejarTeclaModal);
+    if(elementoConFocoPrevio) elementoConFocoPrevio.focus();
+  }
+  function manejarTeclaModal(e){
+    if(e.key === 'Escape'){ cerrarModalAjustes(); return; }
+    if(e.key === 'Tab'){
+      const focosVisibles = modalAjustes.querySelectorAll('button, [tabindex="0"]');
+      const lista = Array.from(focosVisibles);
+      if(lista.length === 0) return;
+      const primero = lista[0], ultimo = lista[lista.length-1];
+      if(e.shiftKey && document.activeElement === primero){
+        e.preventDefault(); ultimo.focus();
+      } else if(!e.shiftKey && document.activeElement === ultimo){
+        e.preventDefault(); primero.focus();
+      }
+    }
+  }
 
-  switchContraste.addEventListener('click', () => {
+  btnAjustes.addEventListener('click', abrirModalAjustes);
+  btnCerrarAjustes.addEventListener('click', cerrarModalAjustes);
+  modalAjustes.addEventListener('click', (e) => { if(e.target===modalAjustes) cerrarModalAjustes(); });
+
+  function alternarSwitch(switchEl, callback){
+    const activarlo = () => {
+      callback();
+      switchEl.setAttribute('aria-checked', switchEl.classList.contains('on') ? 'true' : 'false');
+    };
+    switchEl.addEventListener('click', activarlo);
+    switchEl.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        activarlo();
+      }
+    });
+  }
+
+  alternarSwitch(switchContraste, () => {
     ajustes.contraste = !ajustes.contraste;
     aplicarAjustes(); guardarAjustes();
     if(problemaActual && problemaActual.grafico) dibujarGrafico(problemaActual.grafico);
   });
-  switchGrande.addEventListener('click', () => {
+  alternarSwitch(switchGrande, () => {
     ajustes.grande = !ajustes.grande;
     aplicarAjustes(); guardarAjustes();
   });
@@ -1051,7 +1267,7 @@
       guardarProgreso();
       renderStatsTop();
       renderTemas();
-      modalAjustes.classList.remove('abierto');
+      cerrarModalAjustes();
     }
   });
 
