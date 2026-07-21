@@ -99,6 +99,15 @@
 
   /* PESTAÑAS DE CARPETA (vista inicio) */
   .subt{padding:0 18px; color:var(--ink-soft); font-size:0.95em; margin-top:-4px;}
+  .nivel-edu-selector{
+    display:flex; gap:8px; padding:12px 18px 4px 18px;
+  }
+  .nivel-edu-tab{
+    flex:1; font-family:var(--font-body); font-weight:800; font-size:0.92em; padding:9px 10px;
+    border-radius:12px; border:2.5px solid var(--ink); background:var(--paper-alt); color:var(--ink);
+    cursor:pointer;
+  }
+  .nivel-edu-tab[aria-selected="true"]{background:var(--ink); color:var(--paper);}
   .grid-temas{
     display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:16px 18px 8px 18px;
   }
@@ -389,7 +398,12 @@
       </div>
     </header>
     <p class="subt">Elegí un tema y practicá a tu ritmo. Cada nivel superado suma un sello.</p>
+    <div class="nivel-edu-selector" role="tablist" aria-label="Nivel educativo">
+      <button type="button" class="nivel-edu-tab" data-nivel="primaria" role="tab" aria-selected="false">🎒 Primaria</button>
+      <button type="button" class="nivel-edu-tab" data-nivel="secundaria" role="tab" aria-selected="true">🎓 Secundaria</button>
+    </div>
     <div class="grid-temas" id="grid-temas"></div>
+    <p class="visually-hidden" id="nivel-edu-status" role="status" aria-live="polite"></p>
     <footer class="credito">Desarrollado por Seba Branda</footer>
   </div>
 
@@ -544,6 +558,8 @@
   const inputNombre = document.getElementById('input-nombre');
   const aparienciaOpts = Array.from(document.querySelectorAll('.apariencia-opt'));
   const subt = document.querySelector('.subt');
+  const nivelEduTabs = Array.from(document.querySelectorAll('.nivel-edu-tab'));
+  const nivelEduStatus = document.getElementById('nivel-edu-status');
   const btnReiniciar = document.getElementById('btn-reiniciar');
   const btnToggleBorrador = document.getElementById('btn-toggle-borrador');
   const borradorPanel = document.getElementById('borrador-panel');
@@ -600,7 +616,129 @@
   function elegir(variantes){
     return variantes[randInt(0, variantes.length-1)]();
   }
-  const TEMAS = [
+  const TEMAS_PRIMARIA = [
+    {
+      id:'p_sumas', icono:'➕', nombre:'Sumas y restas', rango:'1° - 3° grado',
+      desc:'Sumas y restas de números naturales.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => { const a=randInt(1,10), b=randInt(1,10); return { enunciado:`${a} + ${b} = ?`, tipo:'numero', respuesta:a+b, tolerancia:0 }; },
+            () => { const a=randInt(1,20), b=randInt(1,a); return { enunciado:`${a} - ${b} = ?`, tipo:'numero', respuesta:a-b, tolerancia:0 }; }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => { const a=randInt(10,100), b=randInt(10,100); return { enunciado:`${a} + ${b} = ?`, tipo:'numero', respuesta:a+b, tolerancia:0 }; },
+            () => { const a=randInt(20,100), b=randInt(1,a); return { enunciado:`${a} - ${b} = ?`, tipo:'numero', respuesta:a-b, tolerancia:0 }; }
+          ]);
+        } else {
+          return elegir([
+            () => { const a=randInt(50,300), b=randInt(50,300), c=randInt(10,100); return { enunciado:`${a} + ${b} + ${c} = ?`, tipo:'numero', respuesta:a+b+c, tolerancia:0 }; },
+            () => { const a=randInt(100,999), b=randInt(1,a); return { enunciado:`${a} - ${b} = ?`, tipo:'numero', respuesta:a-b, tolerancia:0 }; }
+          ]);
+        }
+      }
+    },
+    {
+      id:'p_multiplicacion', icono:'✖️', nombre:'Multiplicación', rango:'2° - 4° grado',
+      desc:'Tablas de multiplicar y multiplicación de números pequeños.',
+      generar(nivel){
+        if(nivel===1){
+          const a=randInt(2,5), b=randInt(1,10);
+          return { enunciado:`${a} × ${b} = ?`, tipo:'numero', respuesta:a*b, tolerancia:0 };
+        } else if(nivel===2){
+          const a=randInt(2,10), b=randInt(1,10);
+          return { enunciado:`${a} × ${b} = ?`, tipo:'numero', respuesta:a*b, tolerancia:0 };
+        } else {
+          const a=randInt(10,99), b=randInt(2,9);
+          return { enunciado:`${a} × ${b} = ?`, tipo:'numero', respuesta:a*b, tolerancia:0 };
+        }
+      }
+    },
+    {
+      id:'p_division', icono:'➗', nombre:'División', rango:'3° - 5° grado',
+      desc:'División exacta de números naturales.',
+      generar(nivel){
+        if(nivel===1){
+          const b=randInt(2,5), c=randInt(1,10), a=b*c;
+          return { enunciado:`${a} ÷ ${b} = ?`, tipo:'numero', respuesta:c, tolerancia:0 };
+        } else if(nivel===2){
+          const b=randInt(2,10), c=randInt(1,12), a=b*c;
+          return { enunciado:`${a} ÷ ${b} = ?`, tipo:'numero', respuesta:c, tolerancia:0 };
+        } else {
+          const b=randInt(2,12), c=randInt(2,20), a=b*c;
+          return { enunciado:`${a} ÷ ${b} = ?`, tipo:'numero', respuesta:c, tolerancia:0 };
+        }
+      }
+    },
+    {
+      id:'p_fracciones', icono:'🍕', nombre:'Fracciones simples', rango:'4° - 6° grado',
+      desc:'Identificación, suma y fracción de un número.',
+      generar(nivel){
+        if(nivel===1){
+          const total = randInt(3,8), parte = randInt(1,total-1);
+          return { enunciado:`Una torta se dividió en ${total} partes iguales y se comieron ${parte}.\n¿Qué fracción de la torta se comió?`, tipo:'fraccion', respuesta:[parte,total] };
+        } else if(nivel===2){
+          const den = randInt(2,10);
+          const n1 = randInt(1,den-1), n2 = randInt(1,den-1);
+          return { enunciado:`${n1}/${den} + ${n2}/${den} = ?  (simplificá si podés)`, tipo:'fraccion', respuesta:[n1+n2, den] };
+        } else {
+          const opciones = [2,3,4,5,6,8,10];
+          const d = opciones[randInt(0,opciones.length-1)];
+          const n = randInt(1,d-1);
+          const N = d*randInt(2,10);
+          return { enunciado:`¿Cuánto es ${n}/${d} de ${N}?`, tipo:'numero', respuesta:(N*n)/d, tolerancia:0 };
+        }
+      }
+    },
+    {
+      id:'p_geometria', icono:'🔺', nombre:'Formas y medidas', rango:'1° - 4° grado',
+      desc:'Figuras geométricas, perímetro y medidas.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => ({ enunciado:'¿Cuántos lados tiene un triángulo?', tipo:'numero', respuesta:3, tolerancia:0, grafico:{ tipo:'triangulo', base:8, altura:6 } }),
+            () => ({ enunciado:'¿Cuántos lados tiene un cuadrado?', tipo:'numero', respuesta:4, tolerancia:0, grafico:{ tipo:'rectangulo', base:8, altura:8 } }),
+            () => ({ enunciado:'¿Cuántos lados tiene un rectángulo?', tipo:'numero', respuesta:4, tolerancia:0, grafico:{ tipo:'rectangulo', base:12, altura:7 } }),
+            () => ({ enunciado:'¿Cuántos lados tiene un pentágono?', tipo:'numero', respuesta:5, tolerancia:0 }),
+            () => ({ enunciado:'¿Cuántos lados tiene un hexágono?', tipo:'numero', respuesta:6, tolerancia:0 }),
+            () => ({ enunciado:'¿Cuántos lados tiene un círculo?', tipo:'numero', respuesta:0, tolerancia:0, grafico:{ tipo:'circulo', radio:6 } })
+          ]);
+        } else if(nivel===2){
+          const b=randInt(3,15), h=randInt(3,15);
+          return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:2*(b+h), tolerancia:0, grafico:{ tipo:'rectangulo', base:b, altura:h } };
+        } else {
+          return elegir([
+            () => { const m=randInt(1,20); return { enunciado:`¿Cuántos centímetros hay en ${m} metros?`, tipo:'numero', respuesta:m*100, tolerancia:0 }; },
+            () => { const kg=randInt(1,15); return { enunciado:`¿Cuántos gramos hay en ${kg} kilogramos?`, tipo:'numero', respuesta:kg*1000, tolerancia:0 }; }
+          ]);
+        }
+      }
+    },
+    {
+      id:'p_dinero', icono:'💰', nombre:'Dinero', rango:'2° - 5° grado',
+      desc:'Sumar, calcular vuelto y multiplicar con billetes y monedas.',
+      generar(nivel){
+        if(nivel===1){
+          const valores=[10,20,50,100,200,500,1000];
+          const x=valores[randInt(0,valores.length-1)], y=valores[randInt(0,valores.length-1)];
+          return { enunciado:`Tenés un billete de $${x} y uno de $${y}.\n¿Cuánto tenés en total?`, tipo:'numero', respuesta:x+y, tolerancia:0 };
+        } else if(nivel===2){
+          const precio = randInt(1,80)*10;
+          const opcionesPago = [100,200,500,1000].filter(p => p>precio);
+          const pago = opcionesPago[randInt(0,opcionesPago.length-1)];
+          return { enunciado:`Un juguete cuesta $${precio}. Pagás con un billete de $${pago}.\n¿Cuánto de vuelto te dan?`, tipo:'numero', respuesta:pago-precio, tolerancia:0 };
+        } else {
+          const cantidad=randInt(2,6);
+          const valores=[10,50,100,200,500];
+          const valor=valores[randInt(0,valores.length-1)];
+          return { enunciado:`Tenés ${cantidad} billetes de $${valor}.\n¿Cuánto tenés en total?`, tipo:'numero', respuesta:cantidad*valor, tolerancia:0 };
+        }
+      }
+    }
+  ];
+
+  const TEMAS_SECUNDARIA = [
     {
       id:'numeros', icono:'🔢', nombre:'Números enteros', rango:'1° - 2° año',
       desc:'Operaciones combinadas con números enteros.',
@@ -1081,6 +1219,11 @@
     }
   ];
 
+  const TODOS_LOS_TEMAS = TEMAS_PRIMARIA.concat(TEMAS_SECUNDARIA);
+  function temasActivos(){
+    return ajustes.nivelEducativo === 'primaria' ? TEMAS_PRIMARIA : TEMAS_SECUNDARIA;
+  }
+
   // ===== Hoja de borrador (dibujo a mano alzada) =====
   const NOMBRES_NIVEL = ['Fácil','Medio','Difícil'];
   const borradorCtx = borradorCanvas.getContext('2d');
@@ -1482,7 +1625,7 @@
   // ===== Estado / progreso =====
   function estadoInicial(){
     const temas = {};
-    TEMAS.forEach(t => {
+    TODOS_LOS_TEMAS.forEach(t => {
       temas[t.id] = { nivelActual:1, correctas:[0,0,0], completado:[false,false,false] };
     });
     return { xp:0, racha:0, ultimaFecha:null, temas };
@@ -1495,7 +1638,7 @@
       const data = JSON.parse(raw);
       // asegurar que existan todos los temas (por si se agregan nuevos)
       const base = estadoInicial();
-      TEMAS.forEach(t => { if(!data.temas[t.id]) data.temas[t.id] = base.temas[t.id]; });
+      TODOS_LOS_TEMAS.forEach(t => { if(!data.temas[t.id]) data.temas[t.id] = base.temas[t.id]; });
       return data;
     }catch(e){ return estadoInicial(); }
   }
@@ -1518,7 +1661,7 @@
   // ===== Ajustes =====
   const TEMAS_DISPONIBLES = ['clasico','oscuro','menta','coral','contraste'];
   function cargarAjustes(){
-    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'' };
+    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', nivelEducativo:'secundaria' };
     try{
       const raw = localStorage.getItem(AJUSTES_KEY);
       if(!raw) return base;
@@ -1545,6 +1688,12 @@
       ? `¡Hola, ${ajustes.nombre}! Elegí un tema y practicá a tu ritmo.`
       : 'Elegí un tema y practicá a tu ritmo. Cada nivel superado suma un sello.';
   }
+  function aplicarNivelEducativo(){
+    if(ajustes.nivelEducativo !== 'primaria' && ajustes.nivelEducativo !== 'secundaria'){
+      ajustes.nivelEducativo = 'secundaria';
+    }
+    nivelEduTabs.forEach(tab => tab.setAttribute('aria-selected', tab.dataset.nivel===ajustes.nivelEducativo ? 'true' : 'false'));
+  }
   function aplicarAjustes(){
     if(!TEMAS_DISPONIBLES.includes(ajustes.apariencia)) ajustes.apariencia = 'clasico';
     aplicarApariencia(ajustes.apariencia);
@@ -1557,6 +1706,7 @@
     switchAnimaciones.classList.toggle('on', ajustes.movimientoReducido);
     switchAnimaciones.setAttribute('aria-checked', ajustes.movimientoReducido ? 'true' : 'false');
     if(inputNombre.value !== ajustes.nombre) inputNombre.value = ajustes.nombre;
+    aplicarNivelEducativo();
     actualizarSaludo();
   }
   function guardarAjustes(){
@@ -1632,7 +1782,7 @@
   }
   function renderTemas(){
     gridTemas.innerHTML = '';
-    TEMAS.forEach((t, idx) => {
+    temasActivos().forEach((t, idx) => {
       const p = progreso.temas[t.id];
       const completados = p.completado.filter(Boolean).length;
       const card = document.createElement('button');
@@ -1672,7 +1822,7 @@
   }
 
   function abrirTema(id){
-    temaActivo = TEMAS.find(t => t.id===id);
+    temaActivo = TODOS_LOS_TEMAS.find(t => t.id===id);
     temaTitulo.textContent = `${temaActivo.icono} ${temaActivo.nombre}`;
     temaDesc.textContent = temaActivo.desc;
     renderCamino();
@@ -1876,6 +2026,21 @@
       }
     });
   }
+
+  nivelEduTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      if(ajustes.nivelEducativo === tab.dataset.nivel) return;
+      ajustes.nivelEducativo = tab.dataset.nivel;
+      guardarAjustes();
+      aplicarNivelEducativo();
+      renderTemas();
+      if(nivelEduStatus){
+        nivelEduStatus.textContent = tab.dataset.nivel === 'primaria'
+          ? 'Mostrando temas de nivel primaria.'
+          : 'Mostrando temas de nivel secundaria.';
+      }
+    });
+  });
 
   aparienciaOpts.forEach(opt => {
     opt.addEventListener('click', () => {
