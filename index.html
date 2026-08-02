@@ -117,6 +117,16 @@
 
   /* PESTAÑAS DE CARPETA (vista inicio) */
   .subt{padding:0 18px; color:var(--ink-soft); font-size:0.95em; margin-top:-4px;}
+  .repaso-mixto-card{
+    display:flex; align-items:center; gap:12px; width:calc(100% - 36px); margin:14px 18px 0 18px;
+    background:var(--paper-alt); border:2.5px dashed var(--marker-red); border-radius:var(--radius);
+    padding:13px 16px; cursor:pointer; text-align:left; font-family:var(--font-body);
+  }
+  .repaso-mixto-card:disabled{opacity:0.5; cursor:not-allowed; border-color:var(--ink-soft);}
+  .repaso-mixto-card .icono{font-size:1.7em; flex-shrink:0;}
+  .repaso-mixto-card .texto{display:flex; flex-direction:column; min-width:0;}
+  .repaso-mixto-card .titulo{font-family:var(--font-display); font-size:1.1em; color:var(--ink);}
+  .repaso-mixto-card .sub{font-size:0.76em; color:var(--ink-soft); margin-top:2px;}
   .grid-temas{
     display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:16px 18px 8px 18px;
   }
@@ -443,6 +453,13 @@
       </div>
     </header>
     <p class="subt">Elegí un tema y practicá a tu ritmo. Cada nivel superado suma un sello.</p>
+    <button class="repaso-mixto-card" id="btn-repaso-mixto" disabled>
+      <span class="icono" aria-hidden="true">🔀</span>
+      <span class="texto">
+        <span class="titulo">Repaso mixto</span>
+        <span class="sub" id="repaso-mixto-sub">Aprobá al menos un nivel en 2 temas distintos para desbloquearlo</span>
+      </span>
+    </button>
     <div class="grid-temas" id="grid-temas"></div>
     <footer class="credito">Desarrollado por Seba Branda</footer>
   </div>
@@ -621,6 +638,8 @@
   const vistaTema = document.getElementById('vista-tema');
   const vistaPractica = document.getElementById('vista-practica');
   const gridTemas = document.getElementById('grid-temas');
+  const btnRepasoMixto = document.getElementById('btn-repaso-mixto');
+  const repasoMixtoSub = document.getElementById('repaso-mixto-sub');
   const xpTotalEl = document.getElementById('xp-total');
   const xpTotalEl2 = document.getElementById('xp-total-2');
   const rachaTotalEl = document.getElementById('racha-total');
@@ -2199,7 +2218,45 @@
       card.addEventListener('click', () => abrirTema(t.id));
       gridTemas.appendChild(card);
     });
+    actualizarRepasoMixtoCard();
   }
+
+  // ===== Repaso mixto =====
+  const MIN_TEMAS_MIXTO = 2;
+  function temasElegiblesParaMixto(){
+    return TEMAS.filter(t => progreso.temas[t.id].completado.some(Boolean));
+  }
+  function actualizarRepasoMixtoCard(){
+    const elegibles = temasElegiblesParaMixto();
+    const disponible = elegibles.length >= MIN_TEMAS_MIXTO;
+    btnRepasoMixto.disabled = !disponible;
+    repasoMixtoSub.textContent = disponible
+      ? `Ejercicios de ${elegibles.length} temas ya aprobados`
+      : 'Aprobá al menos un nivel en 2 temas distintos para desbloquearlo';
+  }
+  function elegirProblemaMixto(){
+    const elegibles = temasElegiblesParaMixto();
+    const tema = elegibles[randInt(0, elegibles.length-1)];
+    const p = progreso.temas[tema.id];
+    const nivelesCompletados = [0,1,2].filter(idx => p.completado[idx]);
+    const idx = nivelesCompletados[randInt(0, nivelesCompletados.length-1)];
+    temaActivo = tema;
+    nivelActivo = idx+1;
+  }
+  let modoMixto = false;
+  let mixtoRespondidas = 0;
+  let mixtoCorrectas = 0;
+  function abrirRepasoMixto(){
+    if(btnRepasoMixto.disabled) return;
+    modoMixto = true;
+    mixtoRespondidas = 0;
+    mixtoCorrectas = 0;
+    btnVolverPractica.textContent = '← Volver a los temas';
+    elegirProblemaMixto();
+    nuevoProblema();
+    mostrarVista('practica');
+  }
+  btnRepasoMixto.addEventListener('click', abrirRepasoMixto);
 
   // ===== Navegación =====
   let temaActivo = null;
@@ -2265,6 +2322,8 @@
   }
 
   function abrirPractica(nivel){
+    modoMixto = false;
+    btnVolverPractica.textContent = '← Volver al tema';
     nivelActivo = nivel;
     hojaEtiqueta.textContent = `Nivel ${nivel} · ${NOMBRES_NIVEL[nivel-1]}`;
     actualizarProgresoTxt();
@@ -2273,6 +2332,12 @@
   }
 
   function actualizarProgresoTxt(){
+    if(modoMixto){
+      progresoNivelTxt.textContent = mixtoRespondidas === 0
+        ? 'Repaso mixto'
+        : `Repaso mixto · ${mixtoCorrectas}/${mixtoRespondidas} correctas`;
+      return;
+    }
     const p = progreso.temas[temaActivo.id];
     const correctas = p.correctas[nivelActivo-1];
     const completado = p.completado[nivelActivo-1];
@@ -2289,6 +2354,11 @@
       return;
     }
     ocultarBloqueoVidas();
+    if(modoMixto){
+      elegirProblemaMixto();
+      hojaEtiqueta.textContent = `${temaActivo.icono} ${temaActivo.nombre} · ${NOMBRES_NIVEL[nivelActivo-1]}`;
+      actualizarProgresoTxt();
+    }
     problemaActual = temaActivo.generar(nivelActivo);
     enunciadoTxt.textContent = problemaActual.enunciado;
     dibujarGrafico(problemaActual.grafico);
@@ -2326,6 +2396,11 @@
     const p = progreso.temas[temaActivo.id];
     const idx = nivelActivo - 1;
     const yaCompletado = p.completado[idx];
+
+    if(modoMixto){
+      mixtoRespondidas++;
+      if(esCorrecta) mixtoCorrectas++;
+    }
 
     if(esCorrecta){
       feedbackBox.className = 'feedback correcto';
@@ -2397,7 +2472,14 @@
   btnVolverTema.addEventListener('click', () => { renderTemas(); mostrarVista('inicio'); });
   btnVolverPractica.addEventListener('click', () => {
     if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
-    renderCamino(); mostrarVista('tema');
+    if(modoMixto){
+      modoMixto = false;
+      renderTemas();
+      mostrarVista('inicio');
+    } else {
+      renderCamino();
+      mostrarVista('tema');
+    }
   });
   [btnVolverTema, btnVolverPractica].forEach(el => {
     el.addEventListener('keydown', (e) => {
