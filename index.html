@@ -553,6 +553,16 @@
       <span id="label-vidas">❤️ Vidas (más tensión)</span>
       <div class="switch" id="switch-vidas" role="switch" tabindex="0" aria-checked="true" aria-labelledby="label-vidas"><div class="bolita"></div></div>
     </div>
+    <div class="fila-ajuste">
+      <span id="label-recordatorio">🔔 Recordatorio diario</span>
+      <div class="switch" id="switch-recordatorio" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-recordatorio"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste columna" id="recordatorio-hora-wrap" style="display:none; border-bottom:1px solid var(--grid); padding-bottom:12px;">
+      <label class="titulo-ajuste" for="input-recordatorio-hora" style="font-size:0.82em;">Hora del recordatorio</label>
+      <input type="time" id="input-recordatorio-hora" class="input-texto" value="19:00">
+      <p style="font-size:0.72em; color:var(--ink-soft); margin:4px 0 0 0;">Funciona mejor en Android/Chrome con la app instalada en la pantalla de inicio. En iPhone puede no avisar si Mate Secundaria está cerrada del todo.</p>
+    </div>
+    <p id="recordatorio-estado" style="font-size:0.78em; color:var(--marker-red); margin:-4px 0 8px 0;"></p>
     <div class="fila-ajuste" style="border-bottom:none;">
       <span>Reiniciar progreso</span>
       <button class="btn-secundario" style="width:auto; margin-top:0; padding:8px 14px; font-size:0.85em;" id="btn-reiniciar">Reiniciar</button>
@@ -605,6 +615,10 @@
   const switchSonido = document.getElementById('switch-sonido');
   const switchAnimaciones = document.getElementById('switch-animaciones');
   const switchVidas = document.getElementById('switch-vidas');
+  const switchRecordatorio = document.getElementById('switch-recordatorio');
+  const recordatorioHoraWrap = document.getElementById('recordatorio-hora-wrap');
+  const inputRecordatorioHora = document.getElementById('input-recordatorio-hora');
+  const recordatorioEstado = document.getElementById('recordatorio-estado');
   const inputNombre = document.getElementById('input-nombre');
   const aparienciaOpts = Array.from(document.querySelectorAll('.apariencia-opt'));
   const chipVidas = document.getElementById('chip-vidas');
@@ -1636,7 +1650,7 @@
     TEMAS.forEach(t => {
       temas[t.id] = { nivelActual:1, correctas:[0,0,0], completado:[false,false,false] };
     });
-    return { xp:0, racha:0, ultimaFecha:null, temas, totalCorrectas:0, rachaAciertosActual:0, mejorRachaAciertos:0, logros:{}, vidas:VIDAS_MAX, vidasProximaRegen:null };
+    return { xp:0, racha:0, ultimaFecha:null, temas, totalCorrectas:0, rachaAciertosActual:0, mejorRachaAciertos:0, logros:{}, vidas:VIDAS_MAX, vidasProximaRegen:null, recordatorioMostradoFecha:null };
   }
   let progreso = cargarProgreso();
   function cargarProgreso(){
@@ -1653,6 +1667,7 @@
       if(!data.logros || typeof data.logros !== 'object') data.logros = {};
       if(typeof data.vidas !== 'number') data.vidas = VIDAS_MAX;
       if(data.vidasProximaRegen === undefined) data.vidasProximaRegen = null;
+      if(data.recordatorioMostradoFecha === undefined) data.recordatorioMostradoFecha = null;
       return data;
     }catch(e){ return estadoInicial(); }
   }
@@ -1675,7 +1690,7 @@
   // ===== Ajustes =====
   const TEMAS_DISPONIBLES = ['clasico','oscuro','menta','coral','contraste'];
   function cargarAjustes(){
-    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true };
+    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00' };
     try{
       const raw = localStorage.getItem(AJUSTES_KEY);
       if(!raw) return base;
@@ -1717,6 +1732,7 @@
     switchVidas.setAttribute('aria-checked', ajustes.vidasActivadas ? 'true' : 'false');
     if(chipVidas) chipVidas.style.display = ajustes.vidasActivadas ? '' : 'none';
     if(chipVidas2) chipVidas2.style.display = ajustes.vidasActivadas ? '' : 'none';
+    renderRecordatorioUI();
     if(inputNombre.value !== ajustes.nombre) inputNombre.value = ajustes.nombre;
     actualizarSaludo();
   }
@@ -1852,6 +1868,109 @@
     vidasBloqueo.style.display = 'none';
     if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
   }
+
+  // ===== Recordatorio diario (notificaciones) =====
+  const RECORDATORIO_TAG = 'racha-diaria';
+  function renderRecordatorioUI(){
+    switchRecordatorio.classList.toggle('on', ajustes.recordatorioActivado);
+    switchRecordatorio.setAttribute('aria-checked', ajustes.recordatorioActivado ? 'true' : 'false');
+    if(inputRecordatorioHora.value !== ajustes.recordatorioHora) inputRecordatorioHora.value = ajustes.recordatorioHora;
+    recordatorioHoraWrap.style.display = ajustes.recordatorioActivado ? '' : 'none';
+  }
+  function horaObjetivoDeHoy(adelantarSiPaso){
+    const [hh, mm] = (ajustes.recordatorioHora || '19:00').split(':').map(Number);
+    const ahora = new Date();
+    const objetivo = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), hh || 19, mm || 0, 0, 0);
+    if(adelantarSiPaso && objetivo.getTime() <= Date.now()) objetivo.setDate(objetivo.getDate() + 1);
+    return objetivo;
+  }
+  async function programarRecordatorio(){
+    if(!ajustes.recordatorioActivado) return;
+    if(typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    if(!('serviceWorker' in navigator)) return;
+    try{
+      const reg = await navigator.serviceWorker.ready;
+      if('showTrigger' in Notification.prototype && typeof TimestampTrigger !== 'undefined'){
+        const previas = await reg.getNotifications({ tag: RECORDATORIO_TAG, includeTriggered: true });
+        previas.forEach(n => n.close());
+        const objetivo = horaObjetivoDeHoy(true);
+        reg.showNotification('🔥 No pierdas tu racha', {
+          body: 'Todavía no practicaste hoy en Mate Secundaria.',
+          tag: RECORDATORIO_TAG,
+          icon: 'icon192.png',
+          showTrigger: new TimestampTrigger(objetivo.getTime())
+        });
+      }
+    }catch(e){}
+  }
+  async function cancelarRecordatorio(){
+    if(typeof Notification === 'undefined' || !('serviceWorker' in navigator)) return;
+    try{
+      const reg = await navigator.serviceWorker.ready;
+      const previas = await reg.getNotifications({ tag: RECORDATORIO_TAG, includeTriggered: true });
+      previas.forEach(n => n.close());
+    }catch(e){}
+  }
+  function mostrarNotificacionAhora(){
+    const cuerpo = progreso.racha > 0
+      ? `Llevás ${progreso.racha} día${progreso.racha===1?'':'s'} de racha. ¡No la pierdas!`
+      : 'Practicá hoy para empezar una nueva racha.';
+    const opciones = { body: cuerpo, icon: 'icon192.png', tag: RECORDATORIO_TAG + '-hoy' };
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.ready.then(reg => reg.showNotification('🔥 Recordatorio de Mate Secundaria', opciones)).catch(()=>{});
+    } else if(typeof Notification !== 'undefined'){
+      try{ new Notification('🔥 Recordatorio de Mate Secundaria', opciones); }catch(e){}
+    }
+  }
+  function verificarRecordatorioInmediato(){
+    if(!ajustes.recordatorioActivado) return;
+    if(typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    const hoy = new Date().toISOString().slice(0,10);
+    if(progreso.ultimaFecha === hoy) return; // ya practicó hoy
+    if(progreso.recordatorioMostradoFecha === hoy) return; // ya se avisó hoy
+    if(Date.now() < horaObjetivoDeHoy(false).getTime()) return; // todavía no es la hora
+    mostrarNotificacionAhora();
+    progreso.recordatorioMostradoFecha = hoy;
+    guardarProgreso();
+  }
+  function alternarRecordatorio(){
+    if(!ajustes.recordatorioActivado){
+      if(typeof Notification === 'undefined'){
+        recordatorioEstado.textContent = 'Tu navegador no soporta notificaciones.';
+        return;
+      }
+      Notification.requestPermission().then(permiso => {
+        if(permiso === 'granted'){
+          ajustes.recordatorioActivado = true;
+          guardarAjustes();
+          renderRecordatorioUI();
+          recordatorioEstado.textContent = '';
+          programarRecordatorio();
+          verificarRecordatorioInmediato();
+        } else {
+          recordatorioEstado.textContent = 'No se activó: falta permitir notificaciones para esta app en el navegador.';
+        }
+      });
+    } else {
+      ajustes.recordatorioActivado = false;
+      guardarAjustes();
+      renderRecordatorioUI();
+      recordatorioEstado.textContent = '';
+      cancelarRecordatorio();
+    }
+  }
+  switchRecordatorio.addEventListener('click', alternarRecordatorio);
+  switchRecordatorio.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); alternarRecordatorio(); }
+  });
+  inputRecordatorioHora.addEventListener('change', () => {
+    ajustes.recordatorioHora = inputRecordatorioHora.value || '19:00';
+    guardarAjustes();
+    if(ajustes.recordatorioActivado) programarRecordatorio();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible') verificarRecordatorioInmediato();
+  });
 
   // ===== Render vista inicio =====
   function renderStatsTop(){
@@ -2191,10 +2310,13 @@
   renderTemas();
   verificarLogros(false);
   mostrarVista('inicio');
+  verificarRecordatorioInmediato();
 
   if('serviceWorker' in navigator){
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      navigator.serviceWorker.register('./sw.js').then(() => {
+        programarRecordatorio();
+      }).catch(()=>{});
     });
   }
 })();
