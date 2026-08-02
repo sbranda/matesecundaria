@@ -92,6 +92,15 @@
   }
   .chip.xp{color:var(--ink);}
   .chip.racha{color:var(--marker-red);}
+  .chip.vidas{font-size:0.95em; letter-spacing:1px;}
+  .vidas-bloqueo{
+    background:var(--paper-alt); border:2.5px solid var(--marker-red); border-radius:var(--radius);
+    padding:26px 20px; margin-top:12px; text-align:center;
+  }
+  .vidas-bloqueo-icono{font-size:2.4em;}
+  .vidas-bloqueo-titulo{font-family:var(--font-display); font-size:1.3em; margin:8px 0 2px 0; color:var(--marker-red);}
+  .vidas-bloqueo-sub{font-size:1em; margin:2px 0; color:var(--ink);}
+  .vidas-bloqueo-nota{font-size:0.8em; color:var(--ink-soft); margin-top:10px;}
   button.icon-btn{
     background:none; border:2px solid var(--ink); border-radius:50%; width:38px;height:38px;
     font-size:1.1em; cursor:pointer; color:var(--ink);
@@ -357,6 +366,7 @@
     100%{transform:scale(1);}
   }
   .chip.bump{animation:bump .5s ease;}
+  .chip.shake-chip{animation:shake .4s ease;}
 
   @keyframes confettiCaida{
     0%{transform:translateY(-10px) rotate(0deg); opacity:1;}
@@ -398,6 +408,7 @@
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="stats-top">
+          <div class="chip vidas" id="chip-vidas">❤️❤️❤️❤️❤️</div>
           <div class="chip xp">⭐ <span id="xp-total">0</span></div>
           <div class="chip racha">🔥 <span id="racha-total">0</span></div>
         </div>
@@ -426,9 +437,10 @@
     <div class="practica-wrap">
       <div class="practica-top">
         <div class="progreso-nivel" id="progreso-nivel-txt"></div>
+        <div class="chip vidas" id="chip-vidas-2">❤️❤️❤️❤️❤️</div>
         <div class="chip xp">⭐ <span id="xp-total-2">0</span></div>
       </div>
-      <div class="hoja">
+      <div class="hoja" id="hoja-practica">
         <div class="etiqueta-nivel" id="hoja-etiqueta">Nivel 1</div>
         <div class="enunciado" id="enunciado-txt">Cargando...</div>
         <div class="grafico-wrap" id="grafico-wrap" style="display:none;">
@@ -440,7 +452,14 @@
           <button class="btn-primario" id="btn-comprobar">Comprobar</button>
         </div>
         <div class="feedback" id="feedback-box" role="status" aria-live="polite"></div>
-        <div class="borrador-wrap">
+      </div>
+      <div class="vidas-bloqueo" id="vidas-bloqueo" style="display:none;" role="status" aria-live="polite">
+        <div class="vidas-bloqueo-icono" aria-hidden="true">💔</div>
+        <p class="vidas-bloqueo-titulo">Te quedaste sin corazones</p>
+        <p class="vidas-bloqueo-sub">Próximo corazón en <strong id="vidas-countdown">--:--</strong></p>
+        <p class="vidas-bloqueo-nota">Podés desactivar las vidas en Ajustes si preferís practicar sin límite.</p>
+      </div>
+      <div class="borrador-wrap" id="borrador-wrap">
           <div class="borrador-header">
             <button class="borrador-toggle" id="btn-toggle-borrador" aria-expanded="false" aria-controls="borrador-panel">
               ✏️ <span>Hoja de borrador</span>
@@ -465,7 +484,6 @@
             </div>
           </div>
         </div>
-      </div>
       <button class="btn-secundario" id="btn-siguiente" style="display:none;">Siguiente ejercicio →</button>
     </div>
   </div>
@@ -520,6 +538,10 @@
       <span id="label-animaciones">Reducir animaciones</span>
       <div class="switch" id="switch-animaciones" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-animaciones"><div class="bolita"></div></div>
     </div>
+    <div class="fila-ajuste">
+      <span id="label-vidas">❤️ Vidas (más tensión)</span>
+      <div class="switch" id="switch-vidas" role="switch" tabindex="0" aria-checked="true" aria-labelledby="label-vidas"><div class="bolita"></div></div>
+    </div>
     <div class="fila-ajuste" style="border-bottom:none;">
       <span>Reiniciar progreso</span>
       <button class="btn-secundario" style="width:auto; margin-top:0; padding:8px 14px; font-size:0.85em;" id="btn-reiniciar">Reiniciar</button>
@@ -571,8 +593,15 @@
   const switchGrande = document.getElementById('switch-grande');
   const switchSonido = document.getElementById('switch-sonido');
   const switchAnimaciones = document.getElementById('switch-animaciones');
+  const switchVidas = document.getElementById('switch-vidas');
   const inputNombre = document.getElementById('input-nombre');
   const aparienciaOpts = Array.from(document.querySelectorAll('.apariencia-opt'));
+  const chipVidas = document.getElementById('chip-vidas');
+  const chipVidas2 = document.getElementById('chip-vidas-2');
+  const hojaPractica = document.getElementById('hoja-practica');
+  const borradorWrapEl = document.getElementById('borrador-wrap');
+  const vidasBloqueo = document.getElementById('vidas-bloqueo');
+  const vidasCountdown = document.getElementById('vidas-countdown');
   const subt = document.querySelector('.subt');
   const btnReiniciar = document.getElementById('btn-reiniciar');
   const btnToggleBorrador = document.getElementById('btn-toggle-borrador');
@@ -589,6 +618,8 @@
   const STORAGE_KEY = 'mateSecundaria_progreso_v1';
   const AJUSTES_KEY = 'mateSecundaria_ajustes_v1';
   const UMBRAL_APROBACION = 10; // respuestas correctas para superar un nivel
+  const VIDAS_MAX = 5;
+  const VIDAS_REGEN_MIN = 15; // minutos para regenerar 1 corazón
 
   // ===== Utilidades numéricas =====
   function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
@@ -1592,7 +1623,7 @@
     TEMAS.forEach(t => {
       temas[t.id] = { nivelActual:1, correctas:[0,0,0], completado:[false,false,false] };
     });
-    return { xp:0, racha:0, ultimaFecha:null, temas, totalCorrectas:0, rachaAciertosActual:0, mejorRachaAciertos:0, logros:{} };
+    return { xp:0, racha:0, ultimaFecha:null, temas, totalCorrectas:0, rachaAciertosActual:0, mejorRachaAciertos:0, logros:{}, vidas:VIDAS_MAX, vidasProximaRegen:null };
   }
   let progreso = cargarProgreso();
   function cargarProgreso(){
@@ -1607,6 +1638,8 @@
       if(typeof data.rachaAciertosActual !== 'number') data.rachaAciertosActual = 0;
       if(typeof data.mejorRachaAciertos !== 'number') data.mejorRachaAciertos = 0;
       if(!data.logros || typeof data.logros !== 'object') data.logros = {};
+      if(typeof data.vidas !== 'number') data.vidas = VIDAS_MAX;
+      if(data.vidasProximaRegen === undefined) data.vidasProximaRegen = null;
       return data;
     }catch(e){ return estadoInicial(); }
   }
@@ -1629,7 +1662,7 @@
   // ===== Ajustes =====
   const TEMAS_DISPONIBLES = ['clasico','oscuro','menta','coral','contraste'];
   function cargarAjustes(){
-    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'' };
+    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true };
     try{
       const raw = localStorage.getItem(AJUSTES_KEY);
       if(!raw) return base;
@@ -1667,6 +1700,10 @@
     switchSonido.setAttribute('aria-checked', ajustes.sonido ? 'true' : 'false');
     switchAnimaciones.classList.toggle('on', ajustes.movimientoReducido);
     switchAnimaciones.setAttribute('aria-checked', ajustes.movimientoReducido ? 'true' : 'false');
+    switchVidas.classList.toggle('on', ajustes.vidasActivadas);
+    switchVidas.setAttribute('aria-checked', ajustes.vidasActivadas ? 'true' : 'false');
+    if(chipVidas) chipVidas.style.display = ajustes.vidasActivadas ? '' : 'none';
+    if(chipVidas2) chipVidas2.style.display = ajustes.vidasActivadas ? '' : 'none';
     if(inputNombre.value !== ajustes.nombre) inputNombre.value = ajustes.nombre;
     actualizarSaludo();
   }
@@ -1735,11 +1772,79 @@
     }
   }
 
+  function shakeChip(el){
+    if(!el || prefiereMovimientoReducido()) return;
+    el.classList.remove('shake-chip');
+    void el.offsetWidth;
+    el.classList.add('shake-chip');
+  }
+
+  // ===== Sistema de vidas =====
+  let vidasIntervalId = null;
+  function actualizarVidas(){
+    if(!ajustes.vidasActivadas) return;
+    if(progreso.vidas < VIDAS_MAX && progreso.vidasProximaRegen){
+      let cambiado = false;
+      const REGEN_MS = VIDAS_REGEN_MIN * 60000;
+      while(progreso.vidas < VIDAS_MAX && progreso.vidasProximaRegen && Date.now() >= progreso.vidasProximaRegen){
+        progreso.vidas++;
+        progreso.vidasProximaRegen += REGEN_MS;
+        cambiado = true;
+      }
+      if(progreso.vidas >= VIDAS_MAX) progreso.vidasProximaRegen = null;
+      if(cambiado) guardarProgreso();
+    }
+  }
+  function renderVidas(){
+    if(!ajustes.vidasActivadas) return;
+    const texto = '❤️'.repeat(progreso.vidas) + '🤍'.repeat(VIDAS_MAX - progreso.vidas);
+    const etiqueta = `${progreso.vidas} de ${VIDAS_MAX} vidas`;
+    if(chipVidas){ chipVidas.textContent = texto; chipVidas.setAttribute('aria-label', etiqueta); }
+    if(chipVidas2){ chipVidas2.textContent = texto; chipVidas2.setAttribute('aria-label', etiqueta); }
+  }
+  function formatoCuentaRegresiva(ms){
+    const total = Math.max(0, Math.ceil(ms/1000));
+    const mins = Math.floor(total/60);
+    const secs = total%60;
+    return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  }
+  function actualizarCuentaRegresivaVidas(){
+    if(!vidasCountdown) return;
+    if(!progreso.vidasProximaRegen){ vidasCountdown.textContent = '--:--'; return; }
+    vidasCountdown.textContent = formatoCuentaRegresiva(progreso.vidasProximaRegen - Date.now());
+  }
+  function tickVidas(){
+    actualizarVidas();
+    renderVidas();
+    if(progreso.vidas > 0){
+      if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
+      nuevoProblema();
+    } else {
+      actualizarCuentaRegresivaVidas();
+    }
+  }
+  function mostrarBloqueoVidas(){
+    if(hojaPractica) hojaPractica.style.display = 'none';
+    if(borradorWrapEl) borradorWrapEl.style.display = 'none';
+    btnSiguiente.style.display = 'none';
+    vidasBloqueo.style.display = 'block';
+    actualizarCuentaRegresivaVidas();
+    if(!vidasIntervalId) vidasIntervalId = setInterval(tickVidas, 1000);
+  }
+  function ocultarBloqueoVidas(){
+    if(hojaPractica) hojaPractica.style.display = '';
+    if(borradorWrapEl) borradorWrapEl.style.display = '';
+    vidasBloqueo.style.display = 'none';
+    if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
+  }
+
   // ===== Render vista inicio =====
   function renderStatsTop(){
     animarNumero(xpTotalEl, progreso.xp);
     animarNumero(xpTotalEl2, progreso.xp);
     animarNumero(rachaTotalEl, progreso.racha);
+    actualizarVidas();
+    renderVidas();
   }
   function renderTemas(){
     gridTemas.innerHTML = '';
@@ -1847,6 +1952,13 @@
   }
 
   function nuevoProblema(){
+    actualizarVidas();
+    renderVidas();
+    if(ajustes.vidasActivadas && progreso.vidas <= 0){
+      mostrarBloqueoVidas();
+      return;
+    }
+    ocultarBloqueoVidas();
     problemaActual = temaActivo.generar(nivelActivo);
     enunciadoTxt.textContent = problemaActual.enunciado;
     dibujarGrafico(problemaActual.grafico);
@@ -1909,6 +2021,14 @@
       feedbackBox.className = 'feedback incorrecto';
       reproducirSonido('incorrecto');
       progreso.rachaAciertosActual = 0;
+      if(ajustes.vidasActivadas){
+        progreso.vidas = Math.max(0, progreso.vidas - 1);
+        if(progreso.vidas < VIDAS_MAX && !progreso.vidasProximaRegen){
+          progreso.vidasProximaRegen = Date.now() + VIDAS_REGEN_MIN * 60000;
+        }
+        renderVidas();
+        shakeChip(chipVidas2);
+      }
       guardarProgreso();
       const respuestaMostrada = problemaActual.tipo==='fraccion'
         ? fmtFraccion(problemaActual.respuesta[0], problemaActual.respuesta[1])
@@ -1939,7 +2059,10 @@
   });
   btnSiguiente.addEventListener('click', nuevoProblema);
   btnVolverTema.addEventListener('click', () => { renderTemas(); mostrarVista('inicio'); });
-  btnVolverPractica.addEventListener('click', () => { renderCamino(); mostrarVista('tema'); });
+  btnVolverPractica.addEventListener('click', () => {
+    if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
+    renderCamino(); mostrarVista('tema');
+  });
   [btnVolverTema, btnVolverPractica].forEach(el => {
     el.addEventListener('keydown', (e) => {
       if(e.key === 'Enter' || e.key === ' '){
@@ -2026,6 +2149,11 @@
   alternarSwitch(switchAnimaciones, () => {
     ajustes.movimientoReducido = !ajustes.movimientoReducido;
     aplicarAjustes(); guardarAjustes();
+  });
+  alternarSwitch(switchVidas, () => {
+    ajustes.vidasActivadas = !ajustes.vidasActivadas;
+    aplicarAjustes(); guardarAjustes();
+    if(vistaPractica.style.display !== 'none') nuevoProblema();
   });
   inputNombre.addEventListener('input', () => {
     ajustes.nombre = inputNombre.value.trim();
