@@ -72,18 +72,26 @@
 
   /* HEADER */
   header.topbar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:14px 18px 10px 18px;
+    padding:14px 18px 12px 18px;
   }
-  .marca{display:flex; align-items:center; gap:10px;}
+  .topbar-fila1{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .marca{display:flex; align-items:center; gap:10px; min-width:0;}
   .marca h1{
-    font-family:var(--font-display); font-size:1.6em; margin:0; color:var(--ink);
-    transform:rotate(-1deg);
+    font-family:var(--font-display); font-size:1.5em; margin:0; color:var(--ink);
+    transform:rotate(-1deg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .marca .sello-mini{
     width:34px;height:34px;border-radius:50%;border:2.5px solid var(--marker-red);
     display:flex;align-items:center;justify-content:center;color:var(--marker-red);
     font-weight:800; transform:rotate(-8deg); flex-shrink:0;
+  }
+  .topbar-acciones{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .topbar-fila2{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    margin-top:12px; padding-top:10px;
+    border-top:2px dashed var(--grid);
   }
   .stats-top{display:flex; gap:10px;}
   .chip{
@@ -92,7 +100,8 @@
   }
   .chip.xp{color:var(--ink);}
   .chip.racha{color:var(--marker-red);}
-  .chip.vidas{font-size:0.95em; letter-spacing:1px;}
+  .chip.vidas{color:var(--ink);}
+  .chip.vidas.baja{color:var(--marker-red); border-color:var(--marker-red);}
   .vidas-bloqueo{
     background:var(--paper-alt); border:2.5px solid var(--marker-red); border-radius:var(--radius);
     padding:26px 20px; margin-top:12px; text-align:center;
@@ -103,7 +112,7 @@
   .vidas-bloqueo-nota{font-size:0.8em; color:var(--ink-soft); margin-top:10px;}
   button.icon-btn{
     background:none; border:2px solid var(--ink); border-radius:50%; width:38px;height:38px;
-    font-size:1.1em; cursor:pointer; color:var(--ink);
+    font-size:1.1em; cursor:pointer; color:var(--ink); flex-shrink:0;
   }
 
   /* PESTAÑAS DE CARPETA (vista inicio) */
@@ -402,18 +411,20 @@
   <!-- ===== VISTA INICIO ===== -->
   <div id="vista-inicio">
     <header class="topbar">
-      <div class="marca">
-        <div class="sello-mini">M</div>
-        <h1>Mate Secundaria</h1>
-      </div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <div class="stats-top">
-          <div class="chip vidas" id="chip-vidas">❤️❤️❤️❤️❤️</div>
-          <div class="chip xp">⭐ <span id="xp-total">0</span></div>
-          <div class="chip racha">🔥 <span id="racha-total">0</span></div>
+      <div class="topbar-fila1">
+        <div class="marca">
+          <div class="sello-mini">M</div>
+          <h1>Mate Secundaria</h1>
         </div>
-        <button class="icon-btn" id="btn-logros" aria-label="Logros">🏅</button>
-        <button class="icon-btn" id="btn-ajustes" aria-label="Ajustes">⚙️</button>
+        <div class="topbar-acciones">
+          <button class="icon-btn" id="btn-logros" aria-label="Logros">🏅</button>
+          <button class="icon-btn" id="btn-ajustes" aria-label="Ajustes">⚙️</button>
+        </div>
+      </div>
+      <div class="topbar-fila2">
+        <div class="chip vidas" id="chip-vidas">❤️ <span id="vidas-total">5</span></div>
+        <div class="chip xp">⭐ <span id="xp-total">0</span></div>
+        <div class="chip racha">🔥 <span id="racha-total">0</span></div>
       </div>
     </header>
     <p class="subt">Elegí un tema y practicá a tu ritmo. Cada nivel superado suma un sello.</p>
@@ -437,7 +448,7 @@
     <div class="practica-wrap">
       <div class="practica-top">
         <div class="progreso-nivel" id="progreso-nivel-txt"></div>
-        <div class="chip vidas" id="chip-vidas-2">❤️❤️❤️❤️❤️</div>
+        <div class="chip vidas" id="chip-vidas-2">❤️ <span id="vidas-total-2">5</span></div>
         <div class="chip xp">⭐ <span id="xp-total-2">0</span></div>
       </div>
       <div class="hoja" id="hoja-practica">
@@ -598,6 +609,8 @@
   const aparienciaOpts = Array.from(document.querySelectorAll('.apariencia-opt'));
   const chipVidas = document.getElementById('chip-vidas');
   const chipVidas2 = document.getElementById('chip-vidas-2');
+  const vidasTotalEl = document.getElementById('vidas-total');
+  const vidasTotalEl2 = document.getElementById('vidas-total-2');
   const hojaPractica = document.getElementById('hoja-practica');
   const borradorWrapEl = document.getElementById('borrador-wrap');
   const vidasBloqueo = document.getElementById('vidas-bloqueo');
@@ -1797,10 +1810,12 @@
   }
   function renderVidas(){
     if(!ajustes.vidasActivadas) return;
-    const texto = '❤️'.repeat(progreso.vidas) + '🤍'.repeat(VIDAS_MAX - progreso.vidas);
     const etiqueta = `${progreso.vidas} de ${VIDAS_MAX} vidas`;
-    if(chipVidas){ chipVidas.textContent = texto; chipVidas.setAttribute('aria-label', etiqueta); }
-    if(chipVidas2){ chipVidas2.textContent = texto; chipVidas2.setAttribute('aria-label', etiqueta); }
+    const baja = progreso.vidas <= 1;
+    if(vidasTotalEl) vidasTotalEl.textContent = progreso.vidas;
+    if(vidasTotalEl2) vidasTotalEl2.textContent = progreso.vidas;
+    if(chipVidas){ chipVidas.setAttribute('aria-label', etiqueta); chipVidas.classList.toggle('baja', baja); }
+    if(chipVidas2){ chipVidas2.setAttribute('aria-label', etiqueta); chipVidas2.classList.toggle('baja', baja); }
   }
   function formatoCuentaRegresiva(ms){
     const total = Math.max(0, Math.ceil(ms/1000));
