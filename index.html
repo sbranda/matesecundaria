@@ -321,6 +321,20 @@
   .logro-icono{font-size:1.7em;}
   .logro-nombre{font-weight:800; font-size:0.8em; margin-top:4px;}
   .logro-desc{font-size:0.68em; color:var(--ink-soft); margin-top:2px; line-height:1.3;}
+
+  .stats-subtitulo{
+    font-family:var(--font-display); font-size:1.05em; margin:16px 0 8px 0; color:var(--ink);
+  }
+  #stats-xp-canvas{
+    width:100%; height:auto; border:2px solid var(--ink); border-radius:10px; background:var(--paper); display:block;
+  }
+  .estad-fila{display:flex; align-items:center; gap:8px; margin-bottom:9px;}
+  .estad-icono{width:20px; text-align:center; flex-shrink:0;}
+  .estad-nombre{flex:0 0 96px; font-size:0.78em; font-weight:700; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .estad-barra-wrap{flex:1; height:10px; background:#E5E0D0; border-radius:6px; overflow:hidden;}
+  .estad-barra{height:100%; background:var(--marker-red); border-radius:6px;}
+  .estad-valor{font-size:0.75em; font-weight:800; width:20px; text-align:right; flex-shrink:0; color:var(--ink-soft);}
+  .stats-vacio{font-size:0.85em; color:var(--ink-soft); margin:4px 0 0 0;}
   .switch{
     width:46px; height:26px; background:#DCD8C8; border-radius:20px; position:relative; cursor:pointer; border:2px solid var(--ink);
   }
@@ -417,6 +431,7 @@
           <h1>Mate Secundaria</h1>
         </div>
         <div class="topbar-acciones">
+          <button class="icon-btn" id="btn-stats" aria-label="Estadísticas">📊</button>
           <button class="icon-btn" id="btn-logros" aria-label="Logros">🏅</button>
           <button class="icon-btn" id="btn-ajustes" aria-label="Ajustes">⚙️</button>
         </div>
@@ -581,6 +596,22 @@
   </div>
 </div>
 
+<!-- MODAL ESTADÍSTICAS -->
+<div class="modal-fondo" id="modal-stats">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stats-titulo">
+    <h3 id="stats-titulo">Tus estadísticas</h3>
+    <p id="stats-resumen" style="margin-top:-8px; color:var(--ink-soft); font-size:0.85em;"></p>
+
+    <h4 class="stats-subtitulo">XP esta semana</h4>
+    <canvas id="stats-xp-canvas" width="280" height="150" role="img" aria-label=""></canvas>
+
+    <h4 class="stats-subtitulo">Temas con más errores</h4>
+    <div id="stats-errores-lista"></div>
+
+    <button class="btn-primario" style="width:100%; margin-top:14px;" id="btn-cerrar-stats">Cerrar</button>
+  </div>
+</div>
+
 <script>
 (function(){
   'use strict';
@@ -611,6 +642,12 @@
   const btnLogros = document.getElementById('btn-logros');
   const modalLogros = document.getElementById('modal-logros');
   const btnCerrarLogros = document.getElementById('btn-cerrar-logros');
+  const btnStats = document.getElementById('btn-stats');
+  const modalStats = document.getElementById('modal-stats');
+  const btnCerrarStats = document.getElementById('btn-cerrar-stats');
+  const statsResumen = document.getElementById('stats-resumen');
+  const statsXpCanvas = document.getElementById('stats-xp-canvas');
+  const statsErroresLista = document.getElementById('stats-errores-lista');
   const switchGrande = document.getElementById('switch-grande');
   const switchSonido = document.getElementById('switch-sonido');
   const switchAnimaciones = document.getElementById('switch-animaciones');
@@ -1248,6 +1285,88 @@
       grid.appendChild(card);
     });
   }
+
+  // ===== Panel de estadísticas =====
+  function obtenerUltimos7Dias(){
+    const nombresDia = ['D','L','M','M','J','V','S'];
+    const dias = [];
+    const hoy = new Date();
+    for(let i=6; i>=0; i--){
+      const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - i);
+      const key = d.toISOString().slice(0,10);
+      dias.push({ key, letra: nombresDia[d.getDay()], valor: progreso.historialXP[key] || 0, esHoy: i===0 });
+    }
+    return dias;
+  }
+  function dibujarGraficoXPSemana(){
+    if(!statsXpCanvas) return;
+    const ctx = statsXpCanvas.getContext('2d');
+    const w = statsXpCanvas.width, h = statsXpCanvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = getCSSVar('--paper');
+    ctx.fillRect(0,0,w,h);
+    const dias = obtenerUltimos7Dias();
+    const maxValor = Math.max(10, ...dias.map(d => d.valor));
+    const pad = 26, padInferior = 24;
+    const areaW = w - pad*2, areaH = h - pad - padInferior;
+    const anchoBarra = areaW / dias.length * 0.55;
+    const paso = areaW / dias.length;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(pad, h-padInferior); ctx.lineTo(w-pad, h-padInferior); ctx.stroke();
+    ctx.font = '11px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    dias.forEach((d, i) => {
+      const bh = Math.max(2, (d.valor / maxValor) * areaH);
+      const x = pad + paso*i + (paso-anchoBarra)/2;
+      const y = h - padInferior - bh;
+      ctx.fillStyle = d.esHoy ? getCSSVar('--marker-red') : getCSSVar('--ink');
+      ctx.fillRect(x, y, anchoBarra, bh);
+      ctx.fillStyle = getCSSVar('--ink-soft');
+      ctx.fillText(d.letra, x + anchoBarra/2, h - padInferior + 15);
+      if(d.valor > 0){
+        ctx.fillStyle = getCSSVar('--ink');
+        ctx.fillText(d.valor, x + anchoBarra/2, y - 5);
+      }
+    });
+    const totalSemana = dias.reduce((a,d)=>a+d.valor, 0);
+    statsXpCanvas.setAttribute('aria-label', `Gráfico de barras con el XP ganado por día en los últimos 7 días. Total de la semana: ${totalSemana} XP.`);
+  }
+  function renderErroresPorTema(){
+    if(!statsErroresLista) return;
+    const entradas = TEMAS.map(t => ({ id:t.id, nombre:t.nombre, icono:t.icono, errores: progreso.erroresPorTema[t.id] || 0 }))
+      .filter(e => e.errores > 0)
+      .sort((a,b) => b.errores - a.errores)
+      .slice(0, 5);
+    statsErroresLista.innerHTML = '';
+    if(entradas.length === 0){
+      const p = document.createElement('p');
+      p.className = 'stats-vacio';
+      p.textContent = 'Todavía no registramos errores. ¡Seguí así!';
+      statsErroresLista.appendChild(p);
+      return;
+    }
+    const maxErrores = entradas[0].errores;
+    entradas.forEach(e => {
+      const fila = document.createElement('div');
+      fila.className = 'estad-fila';
+      fila.setAttribute('role','group');
+      fila.setAttribute('aria-label', `${e.nombre}: ${e.errores} error${e.errores===1?'':'es'}`);
+      const pct = Math.max(6, Math.round((e.errores/maxErrores)*100));
+      fila.innerHTML = `
+        <span class="estad-icono" aria-hidden="true">${e.icono}</span>
+        <span class="estad-nombre">${e.nombre}</span>
+        <span class="estad-barra-wrap"><span class="estad-barra" style="width:${pct}%"></span></span>
+        <span class="estad-valor" aria-hidden="true">${e.errores}</span>
+      `;
+      statsErroresLista.appendChild(fila);
+    });
+  }
+  function renderStats(){
+    if(statsResumen) statsResumen.textContent = `⭐ ${progreso.xp} XP total · 🔥 ${progreso.racha} día${progreso.racha===1?'':'s'} de racha`;
+    dibujarGraficoXPSemana();
+    renderErroresPorTema();
+  }
   const borradorCtx = borradorCanvas.getContext('2d');
   let colorTrazo = '#2B3A55';
   let modoGoma = false;
@@ -1650,7 +1769,7 @@
     TEMAS.forEach(t => {
       temas[t.id] = { nivelActual:1, correctas:[0,0,0], completado:[false,false,false] };
     });
-    return { xp:0, racha:0, ultimaFecha:null, temas, totalCorrectas:0, rachaAciertosActual:0, mejorRachaAciertos:0, logros:{}, vidas:VIDAS_MAX, vidasProximaRegen:null, recordatorioMostradoFecha:null };
+    return { xp:0, racha:0, ultimaFecha:null, temas, totalCorrectas:0, rachaAciertosActual:0, mejorRachaAciertos:0, logros:{}, vidas:VIDAS_MAX, vidasProximaRegen:null, recordatorioMostradoFecha:null, historialXP:{}, erroresPorTema:{} };
   }
   let progreso = cargarProgreso();
   function cargarProgreso(){
@@ -1668,6 +1787,8 @@
       if(typeof data.vidas !== 'number') data.vidas = VIDAS_MAX;
       if(data.vidasProximaRegen === undefined) data.vidasProximaRegen = null;
       if(data.recordatorioMostradoFecha === undefined) data.recordatorioMostradoFecha = null;
+      if(!data.historialXP || typeof data.historialXP !== 'object') data.historialXP = {};
+      if(!data.erroresPorTema || typeof data.erroresPorTema !== 'object') data.erroresPorTema = {};
       return data;
     }catch(e){ return estadoInicial(); }
   }
@@ -2136,6 +2257,8 @@
       feedbackBox.innerHTML = '¡Correcto! 🎉';
       reproducirSonido('correcto');
       progreso.xp += 10;
+      const hoyKey = new Date().toISOString().slice(0,10);
+      progreso.historialXP[hoyKey] = (progreso.historialXP[hoyKey] || 0) + 10;
       progreso.totalCorrectas = (progreso.totalCorrectas||0) + 1;
       progreso.rachaAciertosActual = (progreso.rachaAciertosActual||0) + 1;
       progreso.mejorRachaAciertos = Math.max(progreso.mejorRachaAciertos||0, progreso.rachaAciertosActual);
@@ -2155,6 +2278,7 @@
       feedbackBox.className = 'feedback incorrecto';
       reproducirSonido('incorrecto');
       progreso.rachaAciertosActual = 0;
+      progreso.erroresPorTema[temaActivo.id] = (progreso.erroresPorTema[temaActivo.id] || 0) + 1;
       if(ajustes.vidasActivadas){
         progreso.vidas = Math.max(0, progreso.vidas - 1);
         if(progreso.vidas < VIDAS_MAX && !progreso.vidasProximaRegen){
@@ -2241,6 +2365,8 @@
   function cerrarModalAjustes(){ cerrarModal(modalAjustes); }
   function abrirModalLogros(){ renderLogros(); abrirModal(modalLogros); }
   function cerrarModalLogros(){ cerrarModal(modalLogros); }
+  function abrirModalStats(){ renderStats(); abrirModal(modalStats); }
+  function cerrarModalStats(){ cerrarModal(modalStats); }
 
   btnAjustes.addEventListener('click', abrirModalAjustes);
   btnCerrarAjustes.addEventListener('click', cerrarModalAjustes);
@@ -2248,6 +2374,9 @@
   btnLogros.addEventListener('click', abrirModalLogros);
   btnCerrarLogros.addEventListener('click', cerrarModalLogros);
   modalLogros.addEventListener('click', (e) => { if(e.target===modalLogros) cerrarModalLogros(); });
+  btnStats.addEventListener('click', abrirModalStats);
+  btnCerrarStats.addEventListener('click', cerrarModalStats);
+  modalStats.addEventListener('click', (e) => { if(e.target===modalStats) cerrarModalStats(); });
 
   function alternarSwitch(switchEl, callback){
     const activarlo = () => {
@@ -2268,6 +2397,7 @@
       ajustes.apariencia = opt.dataset.tema;
       aplicarAjustes(); guardarAjustes();
       if(problemaActual && problemaActual.grafico) dibujarGrafico(problemaActual.grafico);
+      if(modalStats.classList.contains('abierto')) dibujarGraficoXPSemana();
     });
   });
 
