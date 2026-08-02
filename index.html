@@ -736,16 +736,21 @@
               const a=randInt(1,20), b=randInt(1,20);
               const op = Math.random()<0.5 ? '+' : '-';
               const r = op==='+' ? a+b : a-b;
-              return { enunciado:`${a} ${op} ${b} = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+              const explicacion = op==='+'
+                ? `Para sumar, juntás las dos cantidades: ${a} + ${b} = ${r}.`
+                : `Para restar, le quitás ${b} a ${a}: ${a} - ${b} = ${r}.`;
+              return { enunciado:`${a} ${op} ${b} = ?`, tipo:'numero', respuesta:r, tolerancia:0, explicacion };
             },
             () => {
               const a=randInt(2,12), b=randInt(2,12);
-              return { enunciado:`${a} × ${b} = ?`, tipo:'numero', respuesta:a*b, tolerancia:0 };
+              return { enunciado:`${a} × ${b} = ?`, tipo:'numero', respuesta:a*b, tolerancia:0,
+                explicacion:`Multiplicás ${a} × ${b}, o sea sumás ${a} un total de ${b} veces: ${a*b}.` };
             },
             () => {
               const b=randInt(2,12), c=randInt(2,12);
               const a=b*c;
-              return { enunciado:`${a} ÷ ${b} = ?`, tipo:'numero', respuesta:c, tolerancia:0 };
+              return { enunciado:`${a} ÷ ${b} = ?`, tipo:'numero', respuesta:c, tolerancia:0,
+                explicacion:`Buscás cuántas veces entra ${b} en ${a}. Como ${b} × ${c} = ${a}, entonces ${a} ÷ ${b} = ${c}.` };
             }
           ]);
         } else if(nivel===2){
@@ -754,14 +759,17 @@
               const a=randNZ(-20,20), b=randNZ(-20,20);
               const ops = ['+','-','×'];
               const op = ops[randInt(0,2)];
-              let r;
-              if(op==='+') r=a+b; else if(op==='-') r=a-b; else r=a*b;
-              return { enunciado:`(${a}) ${op} (${b}) = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+              let r, explicacion;
+              if(op==='+'){ r=a+b; explicacion = `Sumás los dos números con su signo: ${a} + (${b}) = ${r}. Si tienen distinto signo, es como restar y quedarte con el signo del mayor en valor absoluto.`; }
+              else if(op==='-'){ r=a-b; explicacion = `Restar (${b}) es lo mismo que sumar su opuesto: ${a} + (${-b}) = ${r}.`; }
+              else { r=a*b; explicacion = `Multiplicás los valores: ${a} × ${b} = ${r}. Signos iguales dan positivo, signos distintos dan negativo.`; }
+              return { enunciado:`(${a}) ${op} (${b}) = ?`, tipo:'numero', respuesta:r, tolerancia:0, explicacion };
             },
             () => {
               const b=randNZ(2,12)*(Math.random()<0.5?1:-1), c=randNZ(-10,10);
               const a=b*c;
-              return { enunciado:`(${a}) ÷ (${b}) = ?`, tipo:'numero', respuesta:c, tolerancia:0 };
+              return { enunciado:`(${a}) ÷ (${b}) = ?`, tipo:'numero', respuesta:c, tolerancia:0,
+                explicacion:`Dividís ${a} ÷ ${b}. Como ${b} × ${c} = ${a}, el resultado es ${c}. Signos iguales dan positivo, signos distintos dan negativo.` };
             }
           ]);
         } else {
@@ -769,17 +777,20 @@
             () => {
               const a=randNZ(-15,15), b=randNZ(-12,12), c=randNZ(2,9);
               const r = (a+b)*c;
-              return { enunciado:`(${a} + ${b}) × ${c} = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+              return { enunciado:`(${a} + ${b}) × ${c} = ?`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Primero resolvés el paréntesis: ${a} + ${b} = ${a+b}. Después multiplicás por ${c}: ${a+b} × ${c} = ${r}.` };
             },
             () => {
               const a=randNZ(-12,12), b=randNZ(2,9), c=randNZ(-15,15);
               const r = a*b - c;
-              return { enunciado:`${a} × ${b} − (${c}) = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+              return { enunciado:`${a} × ${b} − (${c}) = ?`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`La multiplicación se resuelve antes que la resta: ${a} × ${b} = ${a*b}. Después restás: ${a*b} − (${c}) = ${r}.` };
             },
             () => {
               const a=randNZ(-15,15), b=randNZ(2,9), c=randNZ(-12,12);
               const r = a - b*c;
-              return { enunciado:`${a} − ${b} × (${c}) = ?`, tipo:'numero', respuesta:r, tolerancia:0 };
+              return { enunciado:`${a} − ${b} × (${c}) = ?`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`La multiplicación se resuelve antes que la resta: ${b} × (${c}) = ${b*c}. Después restás: ${a} − (${b*c}) = ${r}.` };
             }
           ]);
         }
@@ -794,13 +805,19 @@
             () => {
               const den = randInt(2,10);
               const n1 = randInt(1,den-1), n2 = randInt(1,den-1);
-              return { enunciado:`${n1}/${den} + ${n2}/${den} = ?  (simplificá si podés)`, tipo:'fraccion', respuesta:[n1+n2, den] };
+              const suma = n1+n2;
+              const simp = fmtFraccion(suma, den);
+              return { enunciado:`${n1}/${den} + ${n2}/${den} = ?  (simplificá si podés)`, tipo:'fraccion', respuesta:[suma, den],
+                explicacion:`Como tienen el mismo denominador, sumás los numeradores y dejás el denominador: ${n1}/${den} + ${n2}/${den} = ${suma}/${den}${simp!==`${suma}/${den}`?` = ${simp}`:''}.` };
             },
             () => {
               const den = randInt(2,10);
               let n1 = randInt(1,den-1), n2 = randInt(1,den-1);
               if(n2>n1) [n1,n2]=[n2,n1];
-              return { enunciado:`${n1}/${den} - ${n2}/${den} = ?  (simplificá si podés)`, tipo:'fraccion', respuesta:[n1-n2, den] };
+              const resta = n1-n2;
+              const simp = fmtFraccion(resta, den);
+              return { enunciado:`${n1}/${den} - ${n2}/${den} = ?  (simplificá si podés)`, tipo:'fraccion', respuesta:[resta, den],
+                explicacion:`Como tienen el mismo denominador, restás los numeradores y dejás el denominador: ${n1}/${den} - ${n2}/${den} = ${resta}/${den}${simp!==`${resta}/${den}`?` = ${simp}`:''}.` };
             }
           ]);
         } else if(nivel===2){
@@ -809,13 +826,17 @@
               const d1=randInt(2,8), d2=randInt(2,8);
               const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
               const num = n1*d2 + n2*d1, den = d1*d2;
-              return { enunciado:`${n1}/${d1} + ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num,den] };
+              const simp = fmtFraccion(num, den);
+              return { enunciado:`${n1}/${d1} + ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num,den],
+                explicacion:`Buscás un denominador común multiplicando los denominadores: ${d1} × ${d2} = ${den}. Convertís: ${n1}/${d1} = ${n1*d2}/${den} y ${n2}/${d2} = ${n2*d1}/${den}. Sumás los numeradores: ${n1*d2} + ${n2*d1} = ${num}/${den}${simp!==`${num}/${den}`?` = ${simp}`:''}.` };
             },
             () => {
               const d1=randInt(2,8), d2=randInt(2,8);
               const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
               const num = n1*d2 - n2*d1, den = d1*d2;
-              return { enunciado:`${n1}/${d1} - ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num,den] };
+              const simp = fmtFraccion(num, den);
+              return { enunciado:`${n1}/${d1} - ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num,den],
+                explicacion:`Buscás un denominador común multiplicando los denominadores: ${d1} × ${d2} = ${den}. Convertís: ${n1}/${d1} = ${n1*d2}/${den} y ${n2}/${d2} = ${n2*d1}/${den}. Restás los numeradores: ${n1*d2} - ${n2*d1} = ${num}/${den}${simp!==`${num}/${den}`?` = ${simp}`:''}.` };
             }
           ]);
         } else {
@@ -823,17 +844,24 @@
             () => {
               const d1=randInt(2,7), d2=randInt(2,7);
               const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
-              return { enunciado:`${n1}/${d1} × ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[n1*n2, d1*d2] };
+              const num=n1*n2, den=d1*d2;
+              const simp = fmtFraccion(num, den);
+              return { enunciado:`${n1}/${d1} × ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num, den],
+                explicacion:`Multiplicás numerador por numerador y denominador por denominador: (${n1}×${n2})/(${d1}×${d2}) = ${num}/${den}${simp!==`${num}/${den}`?` = ${simp}`:''}.` };
             },
             () => {
               const d1=randInt(2,7), d2=randInt(2,7);
               const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
-              return { enunciado:`${n1}/${d1} ÷ ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[n1*d2, d1*n2] };
+              const num=n1*d2, den=d1*n2;
+              const simp = fmtFraccion(num, den);
+              return { enunciado:`${n1}/${d1} ÷ ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num, den],
+                explicacion:`Dividir fracciones es multiplicar por la inversa de la segunda: ${n1}/${d1} × ${d2}/${n2} = ${num}/${den}${simp!==`${num}/${den}`?` = ${simp}`:''}.` };
             },
             () => {
               const sd=randInt(2,6), sn=randInt(1,sd-1);
               const k=randInt(2,5);
-              return { enunciado:`Simplificá: ${sn*k}/${sd*k} = ?`, tipo:'fraccion', respuesta:[sn,sd] };
+              return { enunciado:`Simplificá: ${sn*k}/${sd*k} = ?`, tipo:'fraccion', respuesta:[sn,sd],
+                explicacion:`Buscás un factor común entre ${sn*k} y ${sd*k}: los dos son múltiplos de ${k}. Dividís ambos por ${k}: ${sn*k}/${k} = ${sn} y ${sd*k}/${k} = ${sd}. Resultado: ${sn}/${sd}.` };
             }
           ]);
         }
@@ -847,11 +875,13 @@
           return elegir([
             () => {
               const b=randInt(2,10), e=randInt(2,3);
-              return { enunciado:`${b}^${e} = ?`, tipo:'numero', respuesta:Math.pow(b,e), tolerancia:0 };
+              return { enunciado:`${b}^${e} = ?`, tipo:'numero', respuesta:Math.pow(b,e), tolerancia:0,
+                explicacion:`${b}^${e} significa multiplicar ${b} por sí mismo ${e} veces: ${Array(e).fill(b).join(' × ')} = ${Math.pow(b,e)}.` };
             },
             () => {
               const e=randInt(1,4);
-              return { enunciado:`10^${e} = ?`, tipo:'numero', respuesta:Math.pow(10,e), tolerancia:0 };
+              return { enunciado:`10^${e} = ?`, tipo:'numero', respuesta:Math.pow(10,e), tolerancia:0,
+                explicacion:`10 elevado a ${e} es un 1 seguido de ${e} cero${e===1?'':'s'}: ${Math.pow(10,e)}.` };
             }
           ]);
         } else if(nivel===2){
@@ -859,23 +889,27 @@
             () => {
               const raiz = randInt(2,12);
               const cuad = raiz*raiz;
-              return { enunciado:`√${cuad} = ?`, tipo:'numero', respuesta:raiz, tolerancia:0 };
+              return { enunciado:`√${cuad} = ?`, tipo:'numero', respuesta:raiz, tolerancia:0,
+                explicacion:`Buscás qué número multiplicado por sí mismo da ${cuad}. Como ${raiz} × ${raiz} = ${cuad}, entonces √${cuad} = ${raiz}.` };
             },
             () => {
               const raiz = randInt(2,6);
               const cubo = raiz*raiz*raiz;
-              return { enunciado:`∛${cubo} = ?`, tipo:'numero', respuesta:raiz, tolerancia:0 };
+              return { enunciado:`∛${cubo} = ?`, tipo:'numero', respuesta:raiz, tolerancia:0,
+                explicacion:`Buscás qué número elevado al cubo da ${cubo}. Como ${raiz} × ${raiz} × ${raiz} = ${cubo}, entonces ∛${cubo} = ${raiz}.` };
             }
           ]);
         } else {
           return elegir([
             () => {
               const b=randInt(2,5), m=randInt(2,3), n=randInt(2,3);
-              return { enunciado:`(${b}^${m})^${n} = ?  (resolvé la potencia final)`, tipo:'numero', respuesta:Math.pow(b, m*n), tolerancia:0 };
+              return { enunciado:`(${b}^${m})^${n} = ?  (resolvé la potencia final)`, tipo:'numero', respuesta:Math.pow(b, m*n), tolerancia:0,
+                explicacion:`Potencia de potencia: multiplicás los exponentes. (${b}^${m})^${n} = ${b}^(${m}×${n}) = ${b}^${m*n} = ${Math.pow(b,m*n)}.` };
             },
             () => {
               const b=randInt(2,6), m=randInt(2,4), n=randInt(2,4);
-              return { enunciado:`${b}^${m} × ${b}^${n} = ?  (resolvé la potencia final)`, tipo:'numero', respuesta:Math.pow(b, m+n), tolerancia:0 };
+              return { enunciado:`${b}^${m} × ${b}^${n} = ?  (resolvé la potencia final)`, tipo:'numero', respuesta:Math.pow(b, m+n), tolerancia:0,
+                explicacion:`Multiplicación de potencias de igual base: sumás los exponentes. ${b}^${m} × ${b}^${n} = ${b}^(${m}+${n}) = ${b}^${m+n} = ${Math.pow(b,m+n)}.` };
             }
           ]);
         }
@@ -890,12 +924,14 @@
             () => {
               const a=randInt(2,9), x=randInt(-10,10), b=randInt(-15,15);
               const c = a*x+b;
-              return { enunciado:`${a}x + (${b}) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0 };
+              return { enunciado:`${a}x + (${b}) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Pasás ${b} al otro lado restando: ${a}x = ${c} - (${b}) = ${c-b}. Después dividís por ${a}: x = ${c-b} ÷ ${a} = ${x}.` };
             },
             () => {
               const a=randInt(2,6), k=randInt(-8,8), b=randInt(-10,10);
               const x = a*k, c = k+b;
-              return { enunciado:`x/${a} + (${b}) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0 };
+              return { enunciado:`x/${a} + (${b}) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Pasás ${b} al otro lado restando: x/${a} = ${c} - (${b}) = ${c-b}. Después multiplicás por ${a}: x = ${c-b} × ${a} = ${x}.` };
             }
           ]);
         } else if(nivel===2){
@@ -903,12 +939,14 @@
             () => {
               const a=randInt(2,6), b=randInt(-8,8), x=randInt(-10,10);
               const c = a*(x+b);
-              return { enunciado:`${a}(x + (${b})) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0 };
+              return { enunciado:`${a}(x + (${b})) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Dividís los dos lados por ${a}: x + (${b}) = ${c} ÷ ${a} = ${c/a}. Después pasás ${b} restando: x = ${c/a} - (${b}) = ${x}.` };
             },
             () => {
               const a=randInt(2,6), b=randInt(-10,10), c=randInt(-10,10);
               const x = a*c - b;
-              return { enunciado:`(x + (${b})) / ${a} = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0 };
+              return { enunciado:`(x + (${b})) / ${a} = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Multiplicás los dos lados por ${a}: x + (${b}) = ${c} × ${a} = ${c*a}. Después pasás ${b} restando: x = ${c*a} - (${b}) = ${x}.` };
             }
           ]);
         } else {
@@ -919,12 +957,14 @@
               if(c === a) c = (a >= 7) ? a - 1 : a + 1; // aseguramos a != c sin loops
               const x=randInt(-10,10), b=randInt(-10,10);
               const d = (a-c)*x + b; // ax+b = cx+d -> d = (a-c)x+b
-              return { enunciado:`${a}x + (${b}) = ${c}x + (${d})\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0 };
+              return { enunciado:`${a}x + (${b}) = ${c}x + (${d})\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Agrupás las x de un lado y los números del otro: ${a}x - ${c}x = ${d} - (${b}). Eso da ${a-c}x = ${d-b}. Dividís por ${a-c}: x = ${x}.` };
             },
             () => {
               const a=randInt(2,6), c=randInt(2,6), x=randInt(-10,10), d=randInt(-10,10);
               const b = c*d - a*x;
-              return { enunciado:`(${a}x + (${b})) / ${c} = ${d}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0 };
+              return { enunciado:`(${a}x + (${b})) / ${c} = ${d}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Multiplicás los dos lados por ${c}: ${a}x + (${b}) = ${d} × ${c} = ${d*c}. Pasás ${b} restando: ${a}x = ${d*c-b}. Dividís por ${a}: x = ${x}.` };
             }
           ]);
         }
@@ -941,13 +981,15 @@
               const a1=randInt(-6,6), a0=randInt(-6,6);
               const b1=randInt(-6,6), b0=randInt(-6,6);
               const r = (a1+b1)*x + (a0+b0);
-              return { enunciado:`P(x) = ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) + Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0 };
+              return { enunciado:`P(x) = ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) + Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Sumás P(x) y Q(x) término a término: (${a1}+${b1})x + (${a0}+${b0}) = ${a1+b1}x + (${a0+b0}). Evaluás en x = ${x}: ${a1+b1}×${x} + (${a0+b0}) = ${r}.` };
             },
             () => {
               const a1=randInt(-6,6), a0=randInt(-6,6);
               const b1=randInt(-6,6), b0=randInt(-6,6);
               const r = (a1-b1)*x + (a0-b0);
-              return { enunciado:`P(x) = ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) - Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0 };
+              return { enunciado:`P(x) = ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) - Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Restás P(x) y Q(x) término a término: (${a1}-${b1})x + (${a0}-${b0}) = ${a1-b1}x + (${a0-b0}). Evaluás en x = ${x}: ${a1-b1}×${x} + (${a0-b0}) = ${r}.` };
             }
           ]);
         } else if(nivel===2){
@@ -957,14 +999,16 @@
               const b1=randInt(-6,6), b0=randInt(-6,6);
               const pVal = a2*x*x + a1*x + a0;
               const qVal = b1*x + b0;
-              return { enunciado:`P(x) = ${a2}x² + ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) - Q(x)] para x = ${x}`, tipo:'numero', respuesta:pVal-qVal, tolerancia:0 };
+              return { enunciado:`P(x) = ${a2}x² + ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) - Q(x)] para x = ${x}`, tipo:'numero', respuesta:pVal-qVal, tolerancia:0,
+                explicacion:`Evaluás cada polinomio en x = ${x}: P(${x}) = ${a2}×${x}² + ${a1}×${x} + (${a0}) = ${pVal}. Q(${x}) = ${b1}×${x} + (${b0}) = ${qVal}. Restás: ${pVal} - ${qVal} = ${pVal-qVal}.` };
             },
             () => {
               const a2=randInt(-4,4)||1, a1=randInt(-6,6), a0=randInt(-6,6);
               const b1=randInt(-6,6), b0=randInt(-6,6);
               const pVal = a2*x*x + a1*x + a0;
               const qVal = b1*x + b0;
-              return { enunciado:`P(x) = ${a2}x² + ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) + Q(x)] para x = ${x}`, tipo:'numero', respuesta:pVal+qVal, tolerancia:0 };
+              return { enunciado:`P(x) = ${a2}x² + ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) + Q(x)] para x = ${x}`, tipo:'numero', respuesta:pVal+qVal, tolerancia:0,
+                explicacion:`Evaluás cada polinomio en x = ${x}: P(${x}) = ${a2}×${x}² + ${a1}×${x} + (${a0}) = ${pVal}. Q(${x}) = ${b1}×${x} + (${b0}) = ${qVal}. Sumás: ${pVal} + ${qVal} = ${pVal+qVal}.` };
             }
           ]);
         } else {
@@ -973,13 +1017,15 @@
               const a=randInt(-5,5)||2, b=randInt(-5,5);
               const k=randInt(-4,4)||3;
               const r = k*(a*x+b);
-              return { enunciado:`P(x) = ${a}x + (${b})\nHallá [${k} · P(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0 };
+              return { enunciado:`P(x) = ${a}x + (${b})\nHallá [${k} · P(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Primero evaluás P(x) en x = ${x}: P(${x}) = ${a}×${x} + (${b}) = ${a*x+b}. Después multiplicás por ${k}: ${k} × ${a*x+b} = ${r}.` };
             },
             () => {
               const a=randInt(-4,4)||2, b=randInt(-5,5);
               const c=randInt(-4,4)||3, d=randInt(-5,5);
               const r = (a*x+b)*(c*x+d);
-              return { enunciado:`P(x) = ${a}x + (${b})\nQ(x) = ${c}x + (${d})\nHallá [P(x) · Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0 };
+              return { enunciado:`P(x) = ${a}x + (${b})\nQ(x) = ${c}x + (${d})\nHallá [P(x) · Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Evaluás cada polinomio en x = ${x}: P(${x}) = ${a}×${x} + (${b}) = ${a*x+b}. Q(${x}) = ${c}×${x} + (${d}) = ${c*x+d}. Multiplicás los resultados: ${a*x+b} × ${c*x+d} = ${r}.` };
             }
           ]);
         }
@@ -994,14 +1040,16 @@
             () => {
               const m=randInt(-6,6)||2, b=randInt(-8,8), x=randInt(-6,6);
               return { enunciado:`f(x) = ${m}x + (${b})\nf(${x}) = ?`, tipo:'numero', respuesta:m*x+b, tolerancia:0,
-                grafico:{ tipo:'lineal', m, b, marcaX:x } };
+                grafico:{ tipo:'lineal', m, b, marcaX:x },
+                explicacion:`Reemplazás x por ${x} en la función: f(${x}) = ${m}×${x} + (${b}) = ${m*x+b}.` };
             },
             () => {
               const m=randInt(-6,6)||2, b=randInt(-8,8);
               let x1=randInt(-6,6), x2=randInt(-6,6);
               if(x2===x1) x2 = x1+3;
               const y1=m*x1+b, y2=m*x2+b;
-              return { enunciado:`Una recta pasa por los puntos (${x1}, ${y1}) y (${x2}, ${y2}).\n¿Cuál es su pendiente?`, tipo:'numero', respuesta:m, tolerancia:0 };
+              return { enunciado:`Una recta pasa por los puntos (${x1}, ${y1}) y (${x2}, ${y2}).\n¿Cuál es su pendiente?`, tipo:'numero', respuesta:m, tolerancia:0,
+                explicacion:`La pendiente es el cambio en y dividido el cambio en x: m = (${y2} - ${y1}) / (${x2} - ${x1}) = ${y2-y1}/${x2-x1} = ${m}.` };
             }
           ]);
         } else if(nivel===2){
@@ -1010,13 +1058,15 @@
               const m=randInt(2,8), b=randInt(-10,10), x=randInt(-8,8);
               const y = m*x+b;
               return { enunciado:`f(x) = ${m}x + (${b})\n¿Para qué valor de x, f(x) = ${y}?`, tipo:'numero', respuesta:x, tolerancia:0,
-                grafico:{ tipo:'lineal', m, b, marcaY:y } };
+                grafico:{ tipo:'lineal', m, b, marcaY:y },
+                explicacion:`Igualás f(x) al valor pedido: ${m}x + (${b}) = ${y}. Pasás ${b} restando: ${m}x = ${y-b}. Dividís por ${m}: x = ${x}.` };
             },
             () => {
               const m=randInt(2,7), x1=randInt(-6,6), b=randInt(-10,10);
               const y1 = m*x1+b;
               return { enunciado:`Una función lineal tiene pendiente ${m}.\nSabiendo que f(${x1}) = ${y1}, ¿cuál es la ordenada al origen (b)?`, tipo:'numero', respuesta:b, tolerancia:0,
-                grafico:{ tipo:'lineal', m, b, marcaX:x1, marcaY:y1 } };
+                grafico:{ tipo:'lineal', m, b, marcaX:x1, marcaY:y1 },
+                explicacion:`Reemplazás en la fórmula: f(${x1}) = ${m}×${x1} + b = ${y1}. Despejás b: b = ${y1} - ${m*x1} = ${b}.` };
             }
           ]);
         } else {
@@ -1025,13 +1075,15 @@
               const a=randInt(1,4), b=randInt(-6,6), c=randInt(-6,6), x=randInt(-4,4);
               const r = a*x*x + b*x + c;
               return { enunciado:`f(x) = ${a}x² + ${b}x + (${c})\nf(${x}) = ?`, tipo:'numero', respuesta:r, tolerancia:0,
-                grafico:{ tipo:'cuadratica', a, b, c, marcaX:x } };
+                grafico:{ tipo:'cuadratica', a, b, c, marcaX:x },
+                explicacion:`Reemplazás x por ${x}: f(${x}) = ${a}×${x}² + ${b}×${x} + (${c}) = ${r}.` };
             },
             () => {
               const a=randInt(1,2), k=randInt(-5,5);
               const b = -2*a*k, c=randInt(-6,6);
               return { enunciado:`f(x) = ${a}x² + ${b}x + (${c})\n¿Cuál es el valor de x en el vértice de la parábola?`, tipo:'numero', respuesta:k, tolerancia:0,
-                grafico:{ tipo:'cuadratica', a, b, c, marcaX:k } };
+                grafico:{ tipo:'cuadratica', a, b, c, marcaX:k },
+                explicacion:`La fórmula del vértice es x = -b/(2a). Reemplazás: x = -(${b})/(2×${a}) = ${k}.` };
             }
           ]);
         }
@@ -1047,15 +1099,19 @@
               const b=randInt(3,20), h=randInt(3,20);
               const usarArea = Math.random()<0.5;
               const g = { tipo:'rectangulo', base:b, altura:h };
-              if(usarArea) return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:b*h, tolerancia:0, grafico:g };
-              return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:2*(b+h), tolerancia:0, grafico:g };
+              if(usarArea) return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:b*h, tolerancia:0, grafico:g,
+                explicacion:`El área de un rectángulo es base × altura: ${b} × ${h} = ${b*h}.` };
+              return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:2*(b+h), tolerancia:0, grafico:g,
+                explicacion:`El perímetro es la suma de los cuatro lados: 2 × (base + altura) = 2 × (${b} + ${h}) = ${2*(b+h)}.` };
             },
             () => {
               const l=randInt(3,20);
               const usarArea = Math.random()<0.5;
               const g = { tipo:'rectangulo', base:l, altura:l };
-              if(usarArea) return { enunciado:`Cuadrado de lado ${l}.\n¿Cuál es su área?`, tipo:'numero', respuesta:l*l, tolerancia:0, grafico:g };
-              return { enunciado:`Cuadrado de lado ${l}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:4*l, tolerancia:0, grafico:g };
+              if(usarArea) return { enunciado:`Cuadrado de lado ${l}.\n¿Cuál es su área?`, tipo:'numero', respuesta:l*l, tolerancia:0, grafico:g,
+                explicacion:`El área de un cuadrado es lado × lado: ${l} × ${l} = ${l*l}.` };
+              return { enunciado:`Cuadrado de lado ${l}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:4*l, tolerancia:0, grafico:g,
+                explicacion:`El perímetro de un cuadrado es 4 × lado: 4 × ${l} = ${4*l}.` };
             }
           ]);
         } else if(nivel===2){
@@ -1063,17 +1119,20 @@
             () => {
               const b=randInt(4,20), h=randInt(4,20);
               return { enunciado:`Triángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:(b*h)/2, tolerancia:0.05,
-                grafico:{ tipo:'triangulo', base:b, altura:h } };
+                grafico:{ tipo:'triangulo', base:b, altura:h },
+                explicacion:`El área de un triángulo es (base × altura) / 2: (${b} × ${h}) / 2 = ${(b*h)/2}.` };
             },
             () => {
               const r=randInt(2,12);
               return { enunciado:`Círculo de radio ${r}. Usá π ≈ 3.14\n¿Cuál es su área? (redondeá a 2 decimales)`, tipo:'numero', respuesta:3.14*r*r, tolerancia:0.5,
-                grafico:{ tipo:'circulo', radio:r } };
+                grafico:{ tipo:'circulo', radio:r },
+                explicacion:`El área de un círculo es π × radio²: 3.14 × ${r}² = 3.14 × ${r*r} = ${(3.14*r*r).toFixed(2)}.` };
             },
             () => {
               const bMayor=randInt(8,20), bMenor=randInt(3,bMayor-2), h=randInt(4,15);
               return { enunciado:`Trapecio de base mayor ${bMayor}, base menor ${bMenor} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:((bMayor+bMenor)/2)*h, tolerancia:0.05,
-                grafico:{ tipo:'trapecio', baseMayor:bMayor, baseMenor:bMenor, altura:h } };
+                grafico:{ tipo:'trapecio', baseMayor:bMayor, baseMenor:bMenor, altura:h },
+                explicacion:`El área de un trapecio es ((base mayor + base menor) / 2) × altura: ((${bMayor} + ${bMenor}) / 2) × ${h} = ${((bMayor+bMenor)/2)*h}.` };
             }
           ]);
         } else {
@@ -1082,18 +1141,21 @@
               const ternas = [[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15],[7,24,25]];
               const t = ternas[randInt(0,ternas.length-1)];
               return { enunciado:`Triángulo rectángulo con catetos ${t[0]} y ${t[1]}.\n¿Cuánto mide la hipotenusa?`, tipo:'numero', respuesta:t[2], tolerancia:0.05,
-                grafico:{ tipo:'triangulo-rectangulo', catA:t[0], catB:t[1], hip:t[2], incognita:'hip' } };
+                grafico:{ tipo:'triangulo-rectangulo', catA:t[0], catB:t[1], hip:t[2], incognita:'hip' },
+                explicacion:`Por el Teorema de Pitágoras: hipotenusa² = cateto² + cateto² = ${t[0]}² + ${t[1]}² = ${t[0]*t[0]} + ${t[1]*t[1]} = ${t[0]*t[0]+t[1]*t[1]}. La raíz cuadrada de eso es ${t[2]}.` };
             },
             () => {
               const ternas = [[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15],[7,24,25]];
               const t = ternas[randInt(0,ternas.length-1)];
               return { enunciado:`Triángulo rectángulo con hipotenusa ${t[2]} y un cateto ${t[0]}.\n¿Cuánto mide el otro cateto?`, tipo:'numero', respuesta:t[1], tolerancia:0.05,
-                grafico:{ tipo:'triangulo-rectangulo', catA:t[0], catB:t[1], hip:t[2], incognita:'catB' } };
+                grafico:{ tipo:'triangulo-rectangulo', catA:t[0], catB:t[1], hip:t[2], incognita:'catB' },
+                explicacion:`Por el Teorema de Pitágoras: cateto² = hipotenusa² - cateto conocido² = ${t[2]}² - ${t[0]}² = ${t[2]*t[2]} - ${t[0]*t[0]} = ${t[2]*t[2]-t[0]*t[0]}. La raíz cuadrada de eso es ${t[1]}.` };
             },
             () => {
               const catA=randInt(4,16), catB=randInt(4,16);
               return { enunciado:`Triángulo rectángulo con catetos ${catA} y ${catB}.\n¿Cuál es su área?`, tipo:'numero', respuesta:(catA*catB)/2, tolerancia:0.05,
-                grafico:{ tipo:'triangulo-rectangulo', catA, catB, hip:Math.round(Math.sqrt(catA*catA+catB*catB)*100)/100, incognita:'' } };
+                grafico:{ tipo:'triangulo-rectangulo', catA, catB, hip:Math.round(Math.sqrt(catA*catA+catB*catB)*100)/100, incognita:'' },
+                explicacion:`El área de un triángulo rectángulo es (cateto × cateto) / 2: (${catA} × ${catB}) / 2 = ${(catA*catB)/2}.` };
             }
           ]);
         }
@@ -1113,7 +1175,8 @@
             45:{sen:0.71, cos:0.71, tan:1},
             60:{sen:0.87, cos:0.5, tan:1.73}
           };
-          return { enunciado:`${raz}(${ang}°) = ?  (redondeá a 2 decimales)`, tipo:'numero', respuesta:tabla[ang][raz], tolerancia:0.02 };
+          return { enunciado:`${raz}(${ang}°) = ?  (redondeá a 2 decimales)`, tipo:'numero', respuesta:tabla[ang][raz], tolerancia:0.02,
+            explicacion:`${raz}(${ang}°) es un valor que se memoriza o se busca en la calculadora: ${raz}(${ang}°) ≈ ${tabla[ang][raz]}.` };
         } else if(nivel===2){
           return elegir([
             () => {
@@ -1121,14 +1184,16 @@
               const hip = randInt(10,30);
               const senTabla = {30:0.5, 45:0.71, 60:0.87};
               const opuesto = senTabla[ang]*hip;
-              return { enunciado:`Triángulo rectángulo con hipotenusa ${hip} y ángulo de ${ang}°.\n¿Cuánto mide el cateto opuesto? (redondeá a 1 decimal)`, tipo:'numero', respuesta:opuesto, tolerancia:0.5 };
+              return { enunciado:`Triángulo rectángulo con hipotenusa ${hip} y ángulo de ${ang}°.\n¿Cuánto mide el cateto opuesto? (redondeá a 1 decimal)`, tipo:'numero', respuesta:opuesto, tolerancia:0.5,
+                explicacion:`El cateto opuesto se calcula con sen(ángulo) × hipotenusa: sen(${ang}°) × ${hip} ≈ ${senTabla[ang]} × ${hip} = ${opuesto.toFixed(1)}.` };
             },
             () => {
               const ang = [30,45,60][randInt(0,2)];
               const hip = randInt(10,30);
               const cosTabla = {30:0.87, 45:0.71, 60:0.5};
               const adyacente = cosTabla[ang]*hip;
-              return { enunciado:`Triángulo rectángulo con hipotenusa ${hip} y ángulo de ${ang}°.\n¿Cuánto mide el cateto adyacente? (redondeá a 1 decimal)`, tipo:'numero', respuesta:adyacente, tolerancia:0.5 };
+              return { enunciado:`Triángulo rectángulo con hipotenusa ${hip} y ángulo de ${ang}°.\n¿Cuánto mide el cateto adyacente? (redondeá a 1 decimal)`, tipo:'numero', respuesta:adyacente, tolerancia:0.5,
+                explicacion:`El cateto adyacente se calcula con cos(ángulo) × hipotenusa: cos(${ang}°) × ${hip} ≈ ${cosTabla[ang]} × ${hip} = ${adyacente.toFixed(1)}.` };
             }
           ]);
         } else {
@@ -1137,13 +1202,15 @@
               const catOpuesto = randInt(5,20);
               const hip = catOpuesto + randInt(3,15);
               const angulo = Math.asin(catOpuesto/hip) * (180/Math.PI);
-              return { enunciado:`Triángulo rectángulo: cateto opuesto = ${catOpuesto}, hipotenusa = ${hip}.\n¿Cuánto mide el ángulo? (en grados, redondeá a 1 decimal)`, tipo:'numero', respuesta:angulo, tolerancia:0.5 };
+              return { enunciado:`Triángulo rectángulo: cateto opuesto = ${catOpuesto}, hipotenusa = ${hip}.\n¿Cuánto mide el ángulo? (en grados, redondeá a 1 decimal)`, tipo:'numero', respuesta:angulo, tolerancia:0.5,
+                explicacion:`El ángulo se calcula con el arcoseno de (cateto opuesto / hipotenusa): ángulo = asen(${catOpuesto}/${hip}) ≈ ${angulo.toFixed(1)}°.` };
             },
             () => {
               const catAdyacente = randInt(5,20);
               const hip = catAdyacente + randInt(3,15);
               const angulo = Math.acos(catAdyacente/hip) * (180/Math.PI);
-              return { enunciado:`Triángulo rectángulo: cateto adyacente = ${catAdyacente}, hipotenusa = ${hip}.\n¿Cuánto mide el ángulo? (en grados, redondeá a 1 decimal)`, tipo:'numero', respuesta:angulo, tolerancia:0.5 };
+              return { enunciado:`Triángulo rectángulo: cateto adyacente = ${catAdyacente}, hipotenusa = ${hip}.\n¿Cuánto mide el ángulo? (en grados, redondeá a 1 decimal)`, tipo:'numero', respuesta:angulo, tolerancia:0.5,
+                explicacion:`El ángulo se calcula con el arcocoseno de (cateto adyacente / hipotenusa): ángulo = acos(${catAdyacente}/${hip}) ≈ ${angulo.toFixed(1)}°.` };
             }
           ]);
         }
@@ -1157,8 +1224,10 @@
           return elegir([
             () => {
               const datos = Array.from({length:5}, ()=>randInt(1,20));
-              const prom = datos.reduce((a,b)=>a+b,0)/datos.length;
-              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es el promedio? (redondeá a 2 decimales si hace falta)`, tipo:'numero', respuesta:prom, tolerancia:0.02 };
+              const suma = datos.reduce((a,b)=>a+b,0);
+              const prom = suma/datos.length;
+              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es el promedio? (redondeá a 2 decimales si hace falta)`, tipo:'numero', respuesta:prom, tolerancia:0.02,
+                explicacion:`Sumás todos los datos: ${datos.join(' + ')} = ${suma}. Dividís por la cantidad de datos (${datos.length}): ${suma} ÷ ${datos.length} = ${Number.isInteger(prom)?prom:prom.toFixed(2)}.` };
             },
             () => {
               const moda = randInt(1,20);
@@ -1167,7 +1236,8 @@
                 return v;
               });
               const datos = [moda, moda, moda, ...otros].sort(()=>Math.random()-0.5);
-              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es la moda?`, tipo:'numero', respuesta:moda, tolerancia:0 };
+              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es la moda?`, tipo:'numero', respuesta:moda, tolerancia:0,
+                explicacion:`La moda es el valor que más veces se repite en la lista. Acá, el ${moda} aparece 3 veces, más que cualquier otro dato.` };
             }
           ]);
         } else if(nivel===2){
@@ -1177,13 +1247,16 @@
               const datos = Array.from({length:n}, ()=>randInt(1,30));
               const ordenados = [...datos].sort((a,b)=>a-b);
               const mediana = ordenados[Math.floor(n/2)];
-              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es la mediana?`, tipo:'numero', respuesta:mediana, tolerancia:0 };
+              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es la mediana?`, tipo:'numero', respuesta:mediana, tolerancia:0,
+                explicacion:`Ordenás los datos de menor a mayor: ${ordenados.join(', ')}. Como hay ${n} datos (cantidad impar), la mediana es el del medio: ${mediana}.` };
             },
             () => {
               const n = 6;
               const datos = Array.from({length:n}, ()=>randInt(1,40));
-              const rango = Math.max(...datos) - Math.min(...datos);
-              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es el rango (máximo menos mínimo)?`, tipo:'numero', respuesta:rango, tolerancia:0 };
+              const maximo = Math.max(...datos), minimo = Math.min(...datos);
+              const rango = maximo - minimo;
+              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es el rango (máximo menos mínimo)?`, tipo:'numero', respuesta:rango, tolerancia:0,
+                explicacion:`El rango es el valor máximo menos el mínimo: ${maximo} - ${minimo} = ${rango}.` };
             }
           ]);
         } else {
@@ -1192,13 +1265,15 @@
               const total = randInt(4,10);
               const favorables = randInt(1,total-1);
               const prob = favorables/total;
-              return { enunciado:`En una bolsa hay ${total} bolitas, ${favorables} son rojas.\nSi sacás una al azar, ¿cuál es la probabilidad de que sea roja? (como decimal, redondeá a 2 decimales)`, tipo:'numero', respuesta:prob, tolerancia:0.02 };
+              return { enunciado:`En una bolsa hay ${total} bolitas, ${favorables} son rojas.\nSi sacás una al azar, ¿cuál es la probabilidad de que sea roja? (como decimal, redondeá a 2 decimales)`, tipo:'numero', respuesta:prob, tolerancia:0.02,
+                explicacion:`La probabilidad es casos favorables sobre casos totales: ${favorables}/${total} = ${prob.toFixed(2)}.` };
             },
             () => {
               const total = randInt(4,10);
               const favorables = randInt(1,total-1);
               const prob = (total-favorables)/total;
-              return { enunciado:`En una bolsa hay ${total} bolitas, ${favorables} son azules.\nSi sacás una al azar, ¿cuál es la probabilidad de que NO sea azul? (como decimal, redondeá a 2 decimales)`, tipo:'numero', respuesta:prob, tolerancia:0.02 };
+              return { enunciado:`En una bolsa hay ${total} bolitas, ${favorables} son azules.\nSi sacás una al azar, ¿cuál es la probabilidad de que NO sea azul? (como decimal, redondeá a 2 decimales)`, tipo:'numero', respuesta:prob, tolerancia:0.02,
+                explicacion:`La probabilidad de que NO sea azul es los casos no azules sobre el total: (${total} - ${favorables})/${total} = ${total-favorables}/${total} = ${prob.toFixed(2)}.` };
             }
           ]);
         }
@@ -2291,7 +2366,10 @@
       const respuestaMostrada = problemaActual.tipo==='fraccion'
         ? fmtFraccion(problemaActual.respuesta[0], problemaActual.respuesta[1])
         : (Number.isInteger(problemaActual.respuesta) ? problemaActual.respuesta : problemaActual.respuesta.toFixed(2));
-      feedbackBox.innerHTML = `No es correcto. La respuesta era: <strong>${respuestaMostrada}</strong>`;
+      const explicacionHtml = problemaActual.explicacion
+        ? `<div class="explicacion">💡 ${problemaActual.explicacion}</div>`
+        : '';
+      feedbackBox.innerHTML = `No es correcto. La respuesta era: <strong>${respuestaMostrada}</strong>${explicacionHtml}`;
     }
     actualizarProgresoTxt();
   }
