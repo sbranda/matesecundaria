@@ -287,6 +287,22 @@
   .apariencia-opt[aria-checked="true"]{outline:2.5px solid var(--highlight); outline-offset:1px;}
   .apariencia-swatch{width:30px; height:30px; border-radius:50%; border:2.5px solid; display:block;}
   .apariencia-nombre{font-size:0.66em; font-weight:700;}
+
+  .logro-toast{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-16px); opacity:0;
+    background:var(--ink); color:var(--paper); border:2.5px solid var(--paper); border-radius:14px;
+    padding:10px 18px; font-weight:800; font-size:0.9em; z-index:70; display:flex; align-items:center; gap:8px;
+    transition:opacity .25s ease, transform .25s ease; pointer-events:none; box-shadow:0 3px 0 rgba(0,0,0,0.2);
+  }
+  .logro-toast.visible{opacity:1; transform:translateX(-50%) translateY(0);}
+  .logros-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
+  .logro-card{
+    border:2.5px solid var(--ink); border-radius:12px; padding:10px; text-align:center; background:var(--paper-alt);
+  }
+  .logro-card.bloqueado{opacity:0.45;}
+  .logro-icono{font-size:1.7em;}
+  .logro-nombre{font-weight:800; font-size:0.8em; margin-top:4px;}
+  .logro-desc{font-size:0.68em; color:var(--ink-soft); margin-top:2px; line-height:1.3;}
   .switch{
     width:46px; height:26px; background:#DCD8C8; border-radius:20px; position:relative; cursor:pointer; border:2px solid var(--ink);
   }
@@ -385,6 +401,7 @@
           <div class="chip xp">⭐ <span id="xp-total">0</span></div>
           <div class="chip racha">🔥 <span id="racha-total">0</span></div>
         </div>
+        <button class="icon-btn" id="btn-logros" aria-label="Logros">🏅</button>
         <button class="icon-btn" id="btn-ajustes" aria-label="Ajustes">⚙️</button>
       </div>
     </header>
@@ -511,6 +528,16 @@
   </div>
 </div>
 
+<!-- MODAL LOGROS -->
+<div class="modal-fondo" id="modal-logros">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="logros-titulo">
+    <h3 id="logros-titulo">Logros</h3>
+    <p id="logros-resumen" style="margin-top:-8px; color:var(--ink-soft); font-size:0.85em;"></p>
+    <div class="logros-grid" id="logros-grid"></div>
+    <button class="btn-primario" style="width:100%; margin-top:14px;" id="btn-cerrar-logros">Cerrar</button>
+  </div>
+</div>
+
 <script>
 (function(){
   'use strict';
@@ -538,6 +565,9 @@
   const btnAjustes = document.getElementById('btn-ajustes');
   const modalAjustes = document.getElementById('modal-ajustes');
   const btnCerrarAjustes = document.getElementById('btn-cerrar-ajustes');
+  const btnLogros = document.getElementById('btn-logros');
+  const modalLogros = document.getElementById('modal-logros');
+  const btnCerrarLogros = document.getElementById('btn-cerrar-logros');
   const switchGrande = document.getElementById('switch-grande');
   const switchSonido = document.getElementById('switch-sonido');
   const switchAnimaciones = document.getElementById('switch-animaciones');
@@ -1083,6 +1113,83 @@
 
   // ===== Hoja de borrador (dibujo a mano alzada) =====
   const NOMBRES_NIVEL = ['Fácil','Medio','Difícil'];
+
+  // ===== Logros / insignias =====
+  const LOGROS = [
+    { id:'primer_acierto', icono:'🥇', nombre:'Primer paso', desc:'Resolviste tu primer ejercicio correctamente.',
+      condicion: p => p.totalCorrectas >= 1 },
+    { id:'racha_3', icono:'🔥', nombre:'Constancia', desc:'Practicaste 3 días seguidos.',
+      condicion: p => p.racha >= 3 },
+    { id:'racha_7', icono:'🔥🔥', nombre:'Una semana entera', desc:'Practicaste 7 días seguidos.',
+      condicion: p => p.racha >= 7 },
+    { id:'racha_30', icono:'🔥🔥🔥', nombre:'Imparable', desc:'Practicaste 30 días seguidos.',
+      condicion: p => p.racha >= 30 },
+    { id:'xp_100', icono:'⭐', nombre:'Estrella inicial', desc:'Llegaste a 100 XP.',
+      condicion: p => p.xp >= 100 },
+    { id:'xp_500', icono:'🌟', nombre:'Brillante', desc:'Llegaste a 500 XP.',
+      condicion: p => p.xp >= 500 },
+    { id:'xp_1000', icono:'✨', nombre:'Mil puntos', desc:'Llegaste a 1000 XP.',
+      condicion: p => p.xp >= 1000 },
+    { id:'xp_5000', icono:'💫', nombre:'Maestro del XP', desc:'Llegaste a 5000 XP.',
+      condicion: p => p.xp >= 5000 },
+    { id:'puntaje_10', icono:'🎯', nombre:'Puntería perfecta', desc:'10 respuestas correctas seguidas sin fallar.',
+      condicion: p => p.mejorRachaAciertos >= 10 },
+    { id:'primer_tema', icono:'📘', nombre:'Tema dominado', desc:'Completaste los 3 niveles de un tema.',
+      condicion: p => Object.values(p.temas).some(t => t.completado.every(Boolean)) },
+    { id:'todos_temas', icono:'🏆', nombre:'Secundaria completa', desc:'Completaste los 3 niveles de todos los temas.',
+      condicion: p => Object.values(p.temas).every(t => t.completado.every(Boolean)) }
+  ];
+  let toastLogroPendientes = 0;
+  function mostrarLogroToast(logro){
+    const el = document.createElement('div');
+    el.className = 'logro-toast';
+    el.setAttribute('role','status');
+    el.setAttribute('aria-live','polite');
+    el.innerHTML = `<span aria-hidden="true">${logro.icono}</span><span>¡Logro desbloqueado! ${logro.nombre}</span>`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('visible'));
+    setTimeout(() => {
+      el.classList.remove('visible');
+      setTimeout(() => el.remove(), 400);
+    }, 2600);
+  }
+  function verificarLogros(avisar){
+    if(avisar === undefined) avisar = true;
+    const nuevos = [];
+    LOGROS.forEach(l => {
+      if(!progreso.logros[l.id] && l.condicion(progreso)){
+        progreso.logros[l.id] = true;
+        nuevos.push(l);
+      }
+    });
+    if(nuevos.length){
+      guardarProgreso();
+      if(avisar){
+        nuevos.forEach((l, i) => setTimeout(() => mostrarLogroToast(l), i*3000));
+      }
+    }
+  }
+  function renderLogros(){
+    const grid = document.getElementById('logros-grid');
+    const resumen = document.getElementById('logros-resumen');
+    if(!grid) return;
+    const desbloqueados = LOGROS.filter(l => progreso.logros[l.id]).length;
+    if(resumen) resumen.textContent = `${desbloqueados} de ${LOGROS.length} desbloqueados`;
+    grid.innerHTML = '';
+    LOGROS.forEach(l => {
+      const logrado = !!progreso.logros[l.id];
+      const card = document.createElement('div');
+      card.className = `logro-card${logrado ? '' : ' bloqueado'}`;
+      card.setAttribute('role','group');
+      card.setAttribute('aria-label', `${l.nombre}: ${l.desc}${logrado ? ' (desbloqueado)' : ' (bloqueado)'}`);
+      card.innerHTML = `
+        <div class="logro-icono" aria-hidden="true">${logrado ? l.icono : '🔒'}</div>
+        <div class="logro-nombre">${l.nombre}</div>
+        <div class="logro-desc">${l.desc}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
   const borradorCtx = borradorCanvas.getContext('2d');
   let colorTrazo = '#2B3A55';
   let modoGoma = false;
@@ -1485,7 +1592,7 @@
     TEMAS.forEach(t => {
       temas[t.id] = { nivelActual:1, correctas:[0,0,0], completado:[false,false,false] };
     });
-    return { xp:0, racha:0, ultimaFecha:null, temas };
+    return { xp:0, racha:0, ultimaFecha:null, temas, totalCorrectas:0, rachaAciertosActual:0, mejorRachaAciertos:0, logros:{} };
   }
   let progreso = cargarProgreso();
   function cargarProgreso(){
@@ -1496,6 +1603,10 @@
       // asegurar que existan todos los temas (por si se agregan nuevos)
       const base = estadoInicial();
       TEMAS.forEach(t => { if(!data.temas[t.id]) data.temas[t.id] = base.temas[t.id]; });
+      if(typeof data.totalCorrectas !== 'number') data.totalCorrectas = 0;
+      if(typeof data.rachaAciertosActual !== 'number') data.rachaAciertosActual = 0;
+      if(typeof data.mejorRachaAciertos !== 'number') data.mejorRachaAciertos = 0;
+      if(!data.logros || typeof data.logros !== 'object') data.logros = {};
       return data;
     }catch(e){ return estadoInicial(); }
   }
@@ -1779,6 +1890,9 @@
       feedbackBox.innerHTML = '¡Correcto! 🎉';
       reproducirSonido('correcto');
       progreso.xp += 10;
+      progreso.totalCorrectas = (progreso.totalCorrectas||0) + 1;
+      progreso.rachaAciertosActual = (progreso.rachaAciertosActual||0) + 1;
+      progreso.mejorRachaAciertos = Math.max(progreso.mejorRachaAciertos||0, progreso.rachaAciertosActual);
       if(!yaCompletado) p.correctas[idx] += 1;
       actualizarRacha();
       renderStatsTop();
@@ -1790,9 +1904,12 @@
         mostrarSello();
       }
       guardarProgreso();
+      verificarLogros();
     } else {
       feedbackBox.className = 'feedback incorrecto';
       reproducirSonido('incorrecto');
+      progreso.rachaAciertosActual = 0;
+      guardarProgreso();
       const respuestaMostrada = problemaActual.tipo==='fraccion'
         ? fmtFraccion(problemaActual.respuesta[0], problemaActual.respuesta[1])
         : (Number.isInteger(problemaActual.respuesta) ? problemaActual.respuesta : problemaActual.respuesta.toFixed(2));
@@ -1833,21 +1950,26 @@
   });
 
   let elementoConFocoPrevio = null;
-  function abrirModalAjustes(){
+  let modalActivo = null;
+  function abrirModal(modalEl, primerFoco){
     elementoConFocoPrevio = document.activeElement;
-    modalAjustes.classList.add('abierto');
-    aparienciaOpts[0].focus();
+    modalEl.classList.add('abierto');
+    modalActivo = modalEl;
+    const foco = primerFoco || modalEl.querySelector('button, input, [tabindex="0"]');
+    if(foco) foco.focus();
     document.addEventListener('keydown', manejarTeclaModal);
   }
-  function cerrarModalAjustes(){
-    modalAjustes.classList.remove('abierto');
+  function cerrarModal(modalEl){
+    modalEl.classList.remove('abierto');
+    modalActivo = null;
     document.removeEventListener('keydown', manejarTeclaModal);
     if(elementoConFocoPrevio) elementoConFocoPrevio.focus();
   }
   function manejarTeclaModal(e){
-    if(e.key === 'Escape'){ cerrarModalAjustes(); return; }
+    if(!modalActivo) return;
+    if(e.key === 'Escape'){ cerrarModal(modalActivo); return; }
     if(e.key === 'Tab'){
-      const focosVisibles = modalAjustes.querySelectorAll('button, input, [tabindex="0"]');
+      const focosVisibles = modalActivo.querySelectorAll('button, input, [tabindex="0"]');
       const lista = Array.from(focosVisibles);
       if(lista.length === 0) return;
       const primero = lista[0], ultimo = lista[lista.length-1];
@@ -1858,10 +1980,17 @@
       }
     }
   }
+  function abrirModalAjustes(){ abrirModal(modalAjustes, aparienciaOpts[0]); }
+  function cerrarModalAjustes(){ cerrarModal(modalAjustes); }
+  function abrirModalLogros(){ renderLogros(); abrirModal(modalLogros); }
+  function cerrarModalLogros(){ cerrarModal(modalLogros); }
 
   btnAjustes.addEventListener('click', abrirModalAjustes);
   btnCerrarAjustes.addEventListener('click', cerrarModalAjustes);
   modalAjustes.addEventListener('click', (e) => { if(e.target===modalAjustes) cerrarModalAjustes(); });
+  btnLogros.addEventListener('click', abrirModalLogros);
+  btnCerrarLogros.addEventListener('click', cerrarModalLogros);
+  modalLogros.addEventListener('click', (e) => { if(e.target===modalLogros) cerrarModalLogros(); });
 
   function alternarSwitch(switchEl, callback){
     const activarlo = () => {
@@ -1917,6 +2046,7 @@
   aplicarAjustes();
   renderStatsTop();
   renderTemas();
+  verificarLogros(false);
   mostrarVista('inicio');
 
   if('serviceWorker' in navigator){
