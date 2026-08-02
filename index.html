@@ -1297,6 +1297,133 @@
           ]);
         }
       }
+    },
+    {
+      id:'sistemas', icono:'🧩', nombre:'Sistemas de ecuaciones', rango:'4° - 5° año',
+      desc:'Resolución de sistemas de dos ecuaciones con dos incógnitas.',
+      generar(nivel){
+        function terminoY(coef){ return coef>=0 ? `+ ${coef}y` : `- ${Math.abs(coef)}y`; }
+        if(nivel===1){
+          return elegir([
+            () => {
+              const a=randInt(1,3), m=randInt(2,6), b=randInt(-8,8);
+              let x=randInt(-8,8); if(a+m===0) x=x||1;
+              const y = m*x+b;
+              const c = a*x+y;
+              return { enunciado:`y = ${m}x + (${b})\n${a}x + y = ${c}\n¿Cuánto vale x?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Sustituís la primera ecuación en la segunda: ${a}x + (${m}x + (${b})) = ${c}. Agrupás: ${a+m}x + (${b}) = ${c}. Despejás: ${a+m}x = ${c-b}. x = ${x}.` };
+            },
+            () => {
+              const a=randInt(1,3), m=randInt(2,6), b=randInt(-8,8);
+              const x=randInt(-8,8);
+              const y = m*x+b;
+              const c = a*x+y;
+              return { enunciado:`y = ${m}x + (${b})\n${a}x + y = ${c}\n¿Cuánto vale y?`, tipo:'numero', respuesta:y, tolerancia:0,
+                explicacion:`Sustituís la primera ecuación en la segunda: ${a}x + (${m}x + (${b})) = ${c}. Despejás x: x = ${x}. Reemplazás en y = ${m}x + (${b}) = ${m}×${x} + (${b}) = ${y}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const b1=randInt(2,6), b2=-b1;
+              const a1=randInt(1,6), a2=randInt(1,6);
+              const x=randInt(-8,8), y=randInt(-8,8);
+              const c1=a1*x+b1*y, c2=a2*x+b2*y;
+              return { enunciado:`${a1}x ${terminoY(b1)} = ${c1}\n${a2}x ${terminoY(b2)} = ${c2}\n¿Cuánto vale x? (sumá las dos ecuaciones para eliminar y)`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Sumás las dos ecuaciones: (${a1}+${a2})x + (${b1}+${b2})y = ${c1}+${c2}. Como ${b1}+${b2} = 0, la y se cancela: ${a1+a2}x = ${c1+c2}. x = ${x}.` };
+            },
+            () => {
+              const a1=randInt(2,6), a2=-a1;
+              const b1=randInt(1,6), b2=randInt(1,6);
+              const x=randInt(-8,8), y=randInt(-8,8);
+              const c1=a1*x+b1*y, c2=a2*x+b2*y;
+              return { enunciado:`${a1}x ${terminoY(b1)} = ${c1}\n${a2}x ${terminoY(b2)} = ${c2}\n¿Cuánto vale y? (sumá las dos ecuaciones para eliminar x)`, tipo:'numero', respuesta:y, tolerancia:0,
+                explicacion:`Sumás las dos ecuaciones: (${a1}+${a2})x + (${b1}+${b2})y = ${c1}+${c2}. Como ${a1}+${a2} = 0, la x se cancela: ${b1+b2}y = ${c1+c2}. y = ${y}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              let a1,b1,a2,b2,D,intentos=0;
+              do{ a1=randInt(2,6); b1=randInt(2,6); a2=randInt(2,6); b2=randInt(2,6); D=a1*b2-a2*b1; intentos++; }while(D===0 && intentos<20);
+              if(D===0){ a1=2; b1=3; a2=3; b2=2; D=a1*b2-a2*b1; }
+              const x=randInt(-8,8)||2, y=randInt(-8,8)||3;
+              const c1=a1*x+b1*y, c2=a2*x+b2*y;
+              const Dx = c1*b2-c2*b1;
+              return { enunciado:`${a1}x ${terminoY(b1)} = ${c1}\n${a2}x ${terminoY(b2)} = ${c2}\n¿Cuánto vale x?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Multiplicás la primera ecuación por ${b2} y la segunda por ${b1}, y restás para eliminar y: (${a1}×${b2} − ${a2}×${b1})x = ${c1}×${b2} − ${c2}×${b1}. Eso da ${D}x = ${Dx}. x = ${Dx} ÷ ${D} = ${x}.` };
+            },
+            () => {
+              let a1,b1,a2,b2,D,intentos=0;
+              do{ a1=randInt(2,6); b1=randInt(2,6); a2=randInt(2,6); b2=randInt(2,6); D=a1*b2-a2*b1; intentos++; }while(D===0 && intentos<20);
+              if(D===0){ a1=2; b1=3; a2=3; b2=2; D=a1*b2-a2*b1; }
+              const x=randInt(-8,8)||2, y=randInt(-8,8)||3;
+              const c1=a1*x+b1*y, c2=a2*x+b2*y;
+              const Dy = a1*c2-a2*c1;
+              return { enunciado:`${a1}x ${terminoY(b1)} = ${c1}\n${a2}x ${terminoY(b2)} = ${c2}\n¿Cuánto vale y?`, tipo:'numero', respuesta:y, tolerancia:0,
+                explicacion:`Multiplicás la primera ecuación por ${a2} y la segunda por ${a1} para igualar el coeficiente de x, y restás para eliminarlo: ${D}y = ${a1}×${c2} − ${a2}×${c1} = ${Dy}. y = ${Dy} ÷ ${D} = ${y}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'logaritmos', icono:'📶', nombre:'Logaritmos', rango:'5° - 6° año',
+      desc:'Definición, propiedades y ecuaciones con logaritmos.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => {
+              const e=randInt(1,4);
+              const n=Math.pow(10,e);
+              return { enunciado:`log(${n}) = ?`, tipo:'numero', respuesta:e, tolerancia:0,
+                explicacion:`log(${n}) pregunta a qué exponente hay que elevar 10 para obtener ${n}. Como 10^${e} = ${n}, log(${n}) = ${e}.` };
+            },
+            () => {
+              const b=randInt(2,5), e=randInt(2,4);
+              const n=Math.pow(b,e);
+              return { enunciado:`log en base ${b} de ${n} = ?  (log_${b}(${n}))`, tipo:'numero', respuesta:e, tolerancia:0,
+                explicacion:`log_${b}(${n}) pregunta a qué exponente hay que elevar ${b} para obtener ${n}. Como ${b}^${e} = ${n}, log_${b}(${n}) = ${e}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const b=randInt(2,5), e1=randInt(1,3), e2=randInt(1,3);
+              const m=Math.pow(b,e1), n=Math.pow(b,e2);
+              return { enunciado:`log_${b}(${m}) + log_${b}(${n}) = ?`, tipo:'numero', respuesta:e1+e2, tolerancia:0,
+                explicacion:`Por la propiedad del producto: log_${b}(${m}) + log_${b}(${n}) = log_${b}(${m}×${n}) = log_${b}(${m*n}). Como ${b}^${e1+e2} = ${m*n}, el resultado es ${e1+e2}.` };
+            },
+            () => {
+              const b=randInt(2,5), e2=randInt(1,2), e1=e2+randInt(1,2);
+              const m=Math.pow(b,e1), n=Math.pow(b,e2);
+              return { enunciado:`log_${b}(${m}) - log_${b}(${n}) = ?`, tipo:'numero', respuesta:e1-e2, tolerancia:0,
+                explicacion:`Por la propiedad del cociente: log_${b}(${m}) - log_${b}(${n}) = log_${b}(${m}÷${n}) = log_${b}(${m/n}). Como ${b}^${e1-e2} = ${m/n}, el resultado es ${e1-e2}.` };
+            },
+            () => {
+              const b=randInt(2,5), e=randInt(1,3), k=randInt(2,3);
+              const n=Math.pow(b,e);
+              return { enunciado:`${k} × log_${b}(${n}) = ?`, tipo:'numero', respuesta:k*e, tolerancia:0,
+                explicacion:`Por la propiedad de la potencia: ${k} × log_${b}(${n}) = log_${b}(${n}^${k}). Como log_${b}(${n}) = ${e}, el resultado es ${k} × ${e} = ${k*e}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const b=randInt(2,6), e=randInt(1,3);
+              const x=Math.pow(b,e);
+              return { enunciado:`log_${b}(x) = ${e}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`log_${b}(x) = ${e} significa que ${b}^${e} = x. Entonces x = ${x}.` };
+            },
+            () => {
+              const x=randInt(2,6), e=randInt(2,3);
+              const n=Math.pow(x,e);
+              return { enunciado:`log en base x de ${n} = ${e}  (log_x(${n}) = ${e})\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`log_x(${n}) = ${e} significa que x^${e} = ${n}. Buscás qué número elevado a ${e} da ${n}: x = ${x}.` };
+            }
+          ]);
+        }
+      }
     }
   ];
 
