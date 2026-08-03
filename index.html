@@ -430,6 +430,22 @@
 
   .switch{transition:background-color .2s ease;}
 
+  /* ===== EXPORTAR A PDF (vía impresión del navegador) ===== */
+  #area-impresion{display:none;}
+  #area-impresion h1{font-family:Georgia, serif; font-size:20px; margin-bottom:2px;}
+  #area-impresion p.subt-impresion{font-family:Arial, sans-serif; font-size:13px; color:#444; margin-top:0;}
+  #area-impresion table{width:100%; border-collapse:collapse; margin-top:14px; font-family:Arial, sans-serif;}
+  #area-impresion th, #area-impresion td{border:1px solid #999; padding:6px 9px; text-align:left; font-size:12px;}
+  #area-impresion th{background:#eee;}
+  @media print{
+    body *{ visibility:hidden; }
+    #area-impresion, #area-impresion *{ visibility:visible; }
+    #area-impresion{
+      display:block; position:absolute; top:0; left:0; width:100%;
+      background:#fff; color:#000; padding:20px;
+    }
+  }
+
   @media (prefers-reduced-motion:reduce){
     *, *::before, *::after{
       animation-duration:0.001ms !important;
@@ -546,6 +562,8 @@
 
 </div>
 
+<div id="area-impresion"></div>
+
 <!-- MODAL AJUSTES -->
 <div class="modal-fondo" id="modal-ajustes">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ajustes-titulo">
@@ -639,6 +657,10 @@
     <button class="btn-primario" style="width:100%; margin-top:8px;" id="btn-procesar-clase">Procesar</button>
     <p id="clase-resumen" class="clase-estado" role="status" aria-live="polite"></p>
     <div id="clase-tabla-wrap"></div>
+    <div class="clase-botones" style="margin-top:10px;">
+      <button type="button" class="btn-mini" id="btn-exportar-csv">📊 Exportar a Excel</button>
+      <button type="button" class="btn-mini" id="btn-exportar-pdf">🖨️ Exportar a PDF</button>
+    </div>
     <button class="btn-secundario" style="width:100%; margin-top:10px;" id="btn-limpiar-clase">🗑️ Limpiar reportes guardados</button>
     <button class="btn-primario" style="width:100%; margin-top:10px;" id="btn-cerrar-clase">Cerrar</button>
   </div>
@@ -728,6 +750,9 @@
   const claseResumen = document.getElementById('clase-resumen');
   const claseTablaWrap = document.getElementById('clase-tabla-wrap');
   const btnLimpiarClase = document.getElementById('btn-limpiar-clase');
+  const btnExportarCsv = document.getElementById('btn-exportar-csv');
+  const btnExportarPdf = document.getElementById('btn-exportar-pdf');
+  const areaImpresion = document.getElementById('area-impresion');
   const aparienciaOpts = Array.from(document.querySelectorAll('.apariencia-opt'));
   const chipVidas = document.getElementById('chip-vidas');
   const chipVidas2 = document.getElementById('chip-vidas-2');
@@ -1659,6 +1684,65 @@
     });
     html += '</tbody></table></div>';
     claseTablaWrap.innerHTML = html;
+  }
+
+  function csvEscape(valor){
+    const s = String(valor);
+    if(/[",\n\r]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  }
+  function descargarArchivo(contenido, nombre, tipo){
+    const blob = new Blob([contenido], { type: tipo });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function exportarClaseCSV(){
+    if(reportesClase.length === 0){
+      claseResumen.textContent = 'No hay reportes para exportar todavía. Pegá y procesá al menos uno primero.';
+      return;
+    }
+    const filas = [...reportesClase].sort((a,b) => b.xp - a.xp);
+    const encabezados = ['Alumno/a','Clase','XP','Racha (días)','Temas completos','Total de temas','Logros','Total de logros','Última actualización'];
+    const lineas = [encabezados.map(csvEscape).join(',')];
+    filas.forEach(r => {
+      const fecha = new Date(r.fecha).toLocaleDateString('es-AR');
+      const campos = [r.nombre, r.codigoClase||'', r.xp, r.racha, r.temasCompletados, r.totalTemas, r.logrosDesbloqueados, r.totalLogros, fecha];
+      lineas.push(campos.map(csvEscape).join(','));
+    });
+    const csv = '\uFEFF' + lineas.join('\r\n'); // BOM: para que Excel detecte UTF-8 y las tildes se vean bien
+    descargarArchivo(csv, `clase-mate-secundaria-${new Date().toISOString().slice(0,10)}.csv`, 'text/csv;charset=utf-8;');
+    claseResumen.textContent = `Se descargó el Excel con ${filas.length} alumno${filas.length===1?'':'s'}.`;
+  }
+  function exportarClasePDF(){
+    if(reportesClase.length === 0){
+      claseResumen.textContent = 'No hay reportes para exportar todavía. Pegá y procesá al menos uno primero.';
+      return;
+    }
+    const filas = [...reportesClase].sort((a,b) => b.xp - a.xp);
+    const fechaHoy = new Date().toLocaleDateString('es-AR');
+    const filasHtml = filas.map((r, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td>${escaparHtml(r.nombre)}</td>
+        <td>${escaparHtml(r.codigoClase||'—')}</td>
+        <td>${r.xp}</td>
+        <td>${r.racha}</td>
+        <td>${r.temasCompletados}/${r.totalTemas}</td>
+        <td>${r.logrosDesbloqueados}/${r.totalLogros}</td>
+      </tr>`).join('');
+    areaImpresion.innerHTML = `
+      <h1>Reporte de clase — Mate Secundaria</h1>
+      <p class="subt-impresion">Generado el ${fechaHoy} · ${filas.length} alumno${filas.length===1?'':'s'}</p>
+      <table>
+        <thead><tr><th>#</th><th>Alumno/a</th><th>Clase</th><th>XP</th><th>Racha</th><th>Temas</th><th>Logros</th></tr></thead>
+        <tbody>${filasHtml}</tbody>
+      </table>`;
+    window.print();
   }
 
   // ===== Panel de estadísticas =====
@@ -2843,6 +2927,8 @@
       claseResumen.textContent = '';
     }
   });
+  btnExportarCsv.addEventListener('click', exportarClaseCSV);
+  btnExportarPdf.addEventListener('click', exportarClasePDF);
 
   function alternarSwitch(switchEl, callback){
     const activarlo = () => {
