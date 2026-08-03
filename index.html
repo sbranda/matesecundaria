@@ -328,6 +328,15 @@
   .apariencia-opt[aria-checked="true"]{outline:2.5px solid var(--highlight); outline-offset:1px;}
   .apariencia-swatch{width:30px; height:30px; border-radius:50%; border:2.5px solid; display:block;}
   .apariencia-nombre{font-size:0.66em; font-weight:700;}
+  .acento-row{display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap;}
+  .acento-label{font-size:0.85em; font-weight:700; color:var(--ink);}
+  input.input-color{
+    width:38px; height:38px; border:2.5px solid var(--ink); border-radius:50%; padding:0;
+    cursor:pointer; background:none; -webkit-appearance:none; appearance:none;
+  }
+  input.input-color::-webkit-color-swatch-wrapper{padding:3px; border-radius:50%;}
+  input.input-color::-webkit-color-swatch{border:none; border-radius:50%;}
+  input.input-color::-moz-color-swatch{border:none; border-radius:50%;}
 
   .logro-toast{
     position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-16px); opacity:0;
@@ -594,6 +603,12 @@
           <span class="apariencia-nombre">Alto contraste</span>
         </button>
       </div>
+      <div class="acento-row">
+        <label for="input-color-acento" class="acento-label">🎨 Tu color de acento</label>
+        <input type="color" id="input-color-acento" class="input-color" value="#FFD23F" aria-describedby="acento-nota">
+        <button type="button" class="btn-mini" id="btn-acento-reset">Restablecer</button>
+      </div>
+      <p id="acento-nota" style="font-size:0.72em; color:var(--ink-soft); margin:2px 0 0 0;">Se usa en los focos de teclado, lo seleccionado y el pin de "completo". No se aplica en Alto contraste, para no perder legibilidad.</p>
     </div>
 
     <div class="fila-ajuste columna">
@@ -768,6 +783,8 @@
   const btnExportarPdf = document.getElementById('btn-exportar-pdf');
   const areaImpresion = document.getElementById('area-impresion');
   const aparienciaOpts = Array.from(document.querySelectorAll('.apariencia-opt'));
+  const inputColorAcento = document.getElementById('input-color-acento');
+  const btnAcentoReset = document.getElementById('btn-acento-reset');
   const chipVidas = document.getElementById('chip-vidas');
   const chipVidas2 = document.getElementById('chip-vidas-2');
   const vidasTotalEl = document.getElementById('vidas-total');
@@ -2481,7 +2498,7 @@
   // ===== Ajustes =====
   const TEMAS_DISPONIBLES = ['clasico','oscuro','menta','coral','contraste'];
   function ajustesBase(){
-    return { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00', codigoClase:'' };
+    return { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00', codigoClase:'', colorAcento:'#FFD23F' };
   }
   function cargarAjustes(){
     const base = ajustesBase();
@@ -2514,6 +2531,7 @@
   function aplicarAjustes(){
     if(!TEMAS_DISPONIBLES.includes(ajustes.apariencia)) ajustes.apariencia = 'clasico';
     aplicarApariencia(ajustes.apariencia);
+    aplicarColorAcento();
     document.body.classList.toggle('grande', ajustes.grande);
     document.body.classList.toggle('movimiento-reducido', ajustes.movimientoReducido);
     switchGrande.classList.toggle('on', ajustes.grande);
@@ -2530,6 +2548,19 @@
     if(inputNombre.value !== ajustes.nombre) inputNombre.value = ajustes.nombre;
     if(inputCodigoClase.value !== ajustes.codigoClase) inputCodigoClase.value = ajustes.codigoClase;
     actualizarSaludo();
+  }
+  function aplicarColorAcento(){
+    const esHexValido = /^#[0-9a-fA-F]{6}$/.test(ajustes.colorAcento || '');
+    if(!esHexValido) ajustes.colorAcento = '#FFD23F';
+    if(inputColorAcento.value.toLowerCase() !== ajustes.colorAcento.toLowerCase()){
+      inputColorAcento.value = ajustes.colorAcento;
+    }
+    if(ajustes.apariencia === 'contraste'){
+      // en alto contraste no aplicamos el acento propio, para no arriesgar la legibilidad
+      document.documentElement.style.removeProperty('--highlight');
+    } else {
+      document.documentElement.style.setProperty('--highlight', ajustes.colorAcento);
+    }
   }
   function guardarAjustes(){
     try{ localStorage.setItem(AJUSTES_KEY, JSON.stringify(ajustes)); }catch(e){}
@@ -3172,6 +3203,16 @@
       if(problemaActual && problemaActual.grafico) dibujarGrafico(problemaActual.grafico);
       if(modalStats.classList.contains('abierto')) dibujarGraficoXPSemana();
     });
+  });
+  inputColorAcento.addEventListener('input', () => {
+    ajustes.colorAcento = inputColorAcento.value;
+    guardarAjustes();
+    aplicarColorAcento();
+  });
+  btnAcentoReset.addEventListener('click', () => {
+    ajustes.colorAcento = '#FFD23F';
+    guardarAjustes();
+    aplicarColorAcento();
   });
 
   alternarSwitch(switchGrande, () => {
