@@ -274,6 +274,7 @@
   .feedback.correcto{background:rgba(76,154,91,0.15); border:2px solid var(--marker-green); color:var(--marker-green); display:block;}
   .feedback.incorrecto{background:rgba(192,57,43,0.1); border:2px solid var(--marker-red); color:var(--marker-red); display:block;}
   .feedback .explicacion{font-weight:600; color:var(--ink); margin-top:6px; font-size:0.92em; font-family:var(--font-body);}
+  .btn-compartir-logro{display:block; margin-top:10px;}
   .stamp-anim{
     position:fixed; top:40%; left:50%; transform:translate(-50%,-50%) rotate(-12deg) scale(0);
     font-family:var(--font-mono); font-weight:800; color:var(--marker-red);
@@ -695,6 +696,7 @@
 
     <h4 class="stats-subtitulo">XP esta semana</h4>
     <canvas id="stats-xp-canvas" width="280" height="150" role="img" aria-label=""></canvas>
+    <button type="button" class="btn-mini" id="btn-compartir-semana" style="margin-top:8px;">📤 Compartir mi semana</button>
 
     <h4 class="stats-subtitulo">Temas con más errores</h4>
     <div id="stats-errores-lista"></div>
@@ -740,6 +742,7 @@
   const btnCerrarStats = document.getElementById('btn-cerrar-stats');
   const statsResumen = document.getElementById('stats-resumen');
   const statsXpCanvas = document.getElementById('stats-xp-canvas');
+  const btnCompartirSemana = document.getElementById('btn-compartir-semana');
   const statsErroresLista = document.getElementById('stats-errores-lista');
   const switchGrande = document.getElementById('switch-grande');
   const switchSonido = document.getElementById('switch-sonido');
@@ -1896,6 +1899,144 @@
     dibujarGraficoXPSemana();
     renderErroresPorTema();
   }
+
+  // ===== Tarjetas compartibles (imagen generada, no captura de pantalla) =====
+  function dibujarFondoTarjeta(ctx, w, h){
+    ctx.fillStyle = getCSSVar('--paper');
+    ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle = getCSSVar('--grid');
+    ctx.lineWidth = 1;
+    for(let x=0; x<=w; x+=28){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for(let y=0; y<=h; y+=28){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+  }
+  function dibujarEncabezadoTarjeta(ctx, w){
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(52, 54, 22, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = getCSSVar('--marker-red');
+    ctx.font = 'bold 26px Georgia, serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('M', 52, 56);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = 'bold 25px Georgia, serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Mate Secundaria', 88, 62);
+  }
+  function dibujarPieTarjeta(ctx, w, h){
+    ctx.fillStyle = getCSSVar('--ink-soft');
+    ctx.font = '15px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Hecho con Mate Secundaria — Ejercitador', w/2, h-24);
+  }
+  function generarTarjetaLogro(tema, nivel){
+    const canvas = document.createElement('canvas');
+    canvas.width = 600; canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+    dibujarFondoTarjeta(ctx, 600, 600);
+    dibujarEncabezadoTarjeta(ctx, 600);
+    ctx.save();
+    ctx.translate(300, 260);
+    ctx.rotate(-0.12);
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.arc(0,0,130,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle = getCSSVar('--marker-red');
+    ctx.font = 'bold 44px Arial, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('¡APROBADO!', 0, -10);
+    ctx.font = 'bold 22px Arial, sans-serif';
+    ctx.fillText(NOMBRES_NIVEL[nivel-1], 0, 32);
+    ctx.restore();
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = 'bold 30px Arial, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(`${tema.icono} ${tema.nombre}`, 300, 430);
+    ctx.fillStyle = getCSSVar('--ink-soft');
+    ctx.font = '18px Arial, sans-serif';
+    ctx.fillText(new Date().toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' }), 300, 465);
+    dibujarPieTarjeta(ctx, 600, 600);
+    return canvas;
+  }
+  function generarTarjetaSemana(){
+    const canvas = document.createElement('canvas');
+    canvas.width = 600; canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+    dibujarFondoTarjeta(ctx, 600, 600);
+    dibujarEncabezadoTarjeta(ctx, 600);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = 'bold 28px Arial, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Mi semana en números', 300, 135);
+
+    const dias = obtenerUltimos7Dias();
+    const totalSemana = dias.reduce((a,d)=>a+d.valor, 0);
+    const maxValor = Math.max(10, ...dias.map(d => d.valor));
+    const areaX = 80, areaY = 170, areaW = 440, areaH = 230, padInferior = 30;
+    const paso = areaW / dias.length;
+    const anchoBarra = paso * 0.55;
+    ctx.strokeStyle = getCSSVar('--ink'); ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(areaX, areaY+areaH-padInferior);
+    ctx.lineTo(areaX+areaW, areaY+areaH-padInferior);
+    ctx.stroke();
+    ctx.font = '16px Arial, sans-serif';
+    dias.forEach((d, i) => {
+      const bh = Math.max(3, (d.valor/maxValor) * (areaH-padInferior-20));
+      const x = areaX + paso*i + (paso-anchoBarra)/2;
+      const y = areaY+areaH-padInferior-bh;
+      ctx.fillStyle = d.esHoy ? getCSSVar('--marker-red') : getCSSVar('--ink');
+      ctx.fillRect(x, y, anchoBarra, bh);
+      ctx.fillStyle = getCSSVar('--ink-soft');
+      ctx.textAlign = 'center';
+      ctx.fillText(d.letra, x+anchoBarra/2, areaY+areaH-padInferior+22);
+      if(d.valor > 0){
+        ctx.fillStyle = getCSSVar('--ink');
+        ctx.fillText(d.valor, x+anchoBarra/2, y-8);
+      }
+    });
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = 'bold 23px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`⭐ ${totalSemana} XP esta semana · 🔥 ${progreso.racha} día${progreso.racha===1?'':'s'} de racha`, 300, 460);
+    dibujarPieTarjeta(ctx, 600, 600);
+    return canvas;
+  }
+  function canvasABlob(canvas){
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  }
+  async function compartirImagenCanvas(canvas, nombreArchivo, tituloCompartir){
+    const blob = await canvasABlob(canvas);
+    if(!blob) return;
+    const archivo = new File([blob], nombreArchivo, { type:'image/png' });
+    if(navigator.share && navigator.canShare && navigator.canShare({ files:[archivo] })){
+      try{
+        await navigator.share({ files:[archivo], title: tituloCompartir });
+        return;
+      }catch(e){
+        if(e && e.name === 'AbortError') return; // canceló, no hacemos nada más
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+  function agregarBotonCompartirLogro(tema, nivel){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-mini btn-compartir-logro';
+    btn.textContent = '📤 Compartir este logro';
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const canvas = generarTarjetaLogro(tema, nivel);
+      await compartirImagenCanvas(canvas, `aprobado-${tema.id}-nivel${nivel}.png`, '¡Aprobé un nivel en Mate Secundaria!');
+      btn.disabled = false;
+    });
+    feedbackBox.appendChild(btn);
+  }
   const borradorCtx = borradorCanvas.getContext('2d');
   let colorTrazo = '#2B3A55';
   let modoGoma = false;
@@ -2860,6 +3001,7 @@
         p.completado[idx] = true;
         if(nivelActivo < 3) p.nivelActual = Math.max(p.nivelActual, nivelActivo+1);
         mostrarSello();
+        agregarBotonCompartirLogro(temaActivo, nivelActivo);
       }
       guardarProgreso();
       verificarLogros();
@@ -2978,6 +3120,12 @@
   btnStats.addEventListener('click', abrirModalStats);
   btnCerrarStats.addEventListener('click', cerrarModalStats);
   modalStats.addEventListener('click', (e) => { if(e.target===modalStats) cerrarModalStats(); });
+  btnCompartirSemana.addEventListener('click', async () => {
+    btnCompartirSemana.disabled = true;
+    const canvas = generarTarjetaSemana();
+    await compartirImagenCanvas(canvas, 'mi-semana-mate-secundaria.png', 'Mi semana en Mate Secundaria');
+    btnCompartirSemana.disabled = false;
+  });
   btnCompartirProgreso.addEventListener('click', compartirProgreso);
   btnClase.addEventListener('click', abrirModalClase);
   btnCerrarClase.addEventListener('click', cerrarModalClase);
