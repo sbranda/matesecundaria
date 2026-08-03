@@ -1,0 +1,2925 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mate Secundaria - Ejercitador</title>
+<meta name="theme-color" content="#2B3A55">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon192.png">
+<link rel="apple-touch-icon" href="icon192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FEFCF6;
+    --paper-alt:#F7F3E8;
+    --grid:#CBD9E8;
+    --ink:#2B3A55;
+    --ink-soft:#5C6B85;
+    --highlight:#FFD23F;
+    --marker-green:#4C9A5B;
+    --marker-red:#C0392B;
+    --nivel1:#6FA287;
+    --nivel2:#D89A3E;
+    --nivel3:#8B6BA8;
+    --radius:14px;
+    --font-display:'Kalam', cursive;
+    --font-body:'Nunito', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  .visually-hidden{
+    position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+  body.contraste{
+    --paper:#FFFFFF; --paper-alt:#FFFFFF; --grid:#8A8A8A; --ink:#000000; --ink-soft:#000000;
+  }
+  body.tema-oscuro{
+    --paper:#1E2430; --paper-alt:#262E3D; --grid:#3A4358; --ink:#F2F0E6; --ink-soft:#B7BECF;
+    --marker-green:#6FCB82; --marker-red:#FF6B5B;
+  }
+  body.tema-menta{
+    --paper:#F3FBF6; --paper-alt:#E3F5EA; --grid:#BFE3CC; --ink:#1F4436; --ink-soft:#4F7A67;
+  }
+  body.tema-coral{
+    --paper:#FFF6F2; --paper-alt:#FEE7DC; --grid:#F6C9B4; --ink:#5C2A1F; --ink-soft:#8A5A48;
+    --marker-red:#D64545;
+  }
+  body.movimiento-reducido *, body.movimiento-reducido *::before, body.movimiento-reducido *::after{
+    animation-duration:0.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.001ms !important;
+    scroll-behavior:auto !important;
+  }
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:var(--font-body);
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+    min-height:100vh;
+    overflow-x:hidden;
+    font-size:var(--fs, 16px);
+  }
+  body.grande{ --fs:19px; }
+  #app{max-width:520px; margin:0 auto; padding:0 0 40px 0; min-height:100vh;}
+
+  /* HEADER */
+  header.topbar{
+    padding:14px 18px 12px 18px;
+  }
+  .topbar-fila1{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .marca{display:flex; align-items:center; gap:10px; min-width:0;}
+  .marca h1{
+    font-family:var(--font-display); font-size:1.5em; margin:0; color:var(--ink);
+    transform:rotate(-1deg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .marca .sello-mini{
+    width:34px;height:34px;border-radius:50%;border:2.5px solid var(--marker-red);
+    display:flex;align-items:center;justify-content:center;color:var(--marker-red);
+    font-weight:800; transform:rotate(-8deg); flex-shrink:0;
+  }
+  .topbar-acciones{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .topbar-fila2{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    margin-top:12px; padding-top:10px;
+    border-top:2px dashed var(--grid);
+  }
+  .stats-top{display:flex; gap:10px;}
+  .chip{
+    background:var(--paper-alt); border:2px solid var(--ink); border-radius:20px;
+    padding:5px 11px; font-size:0.82em; font-weight:800; display:flex; align-items:center; gap:4px;
+  }
+  .chip.xp{color:var(--ink);}
+  .chip.racha{color:var(--marker-red);}
+  .chip.vidas{color:var(--ink);}
+  .chip.vidas.baja{color:var(--marker-red); border-color:var(--marker-red);}
+  .vidas-bloqueo{
+    background:var(--paper-alt); border:2.5px solid var(--marker-red); border-radius:var(--radius);
+    padding:26px 20px; margin-top:12px; text-align:center;
+  }
+  .vidas-bloqueo-icono{font-size:2.4em;}
+  .vidas-bloqueo-titulo{font-family:var(--font-display); font-size:1.3em; margin:8px 0 2px 0; color:var(--marker-red);}
+  .vidas-bloqueo-sub{font-size:1em; margin:2px 0; color:var(--ink);}
+  .vidas-bloqueo-nota{font-size:0.8em; color:var(--ink-soft); margin-top:10px;}
+  button.icon-btn{
+    background:none; border:2px solid var(--ink); border-radius:50%; width:38px;height:38px;
+    font-size:1.1em; cursor:pointer; color:var(--ink); flex-shrink:0;
+  }
+
+  /* PESTAÑAS DE CARPETA (vista inicio) */
+  .subt{padding:0 18px; color:var(--ink-soft); font-size:0.95em; margin-top:-4px;}
+  .repaso-mixto-card{
+    display:flex; align-items:center; gap:12px; width:calc(100% - 36px); margin:14px 18px 0 18px;
+    background:var(--paper-alt); border:2.5px dashed var(--marker-red); border-radius:var(--radius);
+    padding:13px 16px; cursor:pointer; text-align:left; font-family:var(--font-body);
+  }
+  .repaso-mixto-card:disabled{opacity:0.5; cursor:not-allowed; border-color:var(--ink-soft);}
+  .repaso-mixto-card .icono{font-size:1.7em; flex-shrink:0;}
+  .repaso-mixto-card .texto{display:flex; flex-direction:column; min-width:0;}
+  .repaso-mixto-card .titulo{font-family:var(--font-display); font-size:1.1em; color:var(--ink);}
+  .repaso-mixto-card .sub{font-size:0.76em; color:var(--ink-soft); margin-top:2px;}
+  .grid-temas{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:16px 18px 8px 18px;
+  }
+  .tema-card{
+    background:var(--paper-alt); border:2.5px solid var(--ink); border-radius:var(--radius);
+    padding:14px 12px; cursor:pointer; position:relative; transition:transform .12s ease;
+    text-align:left;
+  }
+  .tema-card:active{transform:scale(0.96);}
+  .tema-card .icono{font-size:1.8em;}
+  .tema-card .nombre{font-weight:800; font-size:0.98em; margin-top:6px; line-height:1.15; color:var(--ink);}
+  .tema-card .anio-tag{
+    font-family:var(--font-mono); font-size:0.68em; color:var(--ink-soft); margin-top:2px; display:block;
+  }
+  .barra-mini{height:7px; background:#E5E0D0; border-radius:6px; margin-top:9px; overflow:hidden;}
+  .barra-mini > div{height:100%; background:var(--marker-green); border-radius:6px; transition:width .3s ease;}
+  .tema-card .pin{
+    position:absolute; top:-8px; right:10px; width:16px; height:16px; border-radius:50%;
+    background:var(--highlight); border:2px solid var(--ink);
+  }
+
+  /* VISTA TEMA (camino de niveles) */
+  .volver{
+    display:flex; align-items:center; gap:8px; padding:14px 18px 0 18px; cursor:pointer;
+    color:var(--ink-soft); font-weight:700; font-size:0.92em; user-select:none;
+  }
+  .tema-header{padding:6px 18px 4px 18px;}
+  .tema-header h2{font-family:var(--font-display); font-size:1.7em; margin:4px 0 0 0; transform:rotate(-0.5deg);}
+  .tema-header p{color:var(--ink-soft); margin:2px 0 0 0; font-size:0.92em;}
+  .camino{padding:20px 40px; display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .nivel-nodo{
+    width:92px; height:92px; border-radius:50%; border:3px solid var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; position:relative; background:var(--paper-alt);
+    font-family:var(--font-body); padding:0;
+  }
+  .nivel-nodo:disabled{cursor:not-allowed;}
+  .nivel-nodo.n1{background:var(--nivel1); color:#fff;}
+  .nivel-nodo.n2{background:var(--nivel2); color:#fff;}
+  .nivel-nodo.n3{background:var(--nivel3); color:#fff;}
+  .nivel-nodo.bloqueado{background:#DCD8C8; color:var(--ink-soft); cursor:not-allowed; opacity:0.75;}
+  .nivel-nodo .etiqueta{font-family:var(--font-display); font-size:1.3em; font-weight:700;}
+  .nivel-nodo .sub{font-size:0.65em; font-weight:700; margin-top:-2px;}
+  .nivel-nodo .candado{font-size:1.4em;}
+  .conector{width:4px; height:26px; background:var(--ink); opacity:0.35;}
+  @keyframes selloIn{
+    0%{transform:rotate(-10deg) scale(0.7); opacity:0;}
+    60%{transform:rotate(-10deg) scale(1.08); opacity:1;}
+    100%{transform:rotate(-10deg) scale(1); opacity:1;}
+  }
+  .sello-completado{
+    position:absolute; inset:-6px; border:3px solid var(--marker-red); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; transform:rotate(-10deg);
+    pointer-events:none; animation:selloIn .4s ease;
+  }
+  .sello-completado span{
+    color:var(--marker-red); font-weight:800; font-size:0.6em; text-align:center; line-height:1;
+    font-family:var(--font-mono);
+  }
+
+  /* VISTA PRACTICA */
+  .practica-wrap{padding:14px 18px;}
+  .practica-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .progreso-nivel{font-size:0.82em; color:var(--ink-soft); font-weight:700;}
+  .hoja{
+    background:var(--paper-alt); border:2.5px solid var(--ink); border-radius:var(--radius);
+    padding:22px 18px; margin-top:12px; min-height:150px; position:relative;
+  }
+  .hoja .etiqueta-nivel{
+    position:absolute; top:-13px; left:16px; background:var(--ink); color:var(--paper);
+    padding:3px 12px; border-radius:10px; font-size:0.72em; font-weight:800;
+  }
+  .enunciado{
+    font-family:var(--font-mono); font-size:1.18em; line-height:1.6; color:var(--ink);
+    margin-top:6px; white-space:pre-wrap;
+  }
+  .grafico-wrap{margin-top:16px; text-align:center;}
+  #grafico-canvas{
+    max-width:100%; height:auto; border:2px solid var(--ink); border-radius:10px;
+    background:var(--paper); display:inline-block;
+  }
+  .borrador-wrap{margin-top:18px;}
+  .borrador-header{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+  }
+  .borrador-toggle{
+    font-family:var(--font-body); font-weight:800; font-size:0.88em; padding:8px 14px;
+    border-radius:10px; border:2.5px solid var(--ink); background:transparent; color:var(--ink);
+    cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+  .borrador-toggle[aria-expanded="true"]{background:var(--ink); color:var(--paper);}
+  .borrador-panel{margin-top:10px;}
+  .borrador-panel[hidden]{display:none;}
+  .borrador-toolbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
+  .color-swatch{
+    width:30px; height:30px; border-radius:50%; border:2.5px solid var(--ink); cursor:pointer; padding:0;
+  }
+  .color-swatch[aria-pressed="true"]{outline:3px solid var(--highlight); outline-offset:2px;}
+  .btn-goma{
+    width:34px; height:34px; border-radius:50%; border:2.5px solid var(--ink); cursor:pointer;
+    background:var(--paper); font-size:1.05em; display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .btn-goma[aria-pressed="true"]{background:var(--ink); outline:3px solid var(--highlight); outline-offset:2px;}
+  .btn-mini{
+    font-family:var(--font-body); font-weight:800; font-size:0.85em; padding:7px 12px;
+    border-radius:8px; border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+    cursor:pointer;
+  }
+  .borrador-hint{font-size:0.78em; color:var(--ink-soft); margin:0 0 8px 0;}
+  .borrador-canvas-wrap{
+    position:relative; resize:vertical; overflow:hidden;
+    height:220px; min-height:140px; max-height:640px;
+    border:2.5px dashed var(--ink-soft); border-radius:10px; background:var(--paper);
+  }
+  .borrador-canvas-wrap::after{
+    content:''; position:absolute; right:4px; bottom:4px; width:12px; height:12px;
+    background:
+      linear-gradient(135deg, transparent 0 40%, var(--ink-soft) 40% 55%, transparent 55% 100%),
+      linear-gradient(135deg, transparent 0 65%, var(--ink-soft) 65% 80%, transparent 80% 100%);
+    pointer-events:none; opacity:0.6;
+  }
+  #borrador-canvas{
+    display:block; touch-action:none; width:100%; height:100%;
+  }
+  .borrador-resize-controls{display:flex; gap:8px; margin-top:8px;}
+  .respuesta-row{display:flex; gap:10px; margin-top:18px;}
+  input#respuesta-input{
+    flex:1; font-family:var(--font-mono); font-size:1.15em; padding:11px 14px;
+    border:2.5px solid var(--ink); border-radius:10px; background:var(--paper);
+    color:var(--ink); min-width:0;
+  }
+  input#respuesta-input:focus{outline:3px solid var(--highlight);}
+  button.btn-primario{
+    font-family:var(--font-body); font-weight:800; font-size:1em; padding:11px 20px;
+    border-radius:10px; border:2.5px solid var(--ink); background:var(--ink); color:var(--paper);
+    cursor:pointer;
+  }
+  button.btn-primario:active{transform:scale(0.97);}
+  button.btn-secundario{
+    font-family:var(--font-body); font-weight:800; font-size:0.95em; padding:10px 18px;
+    border-radius:10px; border:2.5px solid var(--ink); background:transparent; color:var(--ink);
+    cursor:pointer; width:100%; margin-top:12px;
+  }
+  .feedback{margin-top:16px; padding:14px; border-radius:10px; font-weight:700; display:none;}
+  .feedback.correcto{background:rgba(76,154,91,0.15); border:2px solid var(--marker-green); color:var(--marker-green); display:block;}
+  .feedback.incorrecto{background:rgba(192,57,43,0.1); border:2px solid var(--marker-red); color:var(--marker-red); display:block;}
+  .feedback .explicacion{font-weight:600; color:var(--ink); margin-top:6px; font-size:0.92em; font-family:var(--font-body);}
+  .stamp-anim{
+    position:fixed; top:40%; left:50%; transform:translate(-50%,-50%) rotate(-12deg) scale(0);
+    font-family:var(--font-mono); font-weight:800; color:var(--marker-red);
+    border:6px solid var(--marker-red); border-radius:16px; padding:14px 26px; font-size:1.6em;
+    background:rgba(254,252,246,0.92); z-index:50; pointer-events:none;
+    animation:sello 1.1s ease forwards;
+  }
+  @keyframes sello{
+    0%{transform:translate(-50%,-50%) rotate(-12deg) scale(2.4); opacity:0;}
+    30%{transform:translate(-50%,-50%) rotate(-12deg) scale(1); opacity:1;}
+    75%{transform:translate(-50%,-50%) rotate(-12deg) scale(1); opacity:1;}
+    100%{transform:translate(-50%,-50%) rotate(-12deg) scale(1); opacity:0;}
+  }
+
+  /* MODAL AJUSTES */
+  .modal-fondo{
+    display:none; position:fixed; inset:0; background:rgba(43,58,85,0.5); z-index:60;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-fondo.abierto{display:flex;}
+  .modal{
+    background:var(--paper); border:2.5px solid var(--ink); border-radius:var(--radius);
+    padding:22px; max-width:380px; width:100%; max-height:85vh; overflow-y:auto;
+  }
+  .modal h3{font-family:var(--font-display); margin-top:0; font-size:1.4em;}
+  .fila-ajuste{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--grid);}
+  .fila-ajuste.columna{flex-direction:column; align-items:stretch; gap:8px;}
+  .fila-ajuste label.titulo-ajuste, .fila-ajuste span.titulo-ajuste{font-weight:700; font-size:0.95em;}
+  .input-texto{
+    font-family:var(--font-body); font-size:1em; padding:9px 12px;
+    border:2.5px solid var(--ink); border-radius:8px; background:var(--paper); color:var(--ink);
+  }
+  .input-texto:focus{outline:3px solid var(--highlight); outline-offset:1px;}
+  .clase-botones{display:flex; gap:8px; flex-wrap:wrap; margin-top:2px;}
+  .clase-botones .btn-mini{flex:1 1 auto; white-space:nowrap;}
+  .clase-estado{font-size:0.78em; color:var(--marker-green); margin:6px 0 0 0; min-height:1em;}
+  .clase-ayuda{font-size:0.82em; color:var(--ink-soft); margin-top:-6px;}
+  .clase-textarea{width:100%; font-family:var(--font-mono); font-size:0.82em; resize:vertical; min-height:90px; box-sizing:border-box;}
+  .modal-ancho{max-width:480px;}
+  .clase-tabla-scroll{overflow-x:auto; margin-top:10px; border:2px solid var(--ink); border-radius:10px;}
+  table.clase-tabla{width:100%; border-collapse:collapse; font-size:0.78em;}
+  table.clase-tabla th, table.clase-tabla td{padding:7px 9px; border-bottom:1.5px solid var(--grid); text-align:left; white-space:nowrap;}
+  table.clase-tabla tr:last-child td{border-bottom:none;}
+  table.clase-tabla th{font-family:var(--font-display); color:var(--ink); background:var(--paper-alt); position:sticky; top:0;}
+  .clase-vacio{font-size:0.85em; color:var(--ink-soft); margin-top:10px;}
+  .apariencia-grupo{display:flex; flex-wrap:wrap; gap:10px;}
+  .apariencia-opt{
+    display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none;
+    cursor:pointer; padding:5px; border-radius:8px; font-family:var(--font-body); color:var(--ink);
+  }
+  .apariencia-opt[aria-checked="true"]{outline:2.5px solid var(--highlight); outline-offset:1px;}
+  .apariencia-swatch{width:30px; height:30px; border-radius:50%; border:2.5px solid; display:block;}
+  .apariencia-nombre{font-size:0.66em; font-weight:700;}
+
+  .logro-toast{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-16px); opacity:0;
+    background:var(--ink); color:var(--paper); border:2.5px solid var(--paper); border-radius:14px;
+    padding:10px 18px; font-weight:800; font-size:0.9em; z-index:70; display:flex; align-items:center; gap:8px;
+    transition:opacity .25s ease, transform .25s ease; pointer-events:none; box-shadow:0 3px 0 rgba(0,0,0,0.2);
+  }
+  .logro-toast.visible{opacity:1; transform:translateX(-50%) translateY(0);}
+  .logros-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
+  .logro-card{
+    border:2.5px solid var(--ink); border-radius:12px; padding:10px; text-align:center; background:var(--paper-alt);
+  }
+  .logro-card.bloqueado{opacity:0.45;}
+  .logro-icono{font-size:1.7em;}
+  .logro-nombre{font-weight:800; font-size:0.8em; margin-top:4px;}
+  .logro-desc{font-size:0.68em; color:var(--ink-soft); margin-top:2px; line-height:1.3;}
+
+  .stats-subtitulo{
+    font-family:var(--font-display); font-size:1.05em; margin:16px 0 8px 0; color:var(--ink);
+  }
+  #stats-xp-canvas{
+    width:100%; height:auto; border:2px solid var(--ink); border-radius:10px; background:var(--paper); display:block;
+  }
+  .estad-fila{display:flex; align-items:center; gap:8px; margin-bottom:9px;}
+  .estad-icono{width:20px; text-align:center; flex-shrink:0;}
+  .estad-nombre{flex:0 0 96px; font-size:0.78em; font-weight:700; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .estad-barra-wrap{flex:1; height:10px; background:#E5E0D0; border-radius:6px; overflow:hidden;}
+  .estad-barra{height:100%; background:var(--marker-red); border-radius:6px;}
+  .estad-valor{font-size:0.75em; font-weight:800; width:20px; text-align:right; flex-shrink:0; color:var(--ink-soft);}
+  .stats-vacio{font-size:0.85em; color:var(--ink-soft); margin:4px 0 0 0;}
+  .switch{
+    width:46px; height:26px; background:#DCD8C8; border-radius:20px; position:relative; cursor:pointer; border:2px solid var(--ink);
+  }
+  .switch.on{background:var(--marker-green);}
+  .switch .bolita{width:18px; height:18px; background:#fff; border-radius:50%; position:absolute; top:2px; left:2px; transition:left .2s;}
+  .switch.on .bolita{left:22px;}
+
+  footer.credito{
+    text-align:center; padding:22px 18px 10px 18px; color:var(--ink-soft); font-size:0.78em;
+  }
+
+  /* ===== ANIMACIONES ===== */
+  @keyframes vistaIn{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .vista-anim{animation:vistaIn .32s ease;}
+
+  @keyframes aparecerCard{
+    from{opacity:0; transform:translateY(14px) scale(0.97);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .tema-card{animation:aparecerCard .4s ease both;}
+  @media (hover:hover){
+    .tema-card:hover{transform:translateY(-3px);}
+  }
+
+  @keyframes pulsoNivel{
+    0%,100%{box-shadow:0 0 0 0 rgba(43,58,85,0.32);}
+    50%{box-shadow:0 0 0 9px rgba(43,58,85,0);}
+  }
+  .nivel-nodo.activo{animation:pulsoNivel 2.4s ease-in-out infinite;}
+
+  @keyframes bounceIn{
+    0%{transform:scale(0.85); opacity:0;}
+    60%{transform:scale(1.04); opacity:1;}
+    100%{transform:scale(1); opacity:1;}
+  }
+  @keyframes shake{
+    10%,90%{transform:translateX(-2px);}
+    20%,80%{transform:translateX(4px);}
+    30%,50%,70%{transform:translateX(-6px);}
+    40%,60%{transform:translateX(6px);}
+  }
+  .feedback.correcto{animation:bounceIn .4s ease;}
+  .feedback.incorrecto{animation:shake .4s ease;}
+
+  @keyframes bump{
+    0%{transform:scale(1);}
+    35%{transform:scale(1.28);}
+    65%{transform:scale(0.95);}
+    100%{transform:scale(1);}
+  }
+  .chip.bump{animation:bump .5s ease;}
+  .chip.shake-chip{animation:shake .4s ease;}
+
+  @keyframes confettiCaida{
+    0%{transform:translateY(-10px) rotate(0deg); opacity:1;}
+    100%{transform:translateY(220px) rotate(360deg); opacity:0;}
+  }
+  .confeti-part{
+    position:fixed; top:35%; font-size:1.4em; pointer-events:none; z-index:55;
+    animation:confettiCaida 950ms ease-in forwards;
+  }
+
+  @keyframes modalIn{
+    from{opacity:0; transform:scale(0.92) translateY(6px);}
+    to{opacity:1; transform:scale(1) translateY(0);}
+  }
+  .modal{animation:modalIn .22s ease;}
+
+  .switch{transition:background-color .2s ease;}
+
+  @media (prefers-reduced-motion:reduce){
+    *, *::before, *::after{
+      animation-duration:0.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:0.001ms !important;
+      scroll-behavior:auto !important;
+    }
+  }
+  :focus-visible{outline:3px solid var(--highlight); outline-offset:2px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== VISTA INICIO ===== -->
+  <div id="vista-inicio">
+    <header class="topbar">
+      <div class="topbar-fila1">
+        <div class="marca">
+          <div class="sello-mini">M</div>
+          <h1>Mate Secundaria</h1>
+        </div>
+        <div class="topbar-acciones">
+          <button class="icon-btn" id="btn-stats" aria-label="Estadísticas">📊</button>
+          <button class="icon-btn" id="btn-logros" aria-label="Logros">🏅</button>
+          <button class="icon-btn" id="btn-clase" aria-label="Modo clase">🎓</button>
+          <button class="icon-btn" id="btn-ajustes" aria-label="Ajustes">⚙️</button>
+        </div>
+      </div>
+      <div class="topbar-fila2">
+        <div class="chip vidas" id="chip-vidas">❤️ <span id="vidas-total">5</span></div>
+        <div class="chip xp">⭐ <span id="xp-total">0</span></div>
+        <div class="chip racha">🔥 <span id="racha-total">0</span></div>
+      </div>
+    </header>
+    <p class="subt">Elegí un tema y practicá a tu ritmo. Cada nivel superado suma un sello.</p>
+    <button class="repaso-mixto-card" id="btn-repaso-mixto" disabled>
+      <span class="icono" aria-hidden="true">🔀</span>
+      <span class="texto">
+        <span class="titulo">Repaso mixto</span>
+        <span class="sub" id="repaso-mixto-sub">Aprobá al menos un nivel en 2 temas distintos para desbloquearlo</span>
+      </span>
+    </button>
+    <div class="grid-temas" id="grid-temas"></div>
+    <footer class="credito">Desarrollado por Seba Branda</footer>
+  </div>
+
+  <!-- ===== VISTA TEMA ===== -->
+  <div id="vista-tema" style="display:none;">
+    <div class="volver" id="btn-volver-tema" role="button" tabindex="0">← Volver a los temas</div>
+    <div class="tema-header">
+      <h2 id="tema-titulo"></h2>
+      <p id="tema-desc"></p>
+    </div>
+    <div class="camino" id="camino-niveles"></div>
+  </div>
+
+  <!-- ===== VISTA PRACTICA ===== -->
+  <div id="vista-practica" style="display:none;">
+    <div class="volver" id="btn-volver-practica" role="button" tabindex="0">← Volver al tema</div>
+    <div class="practica-wrap">
+      <div class="practica-top">
+        <div class="progreso-nivel" id="progreso-nivel-txt"></div>
+        <div class="chip vidas" id="chip-vidas-2">❤️ <span id="vidas-total-2">5</span></div>
+        <div class="chip xp">⭐ <span id="xp-total-2">0</span></div>
+      </div>
+      <div class="hoja" id="hoja-practica">
+        <div class="etiqueta-nivel" id="hoja-etiqueta">Nivel 1</div>
+        <div class="enunciado" id="enunciado-txt">Cargando...</div>
+        <div class="grafico-wrap" id="grafico-wrap" style="display:none;">
+          <canvas id="grafico-canvas" width="280" height="200"></canvas>
+        </div>
+        <div class="respuesta-row">
+          <label for="respuesta-input" class="visually-hidden">Tu respuesta</label>
+          <input id="respuesta-input" type="text" inputmode="decimal" placeholder="Tu respuesta" autocomplete="off">
+          <button class="btn-primario" id="btn-comprobar">Comprobar</button>
+        </div>
+        <div class="feedback" id="feedback-box" role="status" aria-live="polite"></div>
+      </div>
+      <div class="vidas-bloqueo" id="vidas-bloqueo" style="display:none;" role="status" aria-live="polite">
+        <div class="vidas-bloqueo-icono" aria-hidden="true">💔</div>
+        <p class="vidas-bloqueo-titulo">Te quedaste sin corazones</p>
+        <p class="vidas-bloqueo-sub">Próximo corazón en <strong id="vidas-countdown">--:--</strong></p>
+        <p class="vidas-bloqueo-nota">Podés desactivar las vidas en Ajustes si preferís practicar sin límite.</p>
+      </div>
+      <div class="borrador-wrap" id="borrador-wrap">
+          <div class="borrador-header">
+            <button class="borrador-toggle" id="btn-toggle-borrador" aria-expanded="false" aria-controls="borrador-panel">
+              ✏️ <span>Hoja de borrador</span>
+            </button>
+          </div>
+          <div class="borrador-panel" id="borrador-panel" hidden>
+            <div class="borrador-toolbar" role="toolbar" aria-label="Herramientas de dibujo">
+              <button type="button" class="color-swatch" data-color="#2B3A55" style="background:#2B3A55;" aria-pressed="true" aria-label="Color azul tinta"></button>
+              <button type="button" class="color-swatch" data-color="#C0392B" style="background:#C0392B;" aria-pressed="false" aria-label="Color rojo"></button>
+              <button type="button" class="color-swatch" data-color="#4C9A5B" style="background:#4C9A5B;" aria-pressed="false" aria-label="Color verde"></button>
+              <button type="button" class="btn-goma" id="btn-goma" aria-pressed="false" aria-label="Goma de borrar: borra solo lo que toques">🧽</button>
+              <button type="button" class="btn-mini" id="btn-borrador-borrar">🗑️ Borrar hoja</button>
+            </div>
+            <p class="borrador-hint">Elegí un color o tocá 🧽 para borrar solo una parte del dibujo. Para el tamaño, arrastrá la esquina inferior derecha o usá los botones de abajo.</p>
+            <div class="borrador-canvas-wrap" id="borrador-canvas-wrap">
+              <canvas id="borrador-canvas" width="600" height="440" role="img" aria-label="Área para escribir o dibujar a mano alzada con el dedo, mouse o lápiz óptico. No es obligatoria para responder."></canvas>
+            </div>
+            <div class="borrador-resize-controls">
+              <button type="button" class="btn-mini" id="btn-borrador-menos" aria-label="Achicar la hoja de borrador">🔽 Más chica</button>
+              <button type="button" class="btn-mini" id="btn-borrador-mas" aria-label="Agrandar la hoja de borrador">🔼 Más grande</button>
+              <span class="visually-hidden" id="borrador-tam-status" role="status" aria-live="polite"></span>
+            </div>
+          </div>
+        </div>
+      <button class="btn-secundario" id="btn-siguiente" style="display:none;">Siguiente ejercicio →</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL AJUSTES -->
+<div class="modal-fondo" id="modal-ajustes">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ajustes-titulo">
+    <h3 id="ajustes-titulo">Ajustes</h3>
+
+    <div class="fila-ajuste columna">
+      <span class="titulo-ajuste" id="label-apariencia">Apariencia</span>
+      <div class="apariencia-grupo" role="radiogroup" aria-labelledby="label-apariencia">
+        <button type="button" class="apariencia-opt" data-tema="clasico" role="radio" aria-checked="true">
+          <span class="apariencia-swatch" style="background:#FEFCF6; border-color:#2B3A55;"></span>
+          <span class="apariencia-nombre">Clásico</span>
+        </button>
+        <button type="button" class="apariencia-opt" data-tema="oscuro" role="radio" aria-checked="false">
+          <span class="apariencia-swatch" style="background:#1E2430; border-color:#F2F0E6;"></span>
+          <span class="apariencia-nombre">Oscuro</span>
+        </button>
+        <button type="button" class="apariencia-opt" data-tema="menta" role="radio" aria-checked="false">
+          <span class="apariencia-swatch" style="background:#F3FBF6; border-color:#1F4436;"></span>
+          <span class="apariencia-nombre">Menta</span>
+        </button>
+        <button type="button" class="apariencia-opt" data-tema="coral" role="radio" aria-checked="false">
+          <span class="apariencia-swatch" style="background:#FFF6F2; border-color:#5C2A1F;"></span>
+          <span class="apariencia-nombre">Coral</span>
+        </button>
+        <button type="button" class="apariencia-opt" data-tema="contraste" role="radio" aria-checked="false">
+          <span class="apariencia-swatch" style="background:#FFFFFF; border-color:#000000;"></span>
+          <span class="apariencia-nombre">Alto contraste</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="fila-ajuste columna">
+      <label class="titulo-ajuste" for="input-nombre">Tu nombre (opcional)</label>
+      <input type="text" id="input-nombre" class="input-texto" maxlength="20" placeholder="¿Cómo te llamás?" autocomplete="off">
+    </div>
+
+    <div class="fila-ajuste">
+      <span id="label-grande">Texto grande</span>
+      <div class="switch" id="switch-grande" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-grande"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste">
+      <span id="label-sonido">Sonido de efectos</span>
+      <div class="switch" id="switch-sonido" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-sonido"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste">
+      <span id="label-animaciones">Reducir animaciones</span>
+      <div class="switch" id="switch-animaciones" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-animaciones"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste">
+      <span id="label-vidas">❤️ Vidas (más tensión)</span>
+      <div class="switch" id="switch-vidas" role="switch" tabindex="0" aria-checked="true" aria-labelledby="label-vidas"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste">
+      <span id="label-recordatorio">🔔 Recordatorio diario</span>
+      <div class="switch" id="switch-recordatorio" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-recordatorio"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste columna" id="recordatorio-hora-wrap" style="display:none; border-bottom:1px solid var(--grid); padding-bottom:12px;">
+      <label class="titulo-ajuste" for="input-recordatorio-hora" style="font-size:0.82em;">Hora del recordatorio</label>
+      <input type="time" id="input-recordatorio-hora" class="input-texto" value="19:00">
+      <p style="font-size:0.72em; color:var(--ink-soft); margin:4px 0 0 0;">Funciona mejor en Android/Chrome con la app instalada en la pantalla de inicio. En iPhone puede no avisar si Mate Secundaria está cerrada del todo.</p>
+    </div>
+    <p id="recordatorio-estado" style="font-size:0.78em; color:var(--marker-red); margin:-4px 0 8px 0;"></p>
+
+    <div class="fila-ajuste" style="border-bottom:none;">
+      <span>Reiniciar progreso</span>
+      <button class="btn-secundario" style="width:auto; margin-top:0; padding:8px 14px; font-size:0.85em;" id="btn-reiniciar">Reiniciar</button>
+    </div>
+    <button class="btn-primario" style="width:100%; margin-top:14px;" id="btn-cerrar-ajustes">Cerrar</button>
+  </div>
+</div>
+
+<!-- MODAL CLASE -->
+<div class="modal-fondo" id="modal-clase">
+  <div class="modal modal-ancho" role="dialog" aria-modal="true" aria-labelledby="clase-titulo">
+    <h3 id="clase-titulo">🎓 Modo clase</h3>
+
+    <h4 class="stats-subtitulo" style="margin-top:0;">Tu progreso (alumno/a)</h4>
+    <div class="fila-ajuste columna" style="border-bottom:none; padding-top:0;">
+      <label class="titulo-ajuste" for="input-codigo-clase">Código de clase (opcional)</label>
+      <input type="text" id="input-codigo-clase" class="input-texto" maxlength="20" placeholder="Ej: 8B-2026" autocomplete="off">
+      <div class="clase-botones">
+        <button type="button" class="btn-mini" id="btn-compartir-progreso">📤 Compartir mi progreso</button>
+      </div>
+      <p id="compartir-estado" class="clase-estado"></p>
+    </div>
+
+    <h4 class="stats-subtitulo">👩‍🏫 Para docentes</h4>
+    <p class="clase-ayuda">Pegá acá los mensajes que te compartieron tus alumnos con el botón de arriba (podés pegar varios juntos, incluso mezclados con otros mensajes de WhatsApp).</p>
+    <label for="textarea-clase" class="visually-hidden">Pegar reportes de alumnos</label>
+    <textarea id="textarea-clase" class="input-texto clase-textarea" rows="4" placeholder="Pegá acá los mensajes..."></textarea>
+    <button class="btn-primario" style="width:100%; margin-top:8px;" id="btn-procesar-clase">Procesar</button>
+    <p id="clase-resumen" class="clase-estado" role="status" aria-live="polite"></p>
+    <div id="clase-tabla-wrap"></div>
+    <button class="btn-secundario" style="width:100%; margin-top:10px;" id="btn-limpiar-clase">🗑️ Limpiar reportes guardados</button>
+    <button class="btn-primario" style="width:100%; margin-top:10px;" id="btn-cerrar-clase">Cerrar</button>
+  </div>
+</div>
+
+<!-- MODAL LOGROS -->
+<div class="modal-fondo" id="modal-logros">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="logros-titulo">
+    <h3 id="logros-titulo">Logros</h3>
+    <p id="logros-resumen" style="margin-top:-8px; color:var(--ink-soft); font-size:0.85em;"></p>
+    <div class="logros-grid" id="logros-grid"></div>
+    <button class="btn-primario" style="width:100%; margin-top:14px;" id="btn-cerrar-logros">Cerrar</button>
+  </div>
+</div>
+
+<!-- MODAL ESTADÍSTICAS -->
+<div class="modal-fondo" id="modal-stats">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stats-titulo">
+    <h3 id="stats-titulo">Tus estadísticas</h3>
+    <p id="stats-resumen" style="margin-top:-8px; color:var(--ink-soft); font-size:0.85em;"></p>
+
+    <h4 class="stats-subtitulo">XP esta semana</h4>
+    <canvas id="stats-xp-canvas" width="280" height="150" role="img" aria-label=""></canvas>
+
+    <h4 class="stats-subtitulo">Temas con más errores</h4>
+    <div id="stats-errores-lista"></div>
+
+    <button class="btn-primario" style="width:100%; margin-top:14px;" id="btn-cerrar-stats">Cerrar</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ===== DOM refs (todo arriba para evitar TDZ) =====
+  const vistaInicio = document.getElementById('vista-inicio');
+  const vistaTema = document.getElementById('vista-tema');
+  const vistaPractica = document.getElementById('vista-practica');
+  const gridTemas = document.getElementById('grid-temas');
+  const btnRepasoMixto = document.getElementById('btn-repaso-mixto');
+  const repasoMixtoSub = document.getElementById('repaso-mixto-sub');
+  const xpTotalEl = document.getElementById('xp-total');
+  const xpTotalEl2 = document.getElementById('xp-total-2');
+  const rachaTotalEl = document.getElementById('racha-total');
+  const temaTitulo = document.getElementById('tema-titulo');
+  const temaDesc = document.getElementById('tema-desc');
+  const caminoNiveles = document.getElementById('camino-niveles');
+  const btnVolverTema = document.getElementById('btn-volver-tema');
+  const btnVolverPractica = document.getElementById('btn-volver-practica');
+  const progresoNivelTxt = document.getElementById('progreso-nivel-txt');
+  const hojaEtiqueta = document.getElementById('hoja-etiqueta');
+  const enunciadoTxt = document.getElementById('enunciado-txt');
+  const respuestaInput = document.getElementById('respuesta-input');
+  const btnComprobar = document.getElementById('btn-comprobar');
+  const feedbackBox = document.getElementById('feedback-box');
+  const btnSiguiente = document.getElementById('btn-siguiente');
+  const btnAjustes = document.getElementById('btn-ajustes');
+  const modalAjustes = document.getElementById('modal-ajustes');
+  const btnCerrarAjustes = document.getElementById('btn-cerrar-ajustes');
+  const btnLogros = document.getElementById('btn-logros');
+  const modalLogros = document.getElementById('modal-logros');
+  const btnCerrarLogros = document.getElementById('btn-cerrar-logros');
+  const btnStats = document.getElementById('btn-stats');
+  const modalStats = document.getElementById('modal-stats');
+  const btnCerrarStats = document.getElementById('btn-cerrar-stats');
+  const statsResumen = document.getElementById('stats-resumen');
+  const statsXpCanvas = document.getElementById('stats-xp-canvas');
+  const statsErroresLista = document.getElementById('stats-errores-lista');
+  const switchGrande = document.getElementById('switch-grande');
+  const switchSonido = document.getElementById('switch-sonido');
+  const switchAnimaciones = document.getElementById('switch-animaciones');
+  const switchVidas = document.getElementById('switch-vidas');
+  const switchRecordatorio = document.getElementById('switch-recordatorio');
+  const recordatorioHoraWrap = document.getElementById('recordatorio-hora-wrap');
+  const inputRecordatorioHora = document.getElementById('input-recordatorio-hora');
+  const recordatorioEstado = document.getElementById('recordatorio-estado');
+  const inputNombre = document.getElementById('input-nombre');
+  const inputCodigoClase = document.getElementById('input-codigo-clase');
+  const btnCompartirProgreso = document.getElementById('btn-compartir-progreso');
+  const compartirEstado = document.getElementById('compartir-estado');
+  const btnClase = document.getElementById('btn-clase');
+  const modalClase = document.getElementById('modal-clase');
+  const btnCerrarClase = document.getElementById('btn-cerrar-clase');
+  const textareaClase = document.getElementById('textarea-clase');
+  const btnProcesarClase = document.getElementById('btn-procesar-clase');
+  const claseResumen = document.getElementById('clase-resumen');
+  const claseTablaWrap = document.getElementById('clase-tabla-wrap');
+  const btnLimpiarClase = document.getElementById('btn-limpiar-clase');
+  const aparienciaOpts = Array.from(document.querySelectorAll('.apariencia-opt'));
+  const chipVidas = document.getElementById('chip-vidas');
+  const chipVidas2 = document.getElementById('chip-vidas-2');
+  const vidasTotalEl = document.getElementById('vidas-total');
+  const vidasTotalEl2 = document.getElementById('vidas-total-2');
+  const hojaPractica = document.getElementById('hoja-practica');
+  const borradorWrapEl = document.getElementById('borrador-wrap');
+  const vidasBloqueo = document.getElementById('vidas-bloqueo');
+  const vidasCountdown = document.getElementById('vidas-countdown');
+  const subt = document.querySelector('.subt');
+  const btnReiniciar = document.getElementById('btn-reiniciar');
+  const btnToggleBorrador = document.getElementById('btn-toggle-borrador');
+  const borradorPanel = document.getElementById('borrador-panel');
+  const borradorCanvasWrap = document.getElementById('borrador-canvas-wrap');
+  const borradorCanvas = document.getElementById('borrador-canvas');
+  const btnBorradorBorrar = document.getElementById('btn-borrador-borrar');
+  const btnGoma = document.getElementById('btn-goma');
+  const btnBorradorMas = document.getElementById('btn-borrador-mas');
+  const btnBorradorMenos = document.getElementById('btn-borrador-menos');
+  const borradorTamStatus = document.getElementById('borrador-tam-status');
+  const swatches = Array.from(document.querySelectorAll('.color-swatch'));
+
+  const STORAGE_KEY = 'mateSecundaria_progreso_v1';
+  const AJUSTES_KEY = 'mateSecundaria_ajustes_v1';
+  const UMBRAL_APROBACION = 10; // respuestas correctas para superar un nivel
+  const VIDAS_MAX = 5;
+  const VIDAS_REGEN_MIN = 15; // minutos para regenerar 1 corazón
+
+  // ===== Utilidades numéricas =====
+  function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function randNZ(min, max){ // sin cero
+    let n = randInt(min,max);
+    while(n===0) n = randInt(min,max);
+    return n;
+  }
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a || 1; }
+  function simplificarFraccion(num, den){
+    if(den<0){ num=-num; den=-den; }
+    const g = gcd(num,den);
+    return [num/g, den/g];
+  }
+  function parseFraccionInput(str){
+    str = str.trim().replace(',', '.');
+    if(str.includes('/')){
+      const partes = str.split('/');
+      const n = parseFloat(partes[0]);
+      const d = parseFloat(partes[1]);
+      if(isNaN(n) || isNaN(d) || d===0) return null;
+      return [n,d];
+    }
+    const val = parseFloat(str);
+    if(isNaN(val)) return null;
+    return [val, 1];
+  }
+  function fraccionesIguales(a, b){
+    // a, b = [num,den]
+    return Math.abs(a[0]*b[1] - b[0]*a[1]) < 1e-9;
+  }
+  function fmtFraccion(num, den){
+    const [n,d] = simplificarFraccion(num,den);
+    if(d===1) return `${n}`;
+    return `${n}/${d}`;
+  }
+
+  // ===== Definición de temas y generadores =====
+  function elegir(variantes){
+    return variantes[randInt(0, variantes.length-1)]();
+  }
+  const TEMAS = [
+    {
+      id:'numeros', icono:'🔢', nombre:'Números enteros', rango:'1° - 2° año',
+      desc:'Operaciones combinadas con números enteros.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => {
+              const a=randInt(1,20), b=randInt(1,20);
+              const op = Math.random()<0.5 ? '+' : '-';
+              const r = op==='+' ? a+b : a-b;
+              const explicacion = op==='+'
+                ? `Para sumar, juntás las dos cantidades: ${a} + ${b} = ${r}.`
+                : `Para restar, le quitás ${b} a ${a}: ${a} - ${b} = ${r}.`;
+              return { enunciado:`${a} ${op} ${b} = ?`, tipo:'numero', respuesta:r, tolerancia:0, explicacion };
+            },
+            () => {
+              const a=randInt(2,12), b=randInt(2,12);
+              return { enunciado:`${a} × ${b} = ?`, tipo:'numero', respuesta:a*b, tolerancia:0,
+                explicacion:`Multiplicás ${a} × ${b}, o sea sumás ${a} un total de ${b} veces: ${a*b}.` };
+            },
+            () => {
+              const b=randInt(2,12), c=randInt(2,12);
+              const a=b*c;
+              return { enunciado:`${a} ÷ ${b} = ?`, tipo:'numero', respuesta:c, tolerancia:0,
+                explicacion:`Buscás cuántas veces entra ${b} en ${a}. Como ${b} × ${c} = ${a}, entonces ${a} ÷ ${b} = ${c}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const a=randNZ(-20,20), b=randNZ(-20,20);
+              const ops = ['+','-','×'];
+              const op = ops[randInt(0,2)];
+              let r, explicacion;
+              if(op==='+'){ r=a+b; explicacion = `Sumás los dos números con su signo: ${a} + (${b}) = ${r}. Si tienen distinto signo, es como restar y quedarte con el signo del mayor en valor absoluto.`; }
+              else if(op==='-'){ r=a-b; explicacion = `Restar (${b}) es lo mismo que sumar su opuesto: ${a} + (${-b}) = ${r}.`; }
+              else { r=a*b; explicacion = `Multiplicás los valores: ${a} × ${b} = ${r}. Signos iguales dan positivo, signos distintos dan negativo.`; }
+              return { enunciado:`(${a}) ${op} (${b}) = ?`, tipo:'numero', respuesta:r, tolerancia:0, explicacion };
+            },
+            () => {
+              const b=randNZ(2,12)*(Math.random()<0.5?1:-1), c=randNZ(-10,10);
+              const a=b*c;
+              return { enunciado:`(${a}) ÷ (${b}) = ?`, tipo:'numero', respuesta:c, tolerancia:0,
+                explicacion:`Dividís ${a} ÷ ${b}. Como ${b} × ${c} = ${a}, el resultado es ${c}. Signos iguales dan positivo, signos distintos dan negativo.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const a=randNZ(-15,15), b=randNZ(-12,12), c=randNZ(2,9);
+              const r = (a+b)*c;
+              return { enunciado:`(${a} + ${b}) × ${c} = ?`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Primero resolvés el paréntesis: ${a} + ${b} = ${a+b}. Después multiplicás por ${c}: ${a+b} × ${c} = ${r}.` };
+            },
+            () => {
+              const a=randNZ(-12,12), b=randNZ(2,9), c=randNZ(-15,15);
+              const r = a*b - c;
+              return { enunciado:`${a} × ${b} − (${c}) = ?`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`La multiplicación se resuelve antes que la resta: ${a} × ${b} = ${a*b}. Después restás: ${a*b} − (${c}) = ${r}.` };
+            },
+            () => {
+              const a=randNZ(-15,15), b=randNZ(2,9), c=randNZ(-12,12);
+              const r = a - b*c;
+              return { enunciado:`${a} − ${b} × (${c}) = ?`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`La multiplicación se resuelve antes que la resta: ${b} × (${c}) = ${b*c}. Después restás: ${a} − (${b*c}) = ${r}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'fracciones', icono:'🍰', nombre:'Fracciones', rango:'1° - 3° año',
+      desc:'Suma, resta, multiplicación y división de fracciones.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => {
+              const den = randInt(2,10);
+              const n1 = randInt(1,den-1), n2 = randInt(1,den-1);
+              const suma = n1+n2;
+              const simp = fmtFraccion(suma, den);
+              return { enunciado:`${n1}/${den} + ${n2}/${den} = ?  (simplificá si podés)`, tipo:'fraccion', respuesta:[suma, den],
+                explicacion:`Como tienen el mismo denominador, sumás los numeradores y dejás el denominador: ${n1}/${den} + ${n2}/${den} = ${suma}/${den}${simp!==`${suma}/${den}`?` = ${simp}`:''}.` };
+            },
+            () => {
+              const den = randInt(2,10);
+              let n1 = randInt(1,den-1), n2 = randInt(1,den-1);
+              if(n2>n1) [n1,n2]=[n2,n1];
+              const resta = n1-n2;
+              const simp = fmtFraccion(resta, den);
+              return { enunciado:`${n1}/${den} - ${n2}/${den} = ?  (simplificá si podés)`, tipo:'fraccion', respuesta:[resta, den],
+                explicacion:`Como tienen el mismo denominador, restás los numeradores y dejás el denominador: ${n1}/${den} - ${n2}/${den} = ${resta}/${den}${simp!==`${resta}/${den}`?` = ${simp}`:''}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const d1=randInt(2,8), d2=randInt(2,8);
+              const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+              const num = n1*d2 + n2*d1, den = d1*d2;
+              const simp = fmtFraccion(num, den);
+              return { enunciado:`${n1}/${d1} + ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num,den],
+                explicacion:`Buscás un denominador común multiplicando los denominadores: ${d1} × ${d2} = ${den}. Convertís: ${n1}/${d1} = ${n1*d2}/${den} y ${n2}/${d2} = ${n2*d1}/${den}. Sumás los numeradores: ${n1*d2} + ${n2*d1} = ${num}/${den}${simp!==`${num}/${den}`?` = ${simp}`:''}.` };
+            },
+            () => {
+              const d1=randInt(2,8), d2=randInt(2,8);
+              const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+              const num = n1*d2 - n2*d1, den = d1*d2;
+              const simp = fmtFraccion(num, den);
+              return { enunciado:`${n1}/${d1} - ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num,den],
+                explicacion:`Buscás un denominador común multiplicando los denominadores: ${d1} × ${d2} = ${den}. Convertís: ${n1}/${d1} = ${n1*d2}/${den} y ${n2}/${d2} = ${n2*d1}/${den}. Restás los numeradores: ${n1*d2} - ${n2*d1} = ${num}/${den}${simp!==`${num}/${den}`?` = ${simp}`:''}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const d1=randInt(2,7), d2=randInt(2,7);
+              const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+              const num=n1*n2, den=d1*d2;
+              const simp = fmtFraccion(num, den);
+              return { enunciado:`${n1}/${d1} × ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num, den],
+                explicacion:`Multiplicás numerador por numerador y denominador por denominador: (${n1}×${n2})/(${d1}×${d2}) = ${num}/${den}${simp!==`${num}/${den}`?` = ${simp}`:''}.` };
+            },
+            () => {
+              const d1=randInt(2,7), d2=randInt(2,7);
+              const n1=randInt(1,d1-1), n2=randInt(1,d2-1);
+              const num=n1*d2, den=d1*n2;
+              const simp = fmtFraccion(num, den);
+              return { enunciado:`${n1}/${d1} ÷ ${n2}/${d2} = ?`, tipo:'fraccion', respuesta:[num, den],
+                explicacion:`Dividir fracciones es multiplicar por la inversa de la segunda: ${n1}/${d1} × ${d2}/${n2} = ${num}/${den}${simp!==`${num}/${den}`?` = ${simp}`:''}.` };
+            },
+            () => {
+              const sd=randInt(2,6), sn=randInt(1,sd-1);
+              const k=randInt(2,5);
+              return { enunciado:`Simplificá: ${sn*k}/${sd*k} = ?`, tipo:'fraccion', respuesta:[sn,sd],
+                explicacion:`Buscás un factor común entre ${sn*k} y ${sd*k}: los dos son múltiplos de ${k}. Dividís ambos por ${k}: ${sn*k}/${k} = ${sn} y ${sd*k}/${k} = ${sd}. Resultado: ${sn}/${sd}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'potencias', icono:'✳️', nombre:'Potencias y raíces', rango:'2° - 3° año',
+      desc:'Potenciación, radicación y propiedades.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => {
+              const b=randInt(2,10), e=randInt(2,3);
+              return { enunciado:`${b}^${e} = ?`, tipo:'numero', respuesta:Math.pow(b,e), tolerancia:0,
+                explicacion:`${b}^${e} significa multiplicar ${b} por sí mismo ${e} veces: ${Array(e).fill(b).join(' × ')} = ${Math.pow(b,e)}.` };
+            },
+            () => {
+              const e=randInt(1,4);
+              return { enunciado:`10^${e} = ?`, tipo:'numero', respuesta:Math.pow(10,e), tolerancia:0,
+                explicacion:`10 elevado a ${e} es un 1 seguido de ${e} cero${e===1?'':'s'}: ${Math.pow(10,e)}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const raiz = randInt(2,12);
+              const cuad = raiz*raiz;
+              return { enunciado:`√${cuad} = ?`, tipo:'numero', respuesta:raiz, tolerancia:0,
+                explicacion:`Buscás qué número multiplicado por sí mismo da ${cuad}. Como ${raiz} × ${raiz} = ${cuad}, entonces √${cuad} = ${raiz}.` };
+            },
+            () => {
+              const raiz = randInt(2,6);
+              const cubo = raiz*raiz*raiz;
+              return { enunciado:`∛${cubo} = ?`, tipo:'numero', respuesta:raiz, tolerancia:0,
+                explicacion:`Buscás qué número elevado al cubo da ${cubo}. Como ${raiz} × ${raiz} × ${raiz} = ${cubo}, entonces ∛${cubo} = ${raiz}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const b=randInt(2,5), m=randInt(2,3), n=randInt(2,3);
+              return { enunciado:`(${b}^${m})^${n} = ?  (resolvé la potencia final)`, tipo:'numero', respuesta:Math.pow(b, m*n), tolerancia:0,
+                explicacion:`Potencia de potencia: multiplicás los exponentes. (${b}^${m})^${n} = ${b}^(${m}×${n}) = ${b}^${m*n} = ${Math.pow(b,m*n)}.` };
+            },
+            () => {
+              const b=randInt(2,6), m=randInt(2,4), n=randInt(2,4);
+              return { enunciado:`${b}^${m} × ${b}^${n} = ?  (resolvé la potencia final)`, tipo:'numero', respuesta:Math.pow(b, m+n), tolerancia:0,
+                explicacion:`Multiplicación de potencias de igual base: sumás los exponentes. ${b}^${m} × ${b}^${n} = ${b}^(${m}+${n}) = ${b}^${m+n} = ${Math.pow(b,m+n)}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'ecuaciones', icono:'⚖️', nombre:'Ecuaciones', rango:'2° - 4° año',
+      desc:'Resolución de ecuaciones de primer grado.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => {
+              const a=randInt(2,9), x=randInt(-10,10), b=randInt(-15,15);
+              const c = a*x+b;
+              return { enunciado:`${a}x + (${b}) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Pasás ${b} al otro lado restando: ${a}x = ${c} - (${b}) = ${c-b}. Después dividís por ${a}: x = ${c-b} ÷ ${a} = ${x}.` };
+            },
+            () => {
+              const a=randInt(2,6), k=randInt(-8,8), b=randInt(-10,10);
+              const x = a*k, c = k+b;
+              return { enunciado:`x/${a} + (${b}) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Pasás ${b} al otro lado restando: x/${a} = ${c} - (${b}) = ${c-b}. Después multiplicás por ${a}: x = ${c-b} × ${a} = ${x}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const a=randInt(2,6), b=randInt(-8,8), x=randInt(-10,10);
+              const c = a*(x+b);
+              return { enunciado:`${a}(x + (${b})) = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Dividís los dos lados por ${a}: x + (${b}) = ${c} ÷ ${a} = ${c/a}. Después pasás ${b} restando: x = ${c/a} - (${b}) = ${x}.` };
+            },
+            () => {
+              const a=randInt(2,6), b=randInt(-10,10), c=randInt(-10,10);
+              const x = a*c - b;
+              return { enunciado:`(x + (${b})) / ${a} = ${c}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Multiplicás los dos lados por ${a}: x + (${b}) = ${c} × ${a} = ${c*a}. Después pasás ${b} restando: x = ${c*a} - (${b}) = ${x}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const a = randInt(2,7);
+              let c = randInt(2,7);
+              if(c === a) c = (a >= 7) ? a - 1 : a + 1; // aseguramos a != c sin loops
+              const x=randInt(-10,10), b=randInt(-10,10);
+              const d = (a-c)*x + b; // ax+b = cx+d -> d = (a-c)x+b
+              return { enunciado:`${a}x + (${b}) = ${c}x + (${d})\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Agrupás las x de un lado y los números del otro: ${a}x - ${c}x = ${d} - (${b}). Eso da ${a-c}x = ${d-b}. Dividís por ${a-c}: x = ${x}.` };
+            },
+            () => {
+              const a=randInt(2,6), c=randInt(2,6), x=randInt(-10,10), d=randInt(-10,10);
+              const b = c*d - a*x;
+              return { enunciado:`(${a}x + (${b})) / ${c} = ${d}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Multiplicás los dos lados por ${c}: ${a}x + (${b}) = ${d} × ${c} = ${d*c}. Pasás ${b} restando: ${a}x = ${d*c-b}. Dividís por ${a}: x = ${x}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'polinomios', icono:'📐', nombre:'Polinomios', rango:'3° - 4° año',
+      desc:'Suma, resta y producto de polinomios (evaluados en un valor).',
+      generar(nivel){
+        const x = randInt(-3,4) || 2;
+        if(nivel===1){
+          return elegir([
+            () => {
+              const a1=randInt(-6,6), a0=randInt(-6,6);
+              const b1=randInt(-6,6), b0=randInt(-6,6);
+              const r = (a1+b1)*x + (a0+b0);
+              return { enunciado:`P(x) = ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) + Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Sumás P(x) y Q(x) término a término: (${a1}+${b1})x + (${a0}+${b0}) = ${a1+b1}x + (${a0+b0}). Evaluás en x = ${x}: ${a1+b1}×${x} + (${a0+b0}) = ${r}.` };
+            },
+            () => {
+              const a1=randInt(-6,6), a0=randInt(-6,6);
+              const b1=randInt(-6,6), b0=randInt(-6,6);
+              const r = (a1-b1)*x + (a0-b0);
+              return { enunciado:`P(x) = ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) - Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Restás P(x) y Q(x) término a término: (${a1}-${b1})x + (${a0}-${b0}) = ${a1-b1}x + (${a0-b0}). Evaluás en x = ${x}: ${a1-b1}×${x} + (${a0-b0}) = ${r}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const a2=randInt(-4,4)||1, a1=randInt(-6,6), a0=randInt(-6,6);
+              const b1=randInt(-6,6), b0=randInt(-6,6);
+              const pVal = a2*x*x + a1*x + a0;
+              const qVal = b1*x + b0;
+              return { enunciado:`P(x) = ${a2}x² + ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) - Q(x)] para x = ${x}`, tipo:'numero', respuesta:pVal-qVal, tolerancia:0,
+                explicacion:`Evaluás cada polinomio en x = ${x}: P(${x}) = ${a2}×${x}² + ${a1}×${x} + (${a0}) = ${pVal}. Q(${x}) = ${b1}×${x} + (${b0}) = ${qVal}. Restás: ${pVal} - ${qVal} = ${pVal-qVal}.` };
+            },
+            () => {
+              const a2=randInt(-4,4)||1, a1=randInt(-6,6), a0=randInt(-6,6);
+              const b1=randInt(-6,6), b0=randInt(-6,6);
+              const pVal = a2*x*x + a1*x + a0;
+              const qVal = b1*x + b0;
+              return { enunciado:`P(x) = ${a2}x² + ${a1}x + (${a0})\nQ(x) = ${b1}x + (${b0})\nHallá [P(x) + Q(x)] para x = ${x}`, tipo:'numero', respuesta:pVal+qVal, tolerancia:0,
+                explicacion:`Evaluás cada polinomio en x = ${x}: P(${x}) = ${a2}×${x}² + ${a1}×${x} + (${a0}) = ${pVal}. Q(${x}) = ${b1}×${x} + (${b0}) = ${qVal}. Sumás: ${pVal} + ${qVal} = ${pVal+qVal}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const a=randInt(-5,5)||2, b=randInt(-5,5);
+              const k=randInt(-4,4)||3;
+              const r = k*(a*x+b);
+              return { enunciado:`P(x) = ${a}x + (${b})\nHallá [${k} · P(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Primero evaluás P(x) en x = ${x}: P(${x}) = ${a}×${x} + (${b}) = ${a*x+b}. Después multiplicás por ${k}: ${k} × ${a*x+b} = ${r}.` };
+            },
+            () => {
+              const a=randInt(-4,4)||2, b=randInt(-5,5);
+              const c=randInt(-4,4)||3, d=randInt(-5,5);
+              const r = (a*x+b)*(c*x+d);
+              return { enunciado:`P(x) = ${a}x + (${b})\nQ(x) = ${c}x + (${d})\nHallá [P(x) · Q(x)] para x = ${x}`, tipo:'numero', respuesta:r, tolerancia:0,
+                explicacion:`Evaluás cada polinomio en x = ${x}: P(${x}) = ${a}×${x} + (${b}) = ${a*x+b}. Q(${x}) = ${c}×${x} + (${d}) = ${c*x+d}. Multiplicás los resultados: ${a*x+b} × ${c*x+d} = ${r}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'funciones', icono:'📈', nombre:'Funciones', rango:'4° - 5° año',
+      desc:'Funciones lineales y cuadráticas.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => {
+              const m=randInt(-6,6)||2, b=randInt(-8,8), x=randInt(-6,6);
+              return { enunciado:`f(x) = ${m}x + (${b})\nf(${x}) = ?`, tipo:'numero', respuesta:m*x+b, tolerancia:0,
+                grafico:{ tipo:'lineal', m, b, marcaX:x },
+                explicacion:`Reemplazás x por ${x} en la función: f(${x}) = ${m}×${x} + (${b}) = ${m*x+b}.` };
+            },
+            () => {
+              const m=randInt(-6,6)||2, b=randInt(-8,8);
+              let x1=randInt(-6,6), x2=randInt(-6,6);
+              if(x2===x1) x2 = x1+3;
+              const y1=m*x1+b, y2=m*x2+b;
+              return { enunciado:`Una recta pasa por los puntos (${x1}, ${y1}) y (${x2}, ${y2}).\n¿Cuál es su pendiente?`, tipo:'numero', respuesta:m, tolerancia:0,
+                explicacion:`La pendiente es el cambio en y dividido el cambio en x: m = (${y2} - ${y1}) / (${x2} - ${x1}) = ${y2-y1}/${x2-x1} = ${m}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const m=randInt(2,8), b=randInt(-10,10), x=randInt(-8,8);
+              const y = m*x+b;
+              return { enunciado:`f(x) = ${m}x + (${b})\n¿Para qué valor de x, f(x) = ${y}?`, tipo:'numero', respuesta:x, tolerancia:0,
+                grafico:{ tipo:'lineal', m, b, marcaY:y },
+                explicacion:`Igualás f(x) al valor pedido: ${m}x + (${b}) = ${y}. Pasás ${b} restando: ${m}x = ${y-b}. Dividís por ${m}: x = ${x}.` };
+            },
+            () => {
+              const m=randInt(2,7), x1=randInt(-6,6), b=randInt(-10,10);
+              const y1 = m*x1+b;
+              return { enunciado:`Una función lineal tiene pendiente ${m}.\nSabiendo que f(${x1}) = ${y1}, ¿cuál es la ordenada al origen (b)?`, tipo:'numero', respuesta:b, tolerancia:0,
+                grafico:{ tipo:'lineal', m, b, marcaX:x1, marcaY:y1 },
+                explicacion:`Reemplazás en la fórmula: f(${x1}) = ${m}×${x1} + b = ${y1}. Despejás b: b = ${y1} - ${m*x1} = ${b}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const a=randInt(1,4), b=randInt(-6,6), c=randInt(-6,6), x=randInt(-4,4);
+              const r = a*x*x + b*x + c;
+              return { enunciado:`f(x) = ${a}x² + ${b}x + (${c})\nf(${x}) = ?`, tipo:'numero', respuesta:r, tolerancia:0,
+                grafico:{ tipo:'cuadratica', a, b, c, marcaX:x },
+                explicacion:`Reemplazás x por ${x}: f(${x}) = ${a}×${x}² + ${b}×${x} + (${c}) = ${r}.` };
+            },
+            () => {
+              const a=randInt(1,2), k=randInt(-5,5);
+              const b = -2*a*k, c=randInt(-6,6);
+              return { enunciado:`f(x) = ${a}x² + ${b}x + (${c})\n¿Cuál es el valor de x en el vértice de la parábola?`, tipo:'numero', respuesta:k, tolerancia:0,
+                grafico:{ tipo:'cuadratica', a, b, c, marcaX:k },
+                explicacion:`La fórmula del vértice es x = -b/(2a). Reemplazás: x = -(${b})/(2×${a}) = ${k}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'geometria', icono:'📏', nombre:'Geometría', rango:'3° - 5° año',
+      desc:'Perímetros, áreas y Teorema de Pitágoras.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => {
+              const b=randInt(3,20), h=randInt(3,20);
+              const usarArea = Math.random()<0.5;
+              const g = { tipo:'rectangulo', base:b, altura:h };
+              if(usarArea) return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:b*h, tolerancia:0, grafico:g,
+                explicacion:`El área de un rectángulo es base × altura: ${b} × ${h} = ${b*h}.` };
+              return { enunciado:`Rectángulo de base ${b} y altura ${h}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:2*(b+h), tolerancia:0, grafico:g,
+                explicacion:`El perímetro es la suma de los cuatro lados: 2 × (base + altura) = 2 × (${b} + ${h}) = ${2*(b+h)}.` };
+            },
+            () => {
+              const l=randInt(3,20);
+              const usarArea = Math.random()<0.5;
+              const g = { tipo:'rectangulo', base:l, altura:l };
+              if(usarArea) return { enunciado:`Cuadrado de lado ${l}.\n¿Cuál es su área?`, tipo:'numero', respuesta:l*l, tolerancia:0, grafico:g,
+                explicacion:`El área de un cuadrado es lado × lado: ${l} × ${l} = ${l*l}.` };
+              return { enunciado:`Cuadrado de lado ${l}.\n¿Cuál es su perímetro?`, tipo:'numero', respuesta:4*l, tolerancia:0, grafico:g,
+                explicacion:`El perímetro de un cuadrado es 4 × lado: 4 × ${l} = ${4*l}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const b=randInt(4,20), h=randInt(4,20);
+              return { enunciado:`Triángulo de base ${b} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:(b*h)/2, tolerancia:0.05,
+                grafico:{ tipo:'triangulo', base:b, altura:h },
+                explicacion:`El área de un triángulo es (base × altura) / 2: (${b} × ${h}) / 2 = ${(b*h)/2}.` };
+            },
+            () => {
+              const r=randInt(2,12);
+              return { enunciado:`Círculo de radio ${r}. Usá π ≈ 3.14\n¿Cuál es su área? (redondeá a 2 decimales)`, tipo:'numero', respuesta:3.14*r*r, tolerancia:0.5,
+                grafico:{ tipo:'circulo', radio:r },
+                explicacion:`El área de un círculo es π × radio²: 3.14 × ${r}² = 3.14 × ${r*r} = ${(3.14*r*r).toFixed(2)}.` };
+            },
+            () => {
+              const bMayor=randInt(8,20), bMenor=randInt(3,bMayor-2), h=randInt(4,15);
+              return { enunciado:`Trapecio de base mayor ${bMayor}, base menor ${bMenor} y altura ${h}.\n¿Cuál es su área?`, tipo:'numero', respuesta:((bMayor+bMenor)/2)*h, tolerancia:0.05,
+                grafico:{ tipo:'trapecio', baseMayor:bMayor, baseMenor:bMenor, altura:h },
+                explicacion:`El área de un trapecio es ((base mayor + base menor) / 2) × altura: ((${bMayor} + ${bMenor}) / 2) × ${h} = ${((bMayor+bMenor)/2)*h}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const ternas = [[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15],[7,24,25]];
+              const t = ternas[randInt(0,ternas.length-1)];
+              return { enunciado:`Triángulo rectángulo con catetos ${t[0]} y ${t[1]}.\n¿Cuánto mide la hipotenusa?`, tipo:'numero', respuesta:t[2], tolerancia:0.05,
+                grafico:{ tipo:'triangulo-rectangulo', catA:t[0], catB:t[1], hip:t[2], incognita:'hip' },
+                explicacion:`Por el Teorema de Pitágoras: hipotenusa² = cateto² + cateto² = ${t[0]}² + ${t[1]}² = ${t[0]*t[0]} + ${t[1]*t[1]} = ${t[0]*t[0]+t[1]*t[1]}. La raíz cuadrada de eso es ${t[2]}.` };
+            },
+            () => {
+              const ternas = [[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15],[7,24,25]];
+              const t = ternas[randInt(0,ternas.length-1)];
+              return { enunciado:`Triángulo rectángulo con hipotenusa ${t[2]} y un cateto ${t[0]}.\n¿Cuánto mide el otro cateto?`, tipo:'numero', respuesta:t[1], tolerancia:0.05,
+                grafico:{ tipo:'triangulo-rectangulo', catA:t[0], catB:t[1], hip:t[2], incognita:'catB' },
+                explicacion:`Por el Teorema de Pitágoras: cateto² = hipotenusa² - cateto conocido² = ${t[2]}² - ${t[0]}² = ${t[2]*t[2]} - ${t[0]*t[0]} = ${t[2]*t[2]-t[0]*t[0]}. La raíz cuadrada de eso es ${t[1]}.` };
+            },
+            () => {
+              const catA=randInt(4,16), catB=randInt(4,16);
+              return { enunciado:`Triángulo rectángulo con catetos ${catA} y ${catB}.\n¿Cuál es su área?`, tipo:'numero', respuesta:(catA*catB)/2, tolerancia:0.05,
+                grafico:{ tipo:'triangulo-rectangulo', catA, catB, hip:Math.round(Math.sqrt(catA*catA+catB*catB)*100)/100, incognita:'' },
+                explicacion:`El área de un triángulo rectángulo es (cateto × cateto) / 2: (${catA} × ${catB}) / 2 = ${(catA*catB)/2}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'trigonometria', icono:'📐', nombre:'Trigonometría', rango:'5° - 6° año',
+      desc:'Razones trigonométricas en el triángulo rectángulo.',
+      generar(nivel){
+        if(nivel===1){
+          const angulos = [30,45,60];
+          const razones = ['sen','cos','tan'];
+          const ang = angulos[randInt(0,2)];
+          const raz = razones[randInt(0,2)];
+          const tabla = {
+            30:{sen:0.5, cos:0.87, tan:0.58},
+            45:{sen:0.71, cos:0.71, tan:1},
+            60:{sen:0.87, cos:0.5, tan:1.73}
+          };
+          return { enunciado:`${raz}(${ang}°) = ?  (redondeá a 2 decimales)`, tipo:'numero', respuesta:tabla[ang][raz], tolerancia:0.02,
+            explicacion:`${raz}(${ang}°) es un valor que se memoriza o se busca en la calculadora: ${raz}(${ang}°) ≈ ${tabla[ang][raz]}.` };
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const ang = [30,45,60][randInt(0,2)];
+              const hip = randInt(10,30);
+              const senTabla = {30:0.5, 45:0.71, 60:0.87};
+              const opuesto = senTabla[ang]*hip;
+              return { enunciado:`Triángulo rectángulo con hipotenusa ${hip} y ángulo de ${ang}°.\n¿Cuánto mide el cateto opuesto? (redondeá a 1 decimal)`, tipo:'numero', respuesta:opuesto, tolerancia:0.5,
+                explicacion:`El cateto opuesto se calcula con sen(ángulo) × hipotenusa: sen(${ang}°) × ${hip} ≈ ${senTabla[ang]} × ${hip} = ${opuesto.toFixed(1)}.` };
+            },
+            () => {
+              const ang = [30,45,60][randInt(0,2)];
+              const hip = randInt(10,30);
+              const cosTabla = {30:0.87, 45:0.71, 60:0.5};
+              const adyacente = cosTabla[ang]*hip;
+              return { enunciado:`Triángulo rectángulo con hipotenusa ${hip} y ángulo de ${ang}°.\n¿Cuánto mide el cateto adyacente? (redondeá a 1 decimal)`, tipo:'numero', respuesta:adyacente, tolerancia:0.5,
+                explicacion:`El cateto adyacente se calcula con cos(ángulo) × hipotenusa: cos(${ang}°) × ${hip} ≈ ${cosTabla[ang]} × ${hip} = ${adyacente.toFixed(1)}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const catOpuesto = randInt(5,20);
+              const hip = catOpuesto + randInt(3,15);
+              const angulo = Math.asin(catOpuesto/hip) * (180/Math.PI);
+              return { enunciado:`Triángulo rectángulo: cateto opuesto = ${catOpuesto}, hipotenusa = ${hip}.\n¿Cuánto mide el ángulo? (en grados, redondeá a 1 decimal)`, tipo:'numero', respuesta:angulo, tolerancia:0.5,
+                explicacion:`El ángulo se calcula con el arcoseno de (cateto opuesto / hipotenusa): ángulo = asen(${catOpuesto}/${hip}) ≈ ${angulo.toFixed(1)}°.` };
+            },
+            () => {
+              const catAdyacente = randInt(5,20);
+              const hip = catAdyacente + randInt(3,15);
+              const angulo = Math.acos(catAdyacente/hip) * (180/Math.PI);
+              return { enunciado:`Triángulo rectángulo: cateto adyacente = ${catAdyacente}, hipotenusa = ${hip}.\n¿Cuánto mide el ángulo? (en grados, redondeá a 1 decimal)`, tipo:'numero', respuesta:angulo, tolerancia:0.5,
+                explicacion:`El ángulo se calcula con el arcocoseno de (cateto adyacente / hipotenusa): ángulo = acos(${catAdyacente}/${hip}) ≈ ${angulo.toFixed(1)}°.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'estadistica', icono:'📊', nombre:'Estadística', rango:'Todos los años',
+      desc:'Medidas de posición: promedio, mediana, moda.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => {
+              const datos = Array.from({length:5}, ()=>randInt(1,20));
+              const suma = datos.reduce((a,b)=>a+b,0);
+              const prom = suma/datos.length;
+              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es el promedio? (redondeá a 2 decimales si hace falta)`, tipo:'numero', respuesta:prom, tolerancia:0.02,
+                explicacion:`Sumás todos los datos: ${datos.join(' + ')} = ${suma}. Dividís por la cantidad de datos (${datos.length}): ${suma} ÷ ${datos.length} = ${Number.isInteger(prom)?prom:prom.toFixed(2)}.` };
+            },
+            () => {
+              const moda = randInt(1,20);
+              const otros = Array.from({length:4}, ()=>{
+                let v; do{ v = randInt(1,20); }while(v===moda);
+                return v;
+              });
+              const datos = [moda, moda, moda, ...otros].sort(()=>Math.random()-0.5);
+              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es la moda?`, tipo:'numero', respuesta:moda, tolerancia:0,
+                explicacion:`La moda es el valor que más veces se repite en la lista. Acá, el ${moda} aparece 3 veces, más que cualquier otro dato.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const n = 7;
+              const datos = Array.from({length:n}, ()=>randInt(1,30));
+              const ordenados = [...datos].sort((a,b)=>a-b);
+              const mediana = ordenados[Math.floor(n/2)];
+              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es la mediana?`, tipo:'numero', respuesta:mediana, tolerancia:0,
+                explicacion:`Ordenás los datos de menor a mayor: ${ordenados.join(', ')}. Como hay ${n} datos (cantidad impar), la mediana es el del medio: ${mediana}.` };
+            },
+            () => {
+              const n = 6;
+              const datos = Array.from({length:n}, ()=>randInt(1,40));
+              const maximo = Math.max(...datos), minimo = Math.min(...datos);
+              const rango = maximo - minimo;
+              return { enunciado:`Datos: ${datos.join(', ')}\n¿Cuál es el rango (máximo menos mínimo)?`, tipo:'numero', respuesta:rango, tolerancia:0,
+                explicacion:`El rango es el valor máximo menos el mínimo: ${maximo} - ${minimo} = ${rango}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const total = randInt(4,10);
+              const favorables = randInt(1,total-1);
+              const prob = favorables/total;
+              return { enunciado:`En una bolsa hay ${total} bolitas, ${favorables} son rojas.\nSi sacás una al azar, ¿cuál es la probabilidad de que sea roja? (como decimal, redondeá a 2 decimales)`, tipo:'numero', respuesta:prob, tolerancia:0.02,
+                explicacion:`La probabilidad es casos favorables sobre casos totales: ${favorables}/${total} = ${prob.toFixed(2)}.` };
+            },
+            () => {
+              const total = randInt(4,10);
+              const favorables = randInt(1,total-1);
+              const prob = (total-favorables)/total;
+              return { enunciado:`En una bolsa hay ${total} bolitas, ${favorables} son azules.\nSi sacás una al azar, ¿cuál es la probabilidad de que NO sea azul? (como decimal, redondeá a 2 decimales)`, tipo:'numero', respuesta:prob, tolerancia:0.02,
+                explicacion:`La probabilidad de que NO sea azul es los casos no azules sobre el total: (${total} - ${favorables})/${total} = ${total-favorables}/${total} = ${prob.toFixed(2)}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'sistemas', icono:'🧩', nombre:'Sistemas de ecuaciones', rango:'4° - 5° año',
+      desc:'Resolución de sistemas de dos ecuaciones con dos incógnitas.',
+      generar(nivel){
+        function terminoY(coef){ return coef>=0 ? `+ ${coef}y` : `- ${Math.abs(coef)}y`; }
+        if(nivel===1){
+          return elegir([
+            () => {
+              const a=randInt(1,3), m=randInt(2,6), b=randInt(-8,8);
+              let x=randInt(-8,8); if(a+m===0) x=x||1;
+              const y = m*x+b;
+              const c = a*x+y;
+              return { enunciado:`y = ${m}x + (${b})\n${a}x + y = ${c}\n¿Cuánto vale x?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Sustituís la primera ecuación en la segunda: ${a}x + (${m}x + (${b})) = ${c}. Agrupás: ${a+m}x + (${b}) = ${c}. Despejás: ${a+m}x = ${c-b}. x = ${x}.` };
+            },
+            () => {
+              const a=randInt(1,3), m=randInt(2,6), b=randInt(-8,8);
+              const x=randInt(-8,8);
+              const y = m*x+b;
+              const c = a*x+y;
+              return { enunciado:`y = ${m}x + (${b})\n${a}x + y = ${c}\n¿Cuánto vale y?`, tipo:'numero', respuesta:y, tolerancia:0,
+                explicacion:`Sustituís la primera ecuación en la segunda: ${a}x + (${m}x + (${b})) = ${c}. Despejás x: x = ${x}. Reemplazás en y = ${m}x + (${b}) = ${m}×${x} + (${b}) = ${y}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const b1=randInt(2,6), b2=-b1;
+              const a1=randInt(1,6), a2=randInt(1,6);
+              const x=randInt(-8,8), y=randInt(-8,8);
+              const c1=a1*x+b1*y, c2=a2*x+b2*y;
+              return { enunciado:`${a1}x ${terminoY(b1)} = ${c1}\n${a2}x ${terminoY(b2)} = ${c2}\n¿Cuánto vale x? (sumá las dos ecuaciones para eliminar y)`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Sumás las dos ecuaciones: (${a1}+${a2})x + (${b1}+${b2})y = ${c1}+${c2}. Como ${b1}+${b2} = 0, la y se cancela: ${a1+a2}x = ${c1+c2}. x = ${x}.` };
+            },
+            () => {
+              const a1=randInt(2,6), a2=-a1;
+              const b1=randInt(1,6), b2=randInt(1,6);
+              const x=randInt(-8,8), y=randInt(-8,8);
+              const c1=a1*x+b1*y, c2=a2*x+b2*y;
+              return { enunciado:`${a1}x ${terminoY(b1)} = ${c1}\n${a2}x ${terminoY(b2)} = ${c2}\n¿Cuánto vale y? (sumá las dos ecuaciones para eliminar x)`, tipo:'numero', respuesta:y, tolerancia:0,
+                explicacion:`Sumás las dos ecuaciones: (${a1}+${a2})x + (${b1}+${b2})y = ${c1}+${c2}. Como ${a1}+${a2} = 0, la x se cancela: ${b1+b2}y = ${c1+c2}. y = ${y}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              let a1,b1,a2,b2,D,intentos=0;
+              do{ a1=randInt(2,6); b1=randInt(2,6); a2=randInt(2,6); b2=randInt(2,6); D=a1*b2-a2*b1; intentos++; }while(D===0 && intentos<20);
+              if(D===0){ a1=2; b1=3; a2=3; b2=2; D=a1*b2-a2*b1; }
+              const x=randInt(-8,8)||2, y=randInt(-8,8)||3;
+              const c1=a1*x+b1*y, c2=a2*x+b2*y;
+              const Dx = c1*b2-c2*b1;
+              return { enunciado:`${a1}x ${terminoY(b1)} = ${c1}\n${a2}x ${terminoY(b2)} = ${c2}\n¿Cuánto vale x?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`Multiplicás la primera ecuación por ${b2} y la segunda por ${b1}, y restás para eliminar y: (${a1}×${b2} − ${a2}×${b1})x = ${c1}×${b2} − ${c2}×${b1}. Eso da ${D}x = ${Dx}. x = ${Dx} ÷ ${D} = ${x}.` };
+            },
+            () => {
+              let a1,b1,a2,b2,D,intentos=0;
+              do{ a1=randInt(2,6); b1=randInt(2,6); a2=randInt(2,6); b2=randInt(2,6); D=a1*b2-a2*b1; intentos++; }while(D===0 && intentos<20);
+              if(D===0){ a1=2; b1=3; a2=3; b2=2; D=a1*b2-a2*b1; }
+              const x=randInt(-8,8)||2, y=randInt(-8,8)||3;
+              const c1=a1*x+b1*y, c2=a2*x+b2*y;
+              const Dy = a1*c2-a2*c1;
+              return { enunciado:`${a1}x ${terminoY(b1)} = ${c1}\n${a2}x ${terminoY(b2)} = ${c2}\n¿Cuánto vale y?`, tipo:'numero', respuesta:y, tolerancia:0,
+                explicacion:`Multiplicás la primera ecuación por ${a2} y la segunda por ${a1} para igualar el coeficiente de x, y restás para eliminarlo: ${D}y = ${a1}×${c2} − ${a2}×${c1} = ${Dy}. y = ${Dy} ÷ ${D} = ${y}.` };
+            }
+          ]);
+        }
+      }
+    },
+    {
+      id:'logaritmos', icono:'📶', nombre:'Logaritmos', rango:'5° - 6° año',
+      desc:'Definición, propiedades y ecuaciones con logaritmos.',
+      generar(nivel){
+        if(nivel===1){
+          return elegir([
+            () => {
+              const e=randInt(1,4);
+              const n=Math.pow(10,e);
+              return { enunciado:`log(${n}) = ?`, tipo:'numero', respuesta:e, tolerancia:0,
+                explicacion:`log(${n}) pregunta a qué exponente hay que elevar 10 para obtener ${n}. Como 10^${e} = ${n}, log(${n}) = ${e}.` };
+            },
+            () => {
+              const b=randInt(2,5), e=randInt(2,4);
+              const n=Math.pow(b,e);
+              return { enunciado:`log en base ${b} de ${n} = ?  (log_${b}(${n}))`, tipo:'numero', respuesta:e, tolerancia:0,
+                explicacion:`log_${b}(${n}) pregunta a qué exponente hay que elevar ${b} para obtener ${n}. Como ${b}^${e} = ${n}, log_${b}(${n}) = ${e}.` };
+            }
+          ]);
+        } else if(nivel===2){
+          return elegir([
+            () => {
+              const b=randInt(2,5), e1=randInt(1,3), e2=randInt(1,3);
+              const m=Math.pow(b,e1), n=Math.pow(b,e2);
+              return { enunciado:`log_${b}(${m}) + log_${b}(${n}) = ?`, tipo:'numero', respuesta:e1+e2, tolerancia:0,
+                explicacion:`Por la propiedad del producto: log_${b}(${m}) + log_${b}(${n}) = log_${b}(${m}×${n}) = log_${b}(${m*n}). Como ${b}^${e1+e2} = ${m*n}, el resultado es ${e1+e2}.` };
+            },
+            () => {
+              const b=randInt(2,5), e2=randInt(1,2), e1=e2+randInt(1,2);
+              const m=Math.pow(b,e1), n=Math.pow(b,e2);
+              return { enunciado:`log_${b}(${m}) - log_${b}(${n}) = ?`, tipo:'numero', respuesta:e1-e2, tolerancia:0,
+                explicacion:`Por la propiedad del cociente: log_${b}(${m}) - log_${b}(${n}) = log_${b}(${m}÷${n}) = log_${b}(${m/n}). Como ${b}^${e1-e2} = ${m/n}, el resultado es ${e1-e2}.` };
+            },
+            () => {
+              const b=randInt(2,5), e=randInt(1,3), k=randInt(2,3);
+              const n=Math.pow(b,e);
+              return { enunciado:`${k} × log_${b}(${n}) = ?`, tipo:'numero', respuesta:k*e, tolerancia:0,
+                explicacion:`Por la propiedad de la potencia: ${k} × log_${b}(${n}) = log_${b}(${n}^${k}). Como log_${b}(${n}) = ${e}, el resultado es ${k} × ${e} = ${k*e}.` };
+            }
+          ]);
+        } else {
+          return elegir([
+            () => {
+              const b=randInt(2,6), e=randInt(1,3);
+              const x=Math.pow(b,e);
+              return { enunciado:`log_${b}(x) = ${e}\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`log_${b}(x) = ${e} significa que ${b}^${e} = x. Entonces x = ${x}.` };
+            },
+            () => {
+              const x=randInt(2,6), e=randInt(2,3);
+              const n=Math.pow(x,e);
+              return { enunciado:`log en base x de ${n} = ${e}  (log_x(${n}) = ${e})\nx = ?`, tipo:'numero', respuesta:x, tolerancia:0,
+                explicacion:`log_x(${n}) = ${e} significa que x^${e} = ${n}. Buscás qué número elevado a ${e} da ${n}: x = ${x}.` };
+            }
+          ]);
+        }
+      }
+    }
+  ];
+
+  // ===== Hoja de borrador (dibujo a mano alzada) =====
+  const NOMBRES_NIVEL = ['Fácil','Medio','Difícil'];
+
+  // ===== Logros / insignias =====
+  const LOGROS = [
+    { id:'primer_acierto', icono:'🥇', nombre:'Primer paso', desc:'Resolviste tu primer ejercicio correctamente.',
+      condicion: p => p.totalCorrectas >= 1 },
+    { id:'racha_3', icono:'🔥', nombre:'Constancia', desc:'Practicaste 3 días seguidos.',
+      condicion: p => p.racha >= 3 },
+    { id:'racha_7', icono:'🔥🔥', nombre:'Una semana entera', desc:'Practicaste 7 días seguidos.',
+      condicion: p => p.racha >= 7 },
+    { id:'racha_30', icono:'🔥🔥🔥', nombre:'Imparable', desc:'Practicaste 30 días seguidos.',
+      condicion: p => p.racha >= 30 },
+    { id:'xp_100', icono:'⭐', nombre:'Estrella inicial', desc:'Llegaste a 100 XP.',
+      condicion: p => p.xp >= 100 },
+    { id:'xp_500', icono:'🌟', nombre:'Brillante', desc:'Llegaste a 500 XP.',
+      condicion: p => p.xp >= 500 },
+    { id:'xp_1000', icono:'✨', nombre:'Mil puntos', desc:'Llegaste a 1000 XP.',
+      condicion: p => p.xp >= 1000 },
+    { id:'xp_5000', icono:'💫', nombre:'Maestro del XP', desc:'Llegaste a 5000 XP.',
+      condicion: p => p.xp >= 5000 },
+    { id:'puntaje_10', icono:'🎯', nombre:'Puntería perfecta', desc:'10 respuestas correctas seguidas sin fallar.',
+      condicion: p => p.mejorRachaAciertos >= 10 },
+    { id:'primer_tema', icono:'📘', nombre:'Tema dominado', desc:'Completaste los 3 niveles de un tema.',
+      condicion: p => Object.values(p.temas).some(t => t.completado.every(Boolean)) },
+    { id:'todos_temas', icono:'🏆', nombre:'Secundaria completa', desc:'Completaste los 3 niveles de todos los temas.',
+      condicion: p => Object.values(p.temas).every(t => t.completado.every(Boolean)) }
+  ];
+  let toastLogroPendientes = 0;
+  function mostrarLogroToast(logro){
+    const el = document.createElement('div');
+    el.className = 'logro-toast';
+    el.setAttribute('role','status');
+    el.setAttribute('aria-live','polite');
+    el.innerHTML = `<span aria-hidden="true">${logro.icono}</span><span>¡Logro desbloqueado! ${logro.nombre}</span>`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('visible'));
+    setTimeout(() => {
+      el.classList.remove('visible');
+      setTimeout(() => el.remove(), 400);
+    }, 2600);
+  }
+  function verificarLogros(avisar){
+    if(avisar === undefined) avisar = true;
+    const nuevos = [];
+    LOGROS.forEach(l => {
+      if(!progreso.logros[l.id] && l.condicion(progreso)){
+        progreso.logros[l.id] = true;
+        nuevos.push(l);
+      }
+    });
+    if(nuevos.length){
+      guardarProgreso();
+      if(avisar){
+        nuevos.forEach((l, i) => setTimeout(() => mostrarLogroToast(l), i*3000));
+      }
+    }
+  }
+  function renderLogros(){
+    const grid = document.getElementById('logros-grid');
+    const resumen = document.getElementById('logros-resumen');
+    if(!grid) return;
+    const desbloqueados = LOGROS.filter(l => progreso.logros[l.id]).length;
+    if(resumen) resumen.textContent = `${desbloqueados} de ${LOGROS.length} desbloqueados`;
+    grid.innerHTML = '';
+    LOGROS.forEach(l => {
+      const logrado = !!progreso.logros[l.id];
+      const card = document.createElement('div');
+      card.className = `logro-card${logrado ? '' : ' bloqueado'}`;
+      card.setAttribute('role','group');
+      card.setAttribute('aria-label', `${l.nombre}: ${l.desc}${logrado ? ' (desbloqueado)' : ' (bloqueado)'}`);
+      card.innerHTML = `
+        <div class="logro-icono" aria-hidden="true">${logrado ? l.icono : '🔒'}</div>
+        <div class="logro-nombre">${l.nombre}</div>
+        <div class="logro-desc">${l.desc}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // ===== Modo clase (sin servidor: compartir + importar reportes) =====
+  const CLASE_STORAGE_KEY = 'mateSecundaria_clase_v1';
+  function cargarReportesClase(){
+    try{
+      const raw = localStorage.getItem(CLASE_STORAGE_KEY);
+      const lista = raw ? JSON.parse(raw) : [];
+      return Array.isArray(lista) ? lista : [];
+    }catch(e){ return []; }
+  }
+  function guardarReportesClase(){
+    try{ localStorage.setItem(CLASE_STORAGE_KEY, JSON.stringify(reportesClase)); }catch(e){}
+  }
+  let reportesClase = cargarReportesClase();
+
+  function escaparHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function generarReporte(){
+    const temasCompletados = TEMAS.filter(t => progreso.temas[t.id].completado.every(Boolean)).length;
+    const logrosDesbloqueados = Object.keys(progreso.logros).length;
+    return {
+      tipo:'reporte-mate-secundaria', version:1,
+      codigoClase: ajustes.codigoClase || '',
+      nombre: ajustes.nombre || 'Alumno/a',
+      fecha: new Date().toISOString(),
+      xp: progreso.xp,
+      racha: progreso.racha,
+      totalCorrectas: progreso.totalCorrectas || 0,
+      temasCompletados, totalTemas: TEMAS.length,
+      logrosDesbloqueados, totalLogros: LOGROS.length
+    };
+  }
+  function textoCompartible(){
+    const r = generarReporte();
+    return `📊 Progreso de Mate Secundaria — ${r.nombre}\n` +
+      `Clase: ${r.codigoClase || 'sin código'}\n` +
+      `⭐ XP total: ${r.xp}\n` +
+      `🔥 Racha: ${r.racha} día${r.racha===1?'':'s'}\n` +
+      `✅ Temas completos: ${r.temasCompletados}/${r.totalTemas}\n` +
+      `🏅 Logros: ${r.logrosDesbloqueados}/${r.totalLogros}\n\n` +
+      `(no borres la línea de abajo: es para que tu profe importe este reporte)\n` +
+      `##MATESECU##${JSON.stringify(r)}##FIN##`;
+  }
+  async function copiarAlPortapapeles(texto){
+    try{
+      await navigator.clipboard.writeText(texto);
+      compartirEstado.textContent = 'Copiado al portapapeles. Pegalo donde quieras enviarlo.';
+    }catch(e){
+      compartirEstado.textContent = 'No se pudo copiar automáticamente. Seleccioná y copiá el resumen manualmente.';
+    }
+  }
+  async function compartirProgreso(){
+    const texto = textoCompartible();
+    compartirEstado.textContent = '';
+    if(navigator.share){
+      try{
+        await navigator.share({ title:'Mi progreso en Mate Secundaria', text: texto });
+        compartirEstado.textContent = '¡Compartido!';
+        return;
+      }catch(e){
+        if(e && e.name === 'AbortError') return; // el alumno canceló, no insistimos
+      }
+    }
+    await copiarAlPortapapeles(texto);
+  }
+  function procesarTextoClase(texto){
+    const regex = /##MATESECU##([\s\S]*?)##FIN##/g;
+    let match, encontrados = 0, invalidos = 0, agregados = 0, actualizados = 0;
+    while((match = regex.exec(texto)) !== null){
+      encontrados++;
+      let obj;
+      try{ obj = JSON.parse(match[1]); }catch(e){ invalidos++; continue; }
+      if(!obj || obj.tipo !== 'reporte-mate-secundaria' || !obj.nombre){ invalidos++; continue; }
+      const idx = reportesClase.findIndex(r => r.nombre === obj.nombre && r.codigoClase === obj.codigoClase);
+      if(idx === -1){
+        reportesClase.push(obj);
+        agregados++;
+      } else if(new Date(obj.fecha) >= new Date(reportesClase[idx].fecha)){
+        reportesClase[idx] = obj;
+        actualizados++;
+      }
+    }
+    guardarReportesClase();
+    return { encontrados, invalidos, agregados, actualizados };
+  }
+  function renderTablaClase(){
+    if(!claseTablaWrap) return;
+    if(reportesClase.length === 0){
+      claseTablaWrap.innerHTML = '<p class="clase-vacio">Todavía no importaste ningún reporte.</p>';
+      return;
+    }
+    const filas = [...reportesClase].sort((a,b) => b.xp - a.xp);
+    let html = '<div class="clase-tabla-scroll"><table class="clase-tabla"><thead><tr>' +
+      '<th>Alumno/a</th><th>Clase</th><th>XP</th><th>Racha</th><th>Temas</th><th>Logros</th>' +
+      '</tr></thead><tbody>';
+    filas.forEach(r => {
+      html += `<tr><td>${escaparHtml(r.nombre)}</td><td>${escaparHtml(r.codigoClase||'—')}</td><td>${r.xp}</td><td>${r.racha}</td><td>${r.temasCompletados}/${r.totalTemas}</td><td>${r.logrosDesbloqueados}/${r.totalLogros}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+    claseTablaWrap.innerHTML = html;
+  }
+
+  // ===== Panel de estadísticas =====
+  function obtenerUltimos7Dias(){
+    const nombresDia = ['D','L','M','M','J','V','S'];
+    const dias = [];
+    const hoy = new Date();
+    for(let i=6; i>=0; i--){
+      const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - i);
+      const key = d.toISOString().slice(0,10);
+      dias.push({ key, letra: nombresDia[d.getDay()], valor: progreso.historialXP[key] || 0, esHoy: i===0 });
+    }
+    return dias;
+  }
+  function dibujarGraficoXPSemana(){
+    if(!statsXpCanvas) return;
+    const ctx = statsXpCanvas.getContext('2d');
+    const w = statsXpCanvas.width, h = statsXpCanvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = getCSSVar('--paper');
+    ctx.fillRect(0,0,w,h);
+    const dias = obtenerUltimos7Dias();
+    const maxValor = Math.max(10, ...dias.map(d => d.valor));
+    const pad = 26, padInferior = 24;
+    const areaW = w - pad*2, areaH = h - pad - padInferior;
+    const anchoBarra = areaW / dias.length * 0.55;
+    const paso = areaW / dias.length;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(pad, h-padInferior); ctx.lineTo(w-pad, h-padInferior); ctx.stroke();
+    ctx.font = '11px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    dias.forEach((d, i) => {
+      const bh = Math.max(2, (d.valor / maxValor) * areaH);
+      const x = pad + paso*i + (paso-anchoBarra)/2;
+      const y = h - padInferior - bh;
+      ctx.fillStyle = d.esHoy ? getCSSVar('--marker-red') : getCSSVar('--ink');
+      ctx.fillRect(x, y, anchoBarra, bh);
+      ctx.fillStyle = getCSSVar('--ink-soft');
+      ctx.fillText(d.letra, x + anchoBarra/2, h - padInferior + 15);
+      if(d.valor > 0){
+        ctx.fillStyle = getCSSVar('--ink');
+        ctx.fillText(d.valor, x + anchoBarra/2, y - 5);
+      }
+    });
+    const totalSemana = dias.reduce((a,d)=>a+d.valor, 0);
+    statsXpCanvas.setAttribute('aria-label', `Gráfico de barras con el XP ganado por día en los últimos 7 días. Total de la semana: ${totalSemana} XP.`);
+  }
+  function renderErroresPorTema(){
+    if(!statsErroresLista) return;
+    const entradas = TEMAS.map(t => ({ id:t.id, nombre:t.nombre, icono:t.icono, errores: progreso.erroresPorTema[t.id] || 0 }))
+      .filter(e => e.errores > 0)
+      .sort((a,b) => b.errores - a.errores)
+      .slice(0, 5);
+    statsErroresLista.innerHTML = '';
+    if(entradas.length === 0){
+      const p = document.createElement('p');
+      p.className = 'stats-vacio';
+      p.textContent = 'Todavía no registramos errores. ¡Seguí así!';
+      statsErroresLista.appendChild(p);
+      return;
+    }
+    const maxErrores = entradas[0].errores;
+    entradas.forEach(e => {
+      const fila = document.createElement('div');
+      fila.className = 'estad-fila';
+      fila.setAttribute('role','group');
+      fila.setAttribute('aria-label', `${e.nombre}: ${e.errores} error${e.errores===1?'':'es'}`);
+      const pct = Math.max(6, Math.round((e.errores/maxErrores)*100));
+      fila.innerHTML = `
+        <span class="estad-icono" aria-hidden="true">${e.icono}</span>
+        <span class="estad-nombre">${e.nombre}</span>
+        <span class="estad-barra-wrap"><span class="estad-barra" style="width:${pct}%"></span></span>
+        <span class="estad-valor" aria-hidden="true">${e.errores}</span>
+      `;
+      statsErroresLista.appendChild(fila);
+    });
+  }
+  function renderStats(){
+    if(statsResumen) statsResumen.textContent = `⭐ ${progreso.xp} XP total · 🔥 ${progreso.racha} día${progreso.racha===1?'':'s'} de racha`;
+    dibujarGraficoXPSemana();
+    renderErroresPorTema();
+  }
+  const borradorCtx = borradorCanvas.getContext('2d');
+  let colorTrazo = '#2B3A55';
+  let modoGoma = false;
+  let dibujando = false;
+  let ultimoPunto = null;
+
+  function ajustarTamanoBorrador(preservarDibujo){
+    const cssW = borradorCanvasWrap.clientWidth || 600;
+    const cssH = borradorCanvasWrap.clientHeight || 220;
+    const ratio = window.devicePixelRatio || 1;
+    const huboDibujoAntes = borradorCanvas.width>0 && borradorCanvas.height>0;
+    let imgPrevia = null;
+    if(preservarDibujo && huboDibujoAntes){
+      try{ imgPrevia = borradorCanvas.toDataURL('image/png'); }catch(e){ imgPrevia = null; }
+    }
+    borradorCanvas.width = Math.max(1, Math.round(cssW*ratio));
+    borradorCanvas.height = Math.max(1, Math.round(cssH*ratio));
+    borradorCtx.setTransform(ratio,0,0,ratio,0,0);
+    borradorCtx.lineCap = 'round';
+    borradorCtx.lineJoin = 'round';
+    borradorCtx.lineWidth = 2.5;
+    if(imgPrevia){
+      const img = new Image();
+      img.onload = () => { borradorCtx.drawImage(img, 0, 0, cssW, cssH); };
+      img.src = imgPrevia;
+    }
+  }
+
+  function posDesdeEvento(e){
+    const rect = borradorCanvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function iniciarTrazo(e){
+    dibujando = true;
+    ultimoPunto = posDesdeEvento(e);
+    borradorCanvas.setPointerCapture(e.pointerId);
+  }
+  function continuarTrazo(e){
+    if(!dibujando) return;
+    const p = posDesdeEvento(e);
+    if(modoGoma){
+      borradorCtx.globalCompositeOperation = 'destination-out';
+      borradorCtx.lineWidth = 22;
+    } else {
+      borradorCtx.globalCompositeOperation = 'source-over';
+      borradorCtx.lineWidth = 2.5;
+      borradorCtx.strokeStyle = colorTrazo;
+    }
+    borradorCtx.beginPath();
+    borradorCtx.moveTo(ultimoPunto.x, ultimoPunto.y);
+    borradorCtx.lineTo(p.x, p.y);
+    borradorCtx.stroke();
+    ultimoPunto = p;
+  }
+  function finalizarTrazo(){
+    dibujando = false;
+    ultimoPunto = null;
+  }
+
+  borradorCanvas.addEventListener('pointerdown', iniciarTrazo);
+  borradorCanvas.addEventListener('pointermove', continuarTrazo);
+  borradorCanvas.addEventListener('pointerup', finalizarTrazo);
+  borradorCanvas.addEventListener('pointerleave', finalizarTrazo);
+  borradorCanvas.addEventListener('pointercancel', finalizarTrazo);
+
+  function limpiarBorrador(){
+    borradorCtx.clearRect(0,0,borradorCanvas.width,borradorCanvas.height);
+  }
+
+  swatches.forEach(sw => {
+    sw.addEventListener('click', () => {
+      colorTrazo = sw.dataset.color;
+      swatches.forEach(s => s.setAttribute('aria-pressed', s===sw ? 'true' : 'false'));
+      modoGoma = false;
+      btnGoma.setAttribute('aria-pressed', 'false');
+    });
+  });
+
+  btnGoma.addEventListener('click', () => {
+    modoGoma = !modoGoma;
+    btnGoma.setAttribute('aria-pressed', modoGoma ? 'true' : 'false');
+  });
+
+  btnBorradorBorrar.addEventListener('click', limpiarBorrador);
+
+  btnToggleBorrador.addEventListener('click', () => {
+    const abierto = borradorPanel.hasAttribute('hidden');
+    if(abierto){
+      borradorPanel.removeAttribute('hidden');
+      btnToggleBorrador.setAttribute('aria-expanded','true');
+    } else {
+      borradorPanel.setAttribute('hidden','');
+      btnToggleBorrador.setAttribute('aria-expanded','false');
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if(!borradorPanel.hasAttribute('hidden')) ajustarTamanoBorrador(true);
+  });
+
+  // Redimensionado con la esquina nativa (mouse/touch/pen) y con botones (teclado)
+  if('ResizeObserver' in window){
+    const observador = new ResizeObserver(() => {
+      if(borradorPanel.hasAttribute('hidden')) return;
+      ajustarTamanoBorrador(true);
+    });
+    observador.observe(borradorCanvasWrap);
+  } else {
+    // Sin ResizeObserver disponible: al menos ajustar al abrir el panel
+    btnToggleBorrador.addEventListener('click', () => {
+      if(!borradorPanel.hasAttribute('hidden')) requestAnimationFrame(() => ajustarTamanoBorrador(true));
+    });
+  }
+
+  function anunciarTamanoBorrador(){
+    const alto = Math.round(borradorCanvasWrap.getBoundingClientRect().height);
+    borradorTamStatus.textContent = `Altura de la hoja de borrador: ${alto} píxeles.`;
+  }
+  function cambiarAlturaBorrador(delta){
+    const actual = borradorCanvasWrap.getBoundingClientRect().height;
+    const nueva = Math.min(640, Math.max(140, actual + delta));
+    borradorCanvasWrap.style.height = nueva + 'px';
+    ajustarTamanoBorrador(true);
+    anunciarTamanoBorrador();
+  }
+  btnBorradorMas.addEventListener('click', () => cambiarAlturaBorrador(60));
+  btnBorradorMenos.addEventListener('click', () => cambiarAlturaBorrador(-60));
+
+  // ===== Dibujo de gráficos (canvas) =====
+  function getCSSVar(nombre){
+    return getComputedStyle(document.body).getPropertyValue(nombre).trim();
+  }
+  function limpiarCanvas(ctx, w, h){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = getCSSVar('--paper');
+    ctx.fillRect(0,0,w,h);
+  }
+  function dibujarEjes(ctx, w, h, pad, xMin, xMax, yMin, yMax){
+    const sx = (w-2*pad)/(xMax-xMin);
+    const sy = (h-2*pad)/(yMax-yMin);
+    const toPx = (x) => pad + (x-xMin)*sx;
+    const toPy = (y) => h-pad-(y-yMin)*sy;
+    ctx.strokeStyle = getCSSVar('--grid');
+    ctx.lineWidth = 1;
+    const pasoX = Math.max(1, Math.round((xMax-xMin)/10));
+    const pasoY = Math.max(1, Math.round((yMax-yMin)/8));
+    for(let gx=Math.ceil(xMin/pasoX)*pasoX; gx<=xMax; gx+=pasoX){
+      ctx.beginPath(); ctx.moveTo(toPx(gx),pad); ctx.lineTo(toPx(gx),h-pad); ctx.stroke();
+    }
+    for(let gy=Math.ceil(yMin/pasoY)*pasoY; gy<=yMax; gy+=pasoY){
+      ctx.beginPath(); ctx.moveTo(pad,toPy(gy)); ctx.lineTo(w-pad,toPy(gy)); ctx.stroke();
+    }
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2;
+    if(yMin<=0 && yMax>=0){
+      ctx.beginPath(); ctx.moveTo(pad,toPy(0)); ctx.lineTo(w-pad,toPy(0)); ctx.stroke();
+    }
+    if(xMin<=0 && xMax>=0){
+      ctx.beginPath(); ctx.moveTo(toPx(0),pad); ctx.lineTo(toPx(0),h-pad); ctx.stroke();
+    }
+    return { toPx, toPy };
+  }
+  function dibujarFuncionLineal(ctx, w, h, m, b, marcaX, marcaY){
+    const xMin=-10, xMax=10;
+    let yMin = Math.min(m*xMin+b, m*xMax+b);
+    let yMax = Math.max(m*xMin+b, m*xMax+b);
+    if(marcaY!==undefined){ yMin=Math.min(yMin,marcaY); yMax=Math.max(yMax,marcaY); }
+    const padY = (yMax-yMin)*0.15 || 2;
+    yMin -= padY; yMax += padY;
+    limpiarCanvas(ctx,w,h);
+    const pad=30;
+    const {toPx,toPy} = dibujarEjes(ctx,w,h,pad,xMin,xMax,yMin,yMax);
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(toPx(xMin), toPy(m*xMin+b));
+    ctx.lineTo(toPx(xMax), toPy(m*xMax+b));
+    ctx.stroke();
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle = getCSSVar('--ink-soft');
+    ctx.lineWidth = 1.5;
+    if(marcaX!==undefined){
+      ctx.beginPath(); ctx.moveTo(toPx(marcaX),toPy(yMin)); ctx.lineTo(toPx(marcaX),toPy(yMax)); ctx.stroke();
+    }
+    if(marcaY!==undefined){
+      ctx.beginPath(); ctx.moveTo(toPx(xMin),toPy(marcaY)); ctx.lineTo(toPx(xMax),toPy(marcaY)); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  function dibujarFuncionCuadratica(ctx, w, h, a, b, c, marcaX){
+    const xMin=-10, xMax=10;
+    let yMin=Infinity, yMax=-Infinity;
+    for(let x=xMin; x<=xMax; x+=0.5){
+      const y = a*x*x + b*x + c;
+      if(y<yMin) yMin=y;
+      if(y>yMax) yMax=y;
+    }
+    const padY = (yMax-yMin)*0.15 || 2;
+    yMin -= padY; yMax += padY;
+    limpiarCanvas(ctx,w,h);
+    const pad=30;
+    const {toPx,toPy} = dibujarEjes(ctx,w,h,pad,xMin,xMax,yMin,yMax);
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let first=true;
+    for(let x=xMin; x<=xMax; x+=0.25){
+      const y = a*x*x + b*x + c;
+      const px=toPx(x), py=toPy(y);
+      if(first){ ctx.moveTo(px,py); first=false; } else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    if(marcaX!==undefined){
+      ctx.setLineDash([4,3]);
+      ctx.strokeStyle = getCSSVar('--ink-soft');
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(toPx(marcaX),toPy(yMin)); ctx.lineTo(toPx(marcaX),toPy(yMax)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+  function dibujarRectangulo(ctx, w, h, base, altura){
+    limpiarCanvas(ctx,w,h);
+    const pad=40;
+    const escala = Math.min((w-2*pad)/base, (h-2*pad)/altura);
+    const rw=base*escala, rh=altura*escala;
+    const x0=(w-rw)/2, y0=(h-rh)/2;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(x0,y0,rw,rh);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = '13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(base, x0+rw/2, y0+rh+18);
+    ctx.save();
+    ctx.translate(x0-16, y0+rh/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText(altura, 0, 0);
+    ctx.restore();
+  }
+  function dibujarTriangulo(ctx, w, h, base, altura){
+    limpiarCanvas(ctx,w,h);
+    const pad=40;
+    const escala = Math.min((w-2*pad)/base, (h-2*pad)/altura);
+    const bw=base*escala, bh=altura*escala;
+    const x0=(w-bw)/2, baseY=(h+bh)/2, topY=baseY-bh;
+    const apexX = x0+bw*0.3;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(apexX, topY);
+    ctx.lineTo(x0, baseY);
+    ctx.lineTo(x0+bw, baseY);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle = getCSSVar('--ink-soft');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(apexX, topY);
+    ctx.lineTo(apexX, baseY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = '13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(base, x0+bw/2, baseY+18);
+    ctx.fillText('h='+altura, apexX+22, (topY+baseY)/2);
+  }
+  function dibujarCirculo(ctx, w, h, radio){
+    limpiarCanvas(ctx,w,h);
+    const pad=40;
+    const rMax = Math.min(w,h)/2 - pad/2;
+    const escala = rMax/radio;
+    const r = radio*escala;
+    const cx=w/2, cy=h/2;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+r,cy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = '13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('r='+radio, cx+r/2, cy-8);
+  }
+  function dibujarTrianguloRectangulo(ctx, w, h, catA, catB, hip, incognita){
+    limpiarCanvas(ctx,w,h);
+    const pad=40;
+    const escala = Math.min((w-2*pad)/catB, (h-2*pad)/catA);
+    const bw=catB*escala, bh=catA*escala;
+    const x0=pad, y0=h-pad-bh, xB=x0+bw, yB=h-pad;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x0,y0);
+    ctx.lineTo(x0,yB);
+    ctx.lineTo(xB,yB);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.strokeStyle = getCSSVar('--marker-red');
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x0,yB-10,10,10);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = '13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    const labelCatA = incognita==='catA' ? '?' : catA;
+    const labelCatB = incognita==='catB' ? '?' : catB;
+    const labelHip = incognita==='hip' ? '?' : hip;
+    ctx.save();
+    ctx.translate(x0-16, (y0+yB)/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText(labelCatA, 0, 0);
+    ctx.restore();
+    ctx.fillText(labelCatB, (x0+xB)/2, yB+18);
+    ctx.fillText(labelHip, (x0+xB)/2 - 6, (y0+yB)/2 - 10);
+  }
+  function dibujarTrapecio(ctx, w, h, baseMayor, baseMenor, altura){
+    limpiarCanvas(ctx,w,h);
+    const pad=40;
+    const escala = Math.min((w-2*pad)/baseMayor, (h-2*pad)/altura);
+    const bw=baseMayor*escala, bh=altura*escala, tw=baseMenor*escala;
+    const x0=(w-bw)/2, baseY=(h+bh)/2, topY=baseY-bh;
+    const topX0=x0+(bw-tw)/2, topX1=topX0+tw;
+    ctx.strokeStyle = getCSSVar('--ink');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(topX0,topY);
+    ctx.lineTo(topX1,topY);
+    ctx.lineTo(x0+bw,baseY);
+    ctx.lineTo(x0,baseY);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle = getCSSVar('--ink-soft');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(topX0,topY);
+    ctx.lineTo(topX0,baseY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = getCSSVar('--ink');
+    ctx.font = '13px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(baseMayor, x0+bw/2, baseY+18);
+    ctx.fillText(baseMenor, topX0+tw/2, topY-8);
+    ctx.fillText('h='+altura, topX0-20, (topY+baseY)/2);
+  }
+  function dibujarGrafico(g){
+    const wrap = document.getElementById('grafico-wrap');
+    const canvas = document.getElementById('grafico-canvas');
+    if(!g){ wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    let desc = 'Gráfico ilustrativo del ejercicio.';
+    switch(g.tipo){
+      case 'lineal':
+        dibujarFuncionLineal(ctx,w,h,g.m,g.b,g.marcaX,g.marcaY);
+        desc = `Gráfico de la recta f de x igual ${g.m}x más (${g.b}).` +
+          (g.marcaX!==undefined ? ` Se marca con línea punteada el valor x = ${g.marcaX}.` : '') +
+          (g.marcaY!==undefined ? ` Se marca con línea punteada el valor y = ${g.marcaY}.` : '');
+        break;
+      case 'cuadratica':
+        dibujarFuncionCuadratica(ctx,w,h,g.a,g.b,g.c,g.marcaX);
+        desc = `Gráfico de la parábola f de x igual ${g.a}x cuadrado más ${g.b}x más (${g.c}).` +
+          (g.marcaX!==undefined ? ` Se marca con línea punteada el valor x = ${g.marcaX}.` : '');
+        break;
+      case 'rectangulo':
+        dibujarRectangulo(ctx,w,h,g.base,g.altura);
+        desc = `Rectángulo con base ${g.base} y altura ${g.altura}.`;
+        break;
+      case 'triangulo':
+        dibujarTriangulo(ctx,w,h,g.base,g.altura);
+        desc = `Triángulo con base ${g.base} y altura ${g.altura} marcada con línea punteada.`;
+        break;
+      case 'circulo':
+        dibujarCirculo(ctx,w,h,g.radio);
+        desc = `Círculo con radio ${g.radio}.`;
+        break;
+      case 'trapecio':
+        dibujarTrapecio(ctx,w,h,g.baseMayor,g.baseMenor,g.altura);
+        desc = `Trapecio con base mayor ${g.baseMayor}, base menor ${g.baseMenor} y altura ${g.altura} marcada con línea punteada.`;
+        break;
+      case 'triangulo-rectangulo':
+        dibujarTrianguloRectangulo(ctx,w,h,g.catA,g.catB,g.hip,g.incognita);
+        desc = `Triángulo rectángulo con cateto ${g.incognita==='catA' ? 'desconocido' : g.catA}, cateto ${g.incognita==='catB' ? 'desconocido' : g.catB} e hipotenusa ${g.incognita==='hip' ? 'desconocida' : g.hip}.`;
+        break;
+    }
+    canvas.setAttribute('role','img');
+    canvas.setAttribute('aria-label', desc);
+  }
+
+  // ===== Estado / progreso =====
+  function estadoInicial(){
+    const temas = {};
+    TEMAS.forEach(t => {
+      temas[t.id] = { nivelActual:1, correctas:[0,0,0], completado:[false,false,false] };
+    });
+    return { xp:0, racha:0, ultimaFecha:null, temas, totalCorrectas:0, rachaAciertosActual:0, mejorRachaAciertos:0, logros:{}, vidas:VIDAS_MAX, vidasProximaRegen:null, recordatorioMostradoFecha:null, historialXP:{}, erroresPorTema:{} };
+  }
+  let progreso = cargarProgreso();
+  function cargarProgreso(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return estadoInicial();
+      const data = JSON.parse(raw);
+      // asegurar que existan todos los temas (por si se agregan nuevos)
+      const base = estadoInicial();
+      TEMAS.forEach(t => { if(!data.temas[t.id]) data.temas[t.id] = base.temas[t.id]; });
+      if(typeof data.totalCorrectas !== 'number') data.totalCorrectas = 0;
+      if(typeof data.rachaAciertosActual !== 'number') data.rachaAciertosActual = 0;
+      if(typeof data.mejorRachaAciertos !== 'number') data.mejorRachaAciertos = 0;
+      if(!data.logros || typeof data.logros !== 'object') data.logros = {};
+      if(typeof data.vidas !== 'number') data.vidas = VIDAS_MAX;
+      if(data.vidasProximaRegen === undefined) data.vidasProximaRegen = null;
+      if(data.recordatorioMostradoFecha === undefined) data.recordatorioMostradoFecha = null;
+      if(!data.historialXP || typeof data.historialXP !== 'object') data.historialXP = {};
+      if(!data.erroresPorTema || typeof data.erroresPorTema !== 'object') data.erroresPorTema = {};
+      return data;
+    }catch(e){ return estadoInicial(); }
+  }
+  function guardarProgreso(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(progreso)); }catch(e){}
+  }
+  function actualizarRacha(){
+    const hoy = new Date().toISOString().slice(0,10);
+    if(progreso.ultimaFecha === hoy) return;
+    if(progreso.ultimaFecha){
+      const ayer = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+      progreso.racha = (progreso.ultimaFecha === ayer) ? progreso.racha + 1 : 1;
+    } else {
+      progreso.racha = 1;
+    }
+    progreso.ultimaFecha = hoy;
+    guardarProgreso();
+  }
+
+  // ===== Ajustes =====
+  const TEMAS_DISPONIBLES = ['clasico','oscuro','menta','coral','contraste'];
+  function cargarAjustes(){
+    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00', codigoClase:'' };
+    try{
+      const raw = localStorage.getItem(AJUSTES_KEY);
+      if(!raw) return base;
+      const data = JSON.parse(raw);
+      // migración desde el formato anterior { contraste, grande }
+      if(data.apariencia === undefined && data.contraste !== undefined){
+        data.apariencia = data.contraste ? 'contraste' : 'clasico';
+      }
+      return { ...base, ...data };
+    }catch(e){ return base; }
+  }
+  let ajustes = cargarAjustes();
+  function aplicarApariencia(tema){
+    document.body.classList.remove('tema-oscuro','tema-menta','tema-coral','contraste');
+    if(tema==='oscuro') document.body.classList.add('tema-oscuro');
+    else if(tema==='menta') document.body.classList.add('tema-menta');
+    else if(tema==='coral') document.body.classList.add('tema-coral');
+    else if(tema==='contraste') document.body.classList.add('contraste');
+    aparienciaOpts.forEach(opt => opt.setAttribute('aria-checked', opt.dataset.tema===tema ? 'true' : 'false'));
+  }
+  function actualizarSaludo(){
+    if(!subt) return;
+    subt.textContent = ajustes.nombre
+      ? `¡Hola, ${ajustes.nombre}! Elegí un tema y practicá a tu ritmo.`
+      : 'Elegí un tema y practicá a tu ritmo. Cada nivel superado suma un sello.';
+  }
+  function aplicarAjustes(){
+    if(!TEMAS_DISPONIBLES.includes(ajustes.apariencia)) ajustes.apariencia = 'clasico';
+    aplicarApariencia(ajustes.apariencia);
+    document.body.classList.toggle('grande', ajustes.grande);
+    document.body.classList.toggle('movimiento-reducido', ajustes.movimientoReducido);
+    switchGrande.classList.toggle('on', ajustes.grande);
+    switchGrande.setAttribute('aria-checked', ajustes.grande ? 'true' : 'false');
+    switchSonido.classList.toggle('on', ajustes.sonido);
+    switchSonido.setAttribute('aria-checked', ajustes.sonido ? 'true' : 'false');
+    switchAnimaciones.classList.toggle('on', ajustes.movimientoReducido);
+    switchAnimaciones.setAttribute('aria-checked', ajustes.movimientoReducido ? 'true' : 'false');
+    switchVidas.classList.toggle('on', ajustes.vidasActivadas);
+    switchVidas.setAttribute('aria-checked', ajustes.vidasActivadas ? 'true' : 'false');
+    if(chipVidas) chipVidas.style.display = ajustes.vidasActivadas ? '' : 'none';
+    if(chipVidas2) chipVidas2.style.display = ajustes.vidasActivadas ? '' : 'none';
+    renderRecordatorioUI();
+    if(inputNombre.value !== ajustes.nombre) inputNombre.value = ajustes.nombre;
+    if(inputCodigoClase.value !== ajustes.codigoClase) inputCodigoClase.value = ajustes.codigoClase;
+    actualizarSaludo();
+  }
+  function guardarAjustes(){
+    try{ localStorage.setItem(AJUSTES_KEY, JSON.stringify(ajustes)); }catch(e){}
+  }
+
+  // ===== Sonido de efectos =====
+  let audioCtx = null;
+  function reproducirSonido(tipo){
+    if(!ajustes.sonido) return;
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      if(tipo === 'correcto'){
+        osc.frequency.setValueAtTime(660, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(990, audioCtx.currentTime + 0.12);
+      } else {
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+      }
+      gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.28);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    }catch(e){}
+  }
+
+  // ===== Animaciones auxiliares =====
+  function prefiereMovimientoReducido(){
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+  function animarNumero(el, valorNuevo){
+    const inicio = parseInt(el.textContent, 10) || 0;
+    if(valorNuevo === inicio){ el.textContent = valorNuevo; return; }
+    if(prefiereMovimientoReducido()){ el.textContent = valorNuevo; return; }
+    const duracion = 500;
+    const t0 = performance.now();
+    function paso(t){
+      const p = Math.min(1, (t-t0)/duracion);
+      el.textContent = Math.round(inicio + (valorNuevo-inicio)*p);
+      if(p<1) requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
+  }
+  function bumpChip(el){
+    if(!el || prefiereMovimientoReducido()) return;
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+  }
+  function lanzarConfeti(){
+    if(prefiereMovimientoReducido()) return;
+    const emojis = ['⭐','✨','🎉'];
+    for(let i=0;i<8;i++){
+      const p = document.createElement('span');
+      p.className = 'confeti-part';
+      p.setAttribute('aria-hidden','true');
+      p.textContent = emojis[randInt(0,2)];
+      p.style.left = (45 + randInt(-22,22)) + '%';
+      p.style.animationDelay = randInt(0,150) + 'ms';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1300);
+    }
+  }
+
+  function shakeChip(el){
+    if(!el || prefiereMovimientoReducido()) return;
+    el.classList.remove('shake-chip');
+    void el.offsetWidth;
+    el.classList.add('shake-chip');
+  }
+
+  // ===== Sistema de vidas =====
+  let vidasIntervalId = null;
+  function actualizarVidas(){
+    if(!ajustes.vidasActivadas) return;
+    if(progreso.vidas < VIDAS_MAX && progreso.vidasProximaRegen){
+      let cambiado = false;
+      const REGEN_MS = VIDAS_REGEN_MIN * 60000;
+      while(progreso.vidas < VIDAS_MAX && progreso.vidasProximaRegen && Date.now() >= progreso.vidasProximaRegen){
+        progreso.vidas++;
+        progreso.vidasProximaRegen += REGEN_MS;
+        cambiado = true;
+      }
+      if(progreso.vidas >= VIDAS_MAX) progreso.vidasProximaRegen = null;
+      if(cambiado) guardarProgreso();
+    }
+  }
+  function renderVidas(){
+    if(!ajustes.vidasActivadas) return;
+    const etiqueta = `${progreso.vidas} de ${VIDAS_MAX} vidas`;
+    const baja = progreso.vidas <= 1;
+    if(vidasTotalEl) vidasTotalEl.textContent = progreso.vidas;
+    if(vidasTotalEl2) vidasTotalEl2.textContent = progreso.vidas;
+    if(chipVidas){ chipVidas.setAttribute('aria-label', etiqueta); chipVidas.classList.toggle('baja', baja); }
+    if(chipVidas2){ chipVidas2.setAttribute('aria-label', etiqueta); chipVidas2.classList.toggle('baja', baja); }
+  }
+  function formatoCuentaRegresiva(ms){
+    const total = Math.max(0, Math.ceil(ms/1000));
+    const mins = Math.floor(total/60);
+    const secs = total%60;
+    return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  }
+  function actualizarCuentaRegresivaVidas(){
+    if(!vidasCountdown) return;
+    if(!progreso.vidasProximaRegen){ vidasCountdown.textContent = '--:--'; return; }
+    vidasCountdown.textContent = formatoCuentaRegresiva(progreso.vidasProximaRegen - Date.now());
+  }
+  function tickVidas(){
+    actualizarVidas();
+    renderVidas();
+    if(progreso.vidas > 0){
+      if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
+      nuevoProblema();
+    } else {
+      actualizarCuentaRegresivaVidas();
+    }
+  }
+  function mostrarBloqueoVidas(){
+    if(hojaPractica) hojaPractica.style.display = 'none';
+    if(borradorWrapEl) borradorWrapEl.style.display = 'none';
+    btnSiguiente.style.display = 'none';
+    vidasBloqueo.style.display = 'block';
+    actualizarCuentaRegresivaVidas();
+    if(!vidasIntervalId) vidasIntervalId = setInterval(tickVidas, 1000);
+  }
+  function ocultarBloqueoVidas(){
+    if(hojaPractica) hojaPractica.style.display = '';
+    if(borradorWrapEl) borradorWrapEl.style.display = '';
+    vidasBloqueo.style.display = 'none';
+    if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
+  }
+
+  // ===== Recordatorio diario (notificaciones) =====
+  const RECORDATORIO_TAG = 'racha-diaria';
+  function renderRecordatorioUI(){
+    switchRecordatorio.classList.toggle('on', ajustes.recordatorioActivado);
+    switchRecordatorio.setAttribute('aria-checked', ajustes.recordatorioActivado ? 'true' : 'false');
+    if(inputRecordatorioHora.value !== ajustes.recordatorioHora) inputRecordatorioHora.value = ajustes.recordatorioHora;
+    recordatorioHoraWrap.style.display = ajustes.recordatorioActivado ? '' : 'none';
+  }
+  function horaObjetivoDeHoy(adelantarSiPaso){
+    const [hh, mm] = (ajustes.recordatorioHora || '19:00').split(':').map(Number);
+    const ahora = new Date();
+    const objetivo = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), hh || 19, mm || 0, 0, 0);
+    if(adelantarSiPaso && objetivo.getTime() <= Date.now()) objetivo.setDate(objetivo.getDate() + 1);
+    return objetivo;
+  }
+  async function programarRecordatorio(){
+    if(!ajustes.recordatorioActivado) return;
+    if(typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    if(!('serviceWorker' in navigator)) return;
+    try{
+      const reg = await navigator.serviceWorker.ready;
+      if('showTrigger' in Notification.prototype && typeof TimestampTrigger !== 'undefined'){
+        const previas = await reg.getNotifications({ tag: RECORDATORIO_TAG, includeTriggered: true });
+        previas.forEach(n => n.close());
+        const objetivo = horaObjetivoDeHoy(true);
+        reg.showNotification('🔥 No pierdas tu racha', {
+          body: 'Todavía no practicaste hoy en Mate Secundaria.',
+          tag: RECORDATORIO_TAG,
+          icon: 'icon192.png',
+          showTrigger: new TimestampTrigger(objetivo.getTime())
+        });
+      }
+    }catch(e){}
+  }
+  async function cancelarRecordatorio(){
+    if(typeof Notification === 'undefined' || !('serviceWorker' in navigator)) return;
+    try{
+      const reg = await navigator.serviceWorker.ready;
+      const previas = await reg.getNotifications({ tag: RECORDATORIO_TAG, includeTriggered: true });
+      previas.forEach(n => n.close());
+    }catch(e){}
+  }
+  function mostrarNotificacionAhora(){
+    const cuerpo = progreso.racha > 0
+      ? `Llevás ${progreso.racha} día${progreso.racha===1?'':'s'} de racha. ¡No la pierdas!`
+      : 'Practicá hoy para empezar una nueva racha.';
+    const opciones = { body: cuerpo, icon: 'icon192.png', tag: RECORDATORIO_TAG + '-hoy' };
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.ready.then(reg => reg.showNotification('🔥 Recordatorio de Mate Secundaria', opciones)).catch(()=>{});
+    } else if(typeof Notification !== 'undefined'){
+      try{ new Notification('🔥 Recordatorio de Mate Secundaria', opciones); }catch(e){}
+    }
+  }
+  function verificarRecordatorioInmediato(){
+    if(!ajustes.recordatorioActivado) return;
+    if(typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    const hoy = new Date().toISOString().slice(0,10);
+    if(progreso.ultimaFecha === hoy) return; // ya practicó hoy
+    if(progreso.recordatorioMostradoFecha === hoy) return; // ya se avisó hoy
+    if(Date.now() < horaObjetivoDeHoy(false).getTime()) return; // todavía no es la hora
+    mostrarNotificacionAhora();
+    progreso.recordatorioMostradoFecha = hoy;
+    guardarProgreso();
+  }
+  function alternarRecordatorio(){
+    if(!ajustes.recordatorioActivado){
+      if(typeof Notification === 'undefined'){
+        recordatorioEstado.textContent = 'Tu navegador no soporta notificaciones.';
+        return;
+      }
+      Notification.requestPermission().then(permiso => {
+        if(permiso === 'granted'){
+          ajustes.recordatorioActivado = true;
+          guardarAjustes();
+          renderRecordatorioUI();
+          recordatorioEstado.textContent = '';
+          programarRecordatorio();
+          verificarRecordatorioInmediato();
+        } else {
+          recordatorioEstado.textContent = 'No se activó: falta permitir notificaciones para esta app en el navegador.';
+        }
+      });
+    } else {
+      ajustes.recordatorioActivado = false;
+      guardarAjustes();
+      renderRecordatorioUI();
+      recordatorioEstado.textContent = '';
+      cancelarRecordatorio();
+    }
+  }
+  switchRecordatorio.addEventListener('click', alternarRecordatorio);
+  switchRecordatorio.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); alternarRecordatorio(); }
+  });
+  inputRecordatorioHora.addEventListener('change', () => {
+    ajustes.recordatorioHora = inputRecordatorioHora.value || '19:00';
+    guardarAjustes();
+    if(ajustes.recordatorioActivado) programarRecordatorio();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible') verificarRecordatorioInmediato();
+  });
+
+  // ===== Render vista inicio =====
+  function renderStatsTop(){
+    animarNumero(xpTotalEl, progreso.xp);
+    animarNumero(xpTotalEl2, progreso.xp);
+    animarNumero(rachaTotalEl, progreso.racha);
+    actualizarVidas();
+    renderVidas();
+  }
+  function renderTemas(){
+    gridTemas.innerHTML = '';
+    TEMAS.forEach((t, idx) => {
+      const p = progreso.temas[t.id];
+      const completados = p.completado.filter(Boolean).length;
+      const card = document.createElement('button');
+      card.className = 'tema-card';
+      card.style.animationDelay = `${idx*45}ms`;
+      card.setAttribute('aria-label', `${t.nombre}, ${completados} de 3 niveles completados`);
+      if(completados===3){
+        const pin = document.createElement('div');
+        pin.className='pin';
+        card.appendChild(pin);
+      }
+      card.innerHTML += `
+        <div class="icono">${t.icono}</div>
+        <div class="nombre">${t.nombre}</div>
+        <span class="anio-tag">${t.rango}</span>
+        <div class="barra-mini"><div style="width:${(completados/3)*100}%"></div></div>
+      `;
+      card.addEventListener('click', () => abrirTema(t.id));
+      gridTemas.appendChild(card);
+    });
+    actualizarRepasoMixtoCard();
+  }
+
+  // ===== Repaso mixto =====
+  const MIN_TEMAS_MIXTO = 2;
+  function temasElegiblesParaMixto(){
+    return TEMAS.filter(t => progreso.temas[t.id].completado.some(Boolean));
+  }
+  function actualizarRepasoMixtoCard(){
+    const elegibles = temasElegiblesParaMixto();
+    const disponible = elegibles.length >= MIN_TEMAS_MIXTO;
+    btnRepasoMixto.disabled = !disponible;
+    repasoMixtoSub.textContent = disponible
+      ? `Ejercicios de ${elegibles.length} temas ya aprobados`
+      : 'Aprobá al menos un nivel en 2 temas distintos para desbloquearlo';
+  }
+  function elegirProblemaMixto(){
+    const elegibles = temasElegiblesParaMixto();
+    const tema = elegibles[randInt(0, elegibles.length-1)];
+    const p = progreso.temas[tema.id];
+    const nivelesCompletados = [0,1,2].filter(idx => p.completado[idx]);
+    const idx = nivelesCompletados[randInt(0, nivelesCompletados.length-1)];
+    temaActivo = tema;
+    nivelActivo = idx+1;
+  }
+  let modoMixto = false;
+  let mixtoRespondidas = 0;
+  let mixtoCorrectas = 0;
+  function abrirRepasoMixto(){
+    if(btnRepasoMixto.disabled) return;
+    modoMixto = true;
+    mixtoRespondidas = 0;
+    mixtoCorrectas = 0;
+    btnVolverPractica.textContent = '← Volver a los temas';
+    elegirProblemaMixto();
+    nuevoProblema();
+    mostrarVista('practica');
+  }
+  btnRepasoMixto.addEventListener('click', abrirRepasoMixto);
+
+  // ===== Navegación =====
+  let temaActivo = null;
+  let nivelActivo = null;
+  let problemaActual = null;
+
+  function mostrarVista(vista){
+    vistaInicio.style.display = vista==='inicio' ? '' : 'none';
+    vistaTema.style.display = vista==='tema' ? '' : 'none';
+    vistaPractica.style.display = vista==='practica' ? '' : 'none';
+    window.scrollTo(0,0);
+    const activa = vista==='inicio' ? vistaInicio : (vista==='tema' ? vistaTema : vistaPractica);
+    activa.classList.remove('vista-anim');
+    void activa.offsetWidth; // fuerza reflow para reiniciar la animación
+    activa.classList.add('vista-anim');
+  }
+
+  function abrirTema(id){
+    temaActivo = TEMAS.find(t => t.id===id);
+    temaTitulo.textContent = `${temaActivo.icono} ${temaActivo.nombre}`;
+    temaDesc.textContent = temaActivo.desc;
+    renderCamino();
+    mostrarVista('tema');
+  }
+
+  function renderCamino(){
+    caminoNiveles.innerHTML = '';
+    const p = progreso.temas[temaActivo.id];
+    let yaMarcoActivo = false;
+    for(let i=1;i<=3;i++){
+      const idx = i-1;
+      const bloqueado = i > p.nivelActual;
+      const completado = p.completado[idx];
+      const esActivo = !bloqueado && !completado && !yaMarcoActivo;
+      if(esActivo) yaMarcoActivo = true;
+      const nodo = document.createElement('button');
+      nodo.type = 'button';
+      nodo.className = `nivel-nodo ${bloqueado ? 'bloqueado' : 'n'+i}${esActivo ? ' activo' : ''}`;
+      nodo.disabled = bloqueado;
+      const estadoTxt = completado ? 'nivel superado' : (bloqueado ? 'bloqueado' : 'disponible');
+      nodo.setAttribute('aria-label', `Nivel ${i}, ${NOMBRES_NIVEL[idx]}, ${estadoTxt}`);
+      nodo.innerHTML = bloqueado
+        ? `<span class="candado" aria-hidden="true">🔒</span><span class="sub">${NOMBRES_NIVEL[idx]}</span>`
+        : `<span class="etiqueta" aria-hidden="true">${i}</span><span class="sub">${NOMBRES_NIVEL[idx]}</span>`;
+      if(completado){
+        const sello = document.createElement('div');
+        sello.className = 'sello-completado';
+        sello.setAttribute('aria-hidden','true');
+        sello.innerHTML = '<span>APRO<br>BADO</span>';
+        nodo.appendChild(sello);
+      }
+      if(!bloqueado){
+        nodo.addEventListener('click', () => abrirPractica(i));
+      }
+      caminoNiveles.appendChild(nodo);
+      if(i<3){
+        const conector = document.createElement('div');
+        conector.className='conector';
+        conector.setAttribute('aria-hidden','true');
+        caminoNiveles.appendChild(conector);
+      }
+    }
+  }
+
+  function abrirPractica(nivel){
+    modoMixto = false;
+    btnVolverPractica.textContent = '← Volver al tema';
+    nivelActivo = nivel;
+    hojaEtiqueta.textContent = `Nivel ${nivel} · ${NOMBRES_NIVEL[nivel-1]}`;
+    actualizarProgresoTxt();
+    nuevoProblema();
+    mostrarVista('practica');
+  }
+
+  function actualizarProgresoTxt(){
+    if(modoMixto){
+      progresoNivelTxt.textContent = mixtoRespondidas === 0
+        ? 'Repaso mixto'
+        : `Repaso mixto · ${mixtoCorrectas}/${mixtoRespondidas} correctas`;
+      return;
+    }
+    const p = progreso.temas[temaActivo.id];
+    const correctas = p.correctas[nivelActivo-1];
+    const completado = p.completado[nivelActivo-1];
+    progresoNivelTxt.textContent = completado
+      ? `Nivel superado ✓ (${Math.min(correctas,UMBRAL_APROBACION)}/${UMBRAL_APROBACION})`
+      : `Progreso: ${Math.min(correctas,UMBRAL_APROBACION)}/${UMBRAL_APROBACION} correctas`;
+  }
+
+  function nuevoProblema(){
+    actualizarVidas();
+    renderVidas();
+    if(ajustes.vidasActivadas && progreso.vidas <= 0){
+      mostrarBloqueoVidas();
+      return;
+    }
+    ocultarBloqueoVidas();
+    if(modoMixto){
+      elegirProblemaMixto();
+      hojaEtiqueta.textContent = `${temaActivo.icono} ${temaActivo.nombre} · ${NOMBRES_NIVEL[nivelActivo-1]}`;
+      actualizarProgresoTxt();
+    }
+    problemaActual = temaActivo.generar(nivelActivo);
+    enunciadoTxt.textContent = problemaActual.enunciado;
+    dibujarGrafico(problemaActual.grafico);
+    limpiarBorrador();
+    respuestaInput.value = '';
+    respuestaInput.disabled = false;
+    feedbackBox.className = 'feedback';
+    feedbackBox.style.display = 'none';
+    btnComprobar.style.display = '';
+    btnSiguiente.style.display = 'none';
+    respuestaInput.focus();
+  }
+
+  function comprobarRespuesta(){
+    const valorIngresado = respuestaInput.value.trim();
+    if(!valorIngresado) return;
+    let esCorrecta = false;
+
+    if(problemaActual.tipo === 'fraccion'){
+      const parsed = parseFraccionInput(valorIngresado);
+      if(parsed) esCorrecta = fraccionesIguales(parsed, problemaActual.respuesta);
+    } else {
+      const val = parseFloat(valorIngresado.replace(',', '.'));
+      if(!isNaN(val)){
+        const tol = problemaActual.tolerancia || 0;
+        esCorrecta = Math.abs(val - problemaActual.respuesta) <= (tol || 1e-9);
+      }
+    }
+
+    respuestaInput.disabled = true;
+    btnComprobar.style.display = 'none';
+    btnSiguiente.style.display = '';
+    feedbackBox.style.display = 'block';
+
+    const p = progreso.temas[temaActivo.id];
+    const idx = nivelActivo - 1;
+    const yaCompletado = p.completado[idx];
+
+    if(modoMixto){
+      mixtoRespondidas++;
+      if(esCorrecta) mixtoCorrectas++;
+    }
+
+    if(esCorrecta){
+      feedbackBox.className = 'feedback correcto';
+      feedbackBox.innerHTML = '¡Correcto! 🎉';
+      reproducirSonido('correcto');
+      progreso.xp += 10;
+      const hoyKey = new Date().toISOString().slice(0,10);
+      progreso.historialXP[hoyKey] = (progreso.historialXP[hoyKey] || 0) + 10;
+      progreso.totalCorrectas = (progreso.totalCorrectas||0) + 1;
+      progreso.rachaAciertosActual = (progreso.rachaAciertosActual||0) + 1;
+      progreso.mejorRachaAciertos = Math.max(progreso.mejorRachaAciertos||0, progreso.rachaAciertosActual);
+      if(!yaCompletado) p.correctas[idx] += 1;
+      actualizarRacha();
+      renderStatsTop();
+      bumpChip(xpTotalEl2.closest('.chip'));
+
+      if(!yaCompletado && p.correctas[idx] >= UMBRAL_APROBACION){
+        p.completado[idx] = true;
+        if(nivelActivo < 3) p.nivelActual = Math.max(p.nivelActual, nivelActivo+1);
+        mostrarSello();
+      }
+      guardarProgreso();
+      verificarLogros();
+    } else {
+      feedbackBox.className = 'feedback incorrecto';
+      reproducirSonido('incorrecto');
+      progreso.rachaAciertosActual = 0;
+      progreso.erroresPorTema[temaActivo.id] = (progreso.erroresPorTema[temaActivo.id] || 0) + 1;
+      if(ajustes.vidasActivadas){
+        progreso.vidas = Math.max(0, progreso.vidas - 1);
+        if(progreso.vidas < VIDAS_MAX && !progreso.vidasProximaRegen){
+          progreso.vidasProximaRegen = Date.now() + VIDAS_REGEN_MIN * 60000;
+        }
+        renderVidas();
+        shakeChip(chipVidas2);
+      }
+      guardarProgreso();
+      const respuestaMostrada = problemaActual.tipo==='fraccion'
+        ? fmtFraccion(problemaActual.respuesta[0], problemaActual.respuesta[1])
+        : (Number.isInteger(problemaActual.respuesta) ? problemaActual.respuesta : problemaActual.respuesta.toFixed(2));
+      const explicacionHtml = problemaActual.explicacion
+        ? `<div class="explicacion">💡 ${problemaActual.explicacion}</div>`
+        : '';
+      feedbackBox.innerHTML = `No es correcto. La respuesta era: <strong>${respuestaMostrada}</strong>${explicacionHtml}`;
+    }
+    actualizarProgresoTxt();
+  }
+
+  function mostrarSello(){
+    lanzarConfeti();
+    const el = document.createElement('div');
+    el.className = 'stamp-anim';
+    el.setAttribute('role','status');
+    el.setAttribute('aria-live','assertive');
+    el.textContent = '¡APROBADO! Nivel superado.';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1150);
+  }
+
+  // ===== Eventos =====
+  btnComprobar.addEventListener('click', comprobarRespuesta);
+  respuestaInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter'){
+      if(btnComprobar.style.display !== 'none') comprobarRespuesta();
+      else nuevoProblema();
+    }
+  });
+  btnSiguiente.addEventListener('click', nuevoProblema);
+  btnVolverTema.addEventListener('click', () => { renderTemas(); mostrarVista('inicio'); });
+  btnVolverPractica.addEventListener('click', () => {
+    if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
+    if(modoMixto){
+      modoMixto = false;
+      renderTemas();
+      mostrarVista('inicio');
+    } else {
+      renderCamino();
+      mostrarVista('tema');
+    }
+  });
+  [btnVolverTema, btnVolverPractica].forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        el.click();
+      }
+    });
+  });
+
+  let elementoConFocoPrevio = null;
+  let modalActivo = null;
+  function abrirModal(modalEl, primerFoco){
+    elementoConFocoPrevio = document.activeElement;
+    modalEl.classList.add('abierto');
+    modalActivo = modalEl;
+    const foco = primerFoco || modalEl.querySelector('button, input, [tabindex="0"]');
+    if(foco) foco.focus();
+    document.addEventListener('keydown', manejarTeclaModal);
+  }
+  function cerrarModal(modalEl){
+    modalEl.classList.remove('abierto');
+    modalActivo = null;
+    document.removeEventListener('keydown', manejarTeclaModal);
+    if(elementoConFocoPrevio) elementoConFocoPrevio.focus();
+  }
+  function manejarTeclaModal(e){
+    if(!modalActivo) return;
+    if(e.key === 'Escape'){ cerrarModal(modalActivo); return; }
+    if(e.key === 'Tab'){
+      const focosVisibles = modalActivo.querySelectorAll('button, input, [tabindex="0"]');
+      const lista = Array.from(focosVisibles);
+      if(lista.length === 0) return;
+      const primero = lista[0], ultimo = lista[lista.length-1];
+      if(e.shiftKey && document.activeElement === primero){
+        e.preventDefault(); ultimo.focus();
+      } else if(!e.shiftKey && document.activeElement === ultimo){
+        e.preventDefault(); primero.focus();
+      }
+    }
+  }
+  function abrirModalAjustes(){ abrirModal(modalAjustes, aparienciaOpts[0]); }
+  function cerrarModalAjustes(){ cerrarModal(modalAjustes); }
+  function abrirModalLogros(){ renderLogros(); abrirModal(modalLogros); }
+  function cerrarModalLogros(){ cerrarModal(modalLogros); }
+  function abrirModalStats(){ renderStats(); abrirModal(modalStats); }
+  function cerrarModalStats(){ cerrarModal(modalStats); }
+  function abrirModalClase(){ renderTablaClase(); abrirModal(modalClase); }
+  function cerrarModalClase(){ cerrarModal(modalClase); }
+
+  btnAjustes.addEventListener('click', abrirModalAjustes);
+  btnCerrarAjustes.addEventListener('click', cerrarModalAjustes);
+  modalAjustes.addEventListener('click', (e) => { if(e.target===modalAjustes) cerrarModalAjustes(); });
+  btnLogros.addEventListener('click', abrirModalLogros);
+  btnCerrarLogros.addEventListener('click', cerrarModalLogros);
+  modalLogros.addEventListener('click', (e) => { if(e.target===modalLogros) cerrarModalLogros(); });
+  btnStats.addEventListener('click', abrirModalStats);
+  btnCerrarStats.addEventListener('click', cerrarModalStats);
+  modalStats.addEventListener('click', (e) => { if(e.target===modalStats) cerrarModalStats(); });
+  btnCompartirProgreso.addEventListener('click', compartirProgreso);
+  btnClase.addEventListener('click', abrirModalClase);
+  btnCerrarClase.addEventListener('click', cerrarModalClase);
+  modalClase.addEventListener('click', (e) => { if(e.target===modalClase) cerrarModalClase(); });
+  btnProcesarClase.addEventListener('click', () => {
+    const texto = textareaClase.value;
+    if(!texto.trim()){ claseResumen.textContent = 'Pegá primero el texto que te compartieron.'; return; }
+    const r = procesarTextoClase(texto);
+    claseResumen.textContent = r.encontrados === 0
+      ? 'No encontré ningún reporte válido en ese texto.'
+      : `Se agregaron ${r.agregados} nuevo(s) y se actualizaron ${r.actualizados}.${r.invalidos ? ` (${r.invalidos} bloque(s) inválido(s) ignorado(s))` : ''}`;
+    textareaClase.value = '';
+    renderTablaClase();
+  });
+  btnLimpiarClase.addEventListener('click', () => {
+    if(confirm('¿Borrar todos los reportes de la clase guardados en este dispositivo? Esta acción no se puede deshacer.')){
+      reportesClase = [];
+      guardarReportesClase();
+      renderTablaClase();
+      claseResumen.textContent = '';
+    }
+  });
+
+  function alternarSwitch(switchEl, callback){
+    const activarlo = () => {
+      callback();
+      switchEl.setAttribute('aria-checked', switchEl.classList.contains('on') ? 'true' : 'false');
+    };
+    switchEl.addEventListener('click', activarlo);
+    switchEl.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        activarlo();
+      }
+    });
+  }
+
+  aparienciaOpts.forEach(opt => {
+    opt.addEventListener('click', () => {
+      ajustes.apariencia = opt.dataset.tema;
+      aplicarAjustes(); guardarAjustes();
+      if(problemaActual && problemaActual.grafico) dibujarGrafico(problemaActual.grafico);
+      if(modalStats.classList.contains('abierto')) dibujarGraficoXPSemana();
+    });
+  });
+
+  alternarSwitch(switchGrande, () => {
+    ajustes.grande = !ajustes.grande;
+    aplicarAjustes(); guardarAjustes();
+  });
+  alternarSwitch(switchSonido, () => {
+    ajustes.sonido = !ajustes.sonido;
+    aplicarAjustes(); guardarAjustes();
+    if(ajustes.sonido) reproducirSonido('correcto');
+  });
+  alternarSwitch(switchAnimaciones, () => {
+    ajustes.movimientoReducido = !ajustes.movimientoReducido;
+    aplicarAjustes(); guardarAjustes();
+  });
+  alternarSwitch(switchVidas, () => {
+    ajustes.vidasActivadas = !ajustes.vidasActivadas;
+    aplicarAjustes(); guardarAjustes();
+    if(vistaPractica.style.display !== 'none') nuevoProblema();
+  });
+  inputNombre.addEventListener('input', () => {
+    ajustes.nombre = inputNombre.value.trim();
+    guardarAjustes();
+    actualizarSaludo();
+  });
+  inputCodigoClase.addEventListener('input', () => {
+    ajustes.codigoClase = inputCodigoClase.value.trim();
+    guardarAjustes();
+  });
+  btnReiniciar.addEventListener('click', () => {
+    if(confirm('¿Seguro que querés borrar todo tu progreso? Esta acción no se puede deshacer.')){
+      progreso = estadoInicial();
+      guardarProgreso();
+      renderStatsTop();
+      renderTemas();
+      cerrarModalAjustes();
+    }
+  });
+
+  // ===== Inicialización =====
+  aplicarAjustes();
+  renderStatsTop();
+  renderTemas();
+  verificarLogros(false);
+  mostrarVista('inicio');
+  verificarRecordatorioInmediato();
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(() => {
+        programarRecordatorio();
+      }).catch(()=>{});
+    });
+  }
+})();
+</script>
+</body>
+</html>
