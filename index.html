@@ -627,6 +627,17 @@
     </div>
     <p id="recordatorio-estado" style="font-size:0.78em; color:var(--marker-red); margin:-4px 0 8px 0;"></p>
 
+    <div class="fila-ajuste columna" style="border-top:2px dashed var(--grid); padding-top:12px;">
+      <span class="titulo-ajuste">💾 Copia de seguridad</span>
+      <p style="font-size:0.76em; color:var(--ink-soft); margin:0 0 4px 0;">Guardá tu progreso en un archivo para no perderlo si cambiás de celular o navegador, o borrás los datos por error.</p>
+      <div class="clase-botones">
+        <button type="button" class="btn-mini" id="btn-exportar-progreso">💾 Exportar mi progreso</button>
+        <button type="button" class="btn-mini" id="btn-importar-progreso">📂 Importar progreso</button>
+        <input type="file" id="input-importar-progreso" accept="application/json,.json" class="visually-hidden">
+      </div>
+      <p id="backup-estado" class="clase-estado" role="status" aria-live="polite"></p>
+    </div>
+
     <div class="fila-ajuste" style="border-bottom:none;">
       <span>Reiniciar progreso</span>
       <button class="btn-secundario" style="width:auto; margin-top:0; padding:8px 14px; font-size:0.85em;" id="btn-reiniciar">Reiniciar</button>
@@ -764,6 +775,10 @@
   const vidasCountdown = document.getElementById('vidas-countdown');
   const subt = document.querySelector('.subt');
   const btnReiniciar = document.getElementById('btn-reiniciar');
+  const btnExportarProgreso = document.getElementById('btn-exportar-progreso');
+  const btnImportarProgreso = document.getElementById('btn-importar-progreso');
+  const inputImportarProgreso = document.getElementById('input-importar-progreso');
+  const backupEstado = document.getElementById('backup-estado');
   const btnToggleBorrador = document.getElementById('btn-toggle-borrador');
   const borradorPanel = document.getElementById('borrador-panel');
   const borradorCanvasWrap = document.getElementById('borrador-canvas-wrap');
@@ -1701,6 +1716,61 @@
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+
+  // ===== Copia de seguridad del progreso individual =====
+  function exportarProgresoCompleto(){
+    const backup = {
+      tipo: 'backup-mate-secundaria',
+      version: 1,
+      fecha: new Date().toISOString(),
+      progreso,
+      ajustes
+    };
+    descargarArchivo(JSON.stringify(backup, null, 2), `mate-secundaria-backup-${new Date().toISOString().slice(0,10)}.json`, 'application/json');
+    backupEstado.textContent = 'Se descargó tu copia de seguridad. Guardala en un lugar seguro (Drive, email, etc.).';
+  }
+  function completarProgresoImportado(datosProgreso){
+    const base = estadoInicial();
+    TEMAS.forEach(t => { if(!datosProgreso.temas || !datosProgreso.temas[t.id]) { datosProgreso.temas = datosProgreso.temas || {}; datosProgreso.temas[t.id] = base.temas[t.id]; } });
+    if(typeof datosProgreso.xp !== 'number') datosProgreso.xp = 0;
+    if(typeof datosProgreso.racha !== 'number') datosProgreso.racha = 0;
+    if(typeof datosProgreso.totalCorrectas !== 'number') datosProgreso.totalCorrectas = 0;
+    if(typeof datosProgreso.rachaAciertosActual !== 'number') datosProgreso.rachaAciertosActual = 0;
+    if(typeof datosProgreso.mejorRachaAciertos !== 'number') datosProgreso.mejorRachaAciertos = 0;
+    if(!datosProgreso.logros || typeof datosProgreso.logros !== 'object') datosProgreso.logros = {};
+    if(typeof datosProgreso.vidas !== 'number') datosProgreso.vidas = VIDAS_MAX;
+    if(datosProgreso.vidasProximaRegen === undefined) datosProgreso.vidasProximaRegen = null;
+    if(datosProgreso.recordatorioMostradoFecha === undefined) datosProgreso.recordatorioMostradoFecha = null;
+    if(!datosProgreso.historialXP || typeof datosProgreso.historialXP !== 'object') datosProgreso.historialXP = {};
+    if(!datosProgreso.erroresPorTema || typeof datosProgreso.erroresPorTema !== 'object') datosProgreso.erroresPorTema = {};
+    return datosProgreso;
+  }
+  function importarProgresoCompleto(archivo){
+    const lector = new FileReader();
+    lector.onload = (e) => {
+      let data;
+      try{ data = JSON.parse(e.target.result); }
+      catch(err){ backupEstado.textContent = 'No se pudo leer el archivo. Elegí un backup válido (.json).'; return; }
+      if(!data || data.tipo !== 'backup-mate-secundaria' || !data.progreso){
+        backupEstado.textContent = 'Ese archivo no parece ser una copia de seguridad de Mate Secundaria.';
+        return;
+      }
+      if(!confirm('Esto va a reemplazar tu progreso actual (XP, racha, niveles, logros) por el del archivo. ¿Continuar?')) return;
+      progreso = completarProgresoImportado(data.progreso);
+      guardarProgreso();
+      if(data.ajustes && typeof data.ajustes === 'object'){
+        ajustes = { ...ajustesBase(), ...data.ajustes };
+        guardarAjustes();
+      }
+      aplicarAjustes();
+      renderStatsTop();
+      renderTemas();
+      verificarLogros(false);
+      backupEstado.textContent = '¡Progreso importado con éxito!';
+    };
+    lector.onerror = () => { backupEstado.textContent = 'No se pudo leer el archivo.'; };
+    lector.readAsText(archivo);
+  }
   function exportarClaseCSV(){
     if(reportesClase.length === 0){
       claseResumen.textContent = 'No hay reportes para exportar todavía. Pegá y procesá al menos uno primero.';
@@ -2269,8 +2339,11 @@
 
   // ===== Ajustes =====
   const TEMAS_DISPONIBLES = ['clasico','oscuro','menta','coral','contraste'];
+  function ajustesBase(){
+    return { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00', codigoClase:'' };
+  }
   function cargarAjustes(){
-    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00', codigoClase:'' };
+    const base = ajustesBase();
     try{
       const raw = localStorage.getItem(AJUSTES_KEY);
       if(!raw) return base;
@@ -2988,6 +3061,13 @@
       renderTemas();
       cerrarModalAjustes();
     }
+  });
+  btnExportarProgreso.addEventListener('click', exportarProgresoCompleto);
+  btnImportarProgreso.addEventListener('click', () => inputImportarProgreso.click());
+  inputImportarProgreso.addEventListener('change', () => {
+    const archivo = inputImportarProgreso.files[0];
+    if(archivo) importarProgresoCompleto(archivo);
+    inputImportarProgreso.value = '';
   });
 
   // ===== Inicialización =====
