@@ -307,6 +307,18 @@
     border:2.5px solid var(--ink); border-radius:8px; background:var(--paper); color:var(--ink);
   }
   .input-texto:focus{outline:3px solid var(--highlight); outline-offset:1px;}
+  .clase-botones{display:flex; gap:8px; flex-wrap:wrap; margin-top:2px;}
+  .clase-botones .btn-mini{flex:1 1 auto; white-space:nowrap;}
+  .clase-estado{font-size:0.78em; color:var(--marker-green); margin:6px 0 0 0; min-height:1em;}
+  .clase-ayuda{font-size:0.82em; color:var(--ink-soft); margin-top:-6px;}
+  .clase-textarea{width:100%; font-family:var(--font-mono); font-size:0.82em; resize:vertical; min-height:90px; box-sizing:border-box;}
+  .modal-ancho{max-width:480px;}
+  .clase-tabla-scroll{overflow-x:auto; margin-top:10px; border:2px solid var(--ink); border-radius:10px;}
+  table.clase-tabla{width:100%; border-collapse:collapse; font-size:0.78em;}
+  table.clase-tabla th, table.clase-tabla td{padding:7px 9px; border-bottom:1.5px solid var(--grid); text-align:left; white-space:nowrap;}
+  table.clase-tabla tr:last-child td{border-bottom:none;}
+  table.clase-tabla th{font-family:var(--font-display); color:var(--ink); background:var(--paper-alt); position:sticky; top:0;}
+  .clase-vacio{font-size:0.85em; color:var(--ink-soft); margin-top:10px;}
   .apariencia-grupo{display:flex; flex-wrap:wrap; gap:10px;}
   .apariencia-opt{
     display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none;
@@ -595,11 +607,37 @@
       <p style="font-size:0.72em; color:var(--ink-soft); margin:4px 0 0 0;">Funciona mejor en Android/Chrome con la app instalada en la pantalla de inicio. En iPhone puede no avisar si Mate Secundaria está cerrada del todo.</p>
     </div>
     <p id="recordatorio-estado" style="font-size:0.78em; color:var(--marker-red); margin:-4px 0 8px 0;"></p>
+
+    <div class="fila-ajuste columna" style="border-top:2px dashed var(--grid); padding-top:12px;">
+      <label class="titulo-ajuste" for="input-codigo-clase">🎓 Código de clase (opcional)</label>
+      <input type="text" id="input-codigo-clase" class="input-texto" maxlength="20" placeholder="Ej: 8B-2026" autocomplete="off">
+      <div class="clase-botones">
+        <button type="button" class="btn-mini" id="btn-compartir-progreso">📤 Compartir mi progreso</button>
+        <button type="button" class="btn-mini" id="btn-abrir-clase">👩‍🏫 Ver reportes de la clase</button>
+      </div>
+      <p id="compartir-estado" class="clase-estado"></p>
+    </div>
+
     <div class="fila-ajuste" style="border-bottom:none;">
       <span>Reiniciar progreso</span>
       <button class="btn-secundario" style="width:auto; margin-top:0; padding:8px 14px; font-size:0.85em;" id="btn-reiniciar">Reiniciar</button>
     </div>
     <button class="btn-primario" style="width:100%; margin-top:14px;" id="btn-cerrar-ajustes">Cerrar</button>
+  </div>
+</div>
+
+<!-- MODAL CLASE -->
+<div class="modal-fondo" id="modal-clase">
+  <div class="modal modal-ancho" role="dialog" aria-modal="true" aria-labelledby="clase-titulo">
+    <h3 id="clase-titulo">👩‍🏫 Reportes de la clase</h3>
+    <p class="clase-ayuda">Pegá acá los mensajes que te compartieron tus alumnos con el botón "Compartir mi progreso" (podés pegar varios juntos, incluso mezclados con otros mensajes de WhatsApp).</p>
+    <label for="textarea-clase" class="visually-hidden">Pegar reportes de alumnos</label>
+    <textarea id="textarea-clase" class="input-texto clase-textarea" rows="4" placeholder="Pegá acá los mensajes..."></textarea>
+    <button class="btn-primario" style="width:100%; margin-top:8px;" id="btn-procesar-clase">Procesar</button>
+    <p id="clase-resumen" class="clase-estado" role="status" aria-live="polite"></p>
+    <div id="clase-tabla-wrap"></div>
+    <button class="btn-secundario" style="width:100%; margin-top:10px;" id="btn-limpiar-clase">🗑️ Limpiar reportes guardados</button>
+    <button class="btn-primario" style="width:100%; margin-top:10px;" id="btn-cerrar-clase">Cerrar</button>
   </div>
 </div>
 
@@ -676,6 +714,17 @@
   const inputRecordatorioHora = document.getElementById('input-recordatorio-hora');
   const recordatorioEstado = document.getElementById('recordatorio-estado');
   const inputNombre = document.getElementById('input-nombre');
+  const inputCodigoClase = document.getElementById('input-codigo-clase');
+  const btnCompartirProgreso = document.getElementById('btn-compartir-progreso');
+  const compartirEstado = document.getElementById('compartir-estado');
+  const btnAbrirClase = document.getElementById('btn-abrir-clase');
+  const modalClase = document.getElementById('modal-clase');
+  const btnCerrarClase = document.getElementById('btn-cerrar-clase');
+  const textareaClase = document.getElementById('textarea-clase');
+  const btnProcesarClase = document.getElementById('btn-procesar-clase');
+  const claseResumen = document.getElementById('clase-resumen');
+  const claseTablaWrap = document.getElementById('clase-tabla-wrap');
+  const btnLimpiarClase = document.getElementById('btn-limpiar-clase');
   const aparienciaOpts = Array.from(document.querySelectorAll('.apariencia-opt'));
   const chipVidas = document.getElementById('chip-vidas');
   const chipVidas2 = document.getElementById('chip-vidas-2');
@@ -1507,6 +1556,108 @@
     });
   }
 
+  // ===== Modo clase (sin servidor: compartir + importar reportes) =====
+  const CLASE_STORAGE_KEY = 'mateSecundaria_clase_v1';
+  function cargarReportesClase(){
+    try{
+      const raw = localStorage.getItem(CLASE_STORAGE_KEY);
+      const lista = raw ? JSON.parse(raw) : [];
+      return Array.isArray(lista) ? lista : [];
+    }catch(e){ return []; }
+  }
+  function guardarReportesClase(){
+    try{ localStorage.setItem(CLASE_STORAGE_KEY, JSON.stringify(reportesClase)); }catch(e){}
+  }
+  let reportesClase = cargarReportesClase();
+
+  function escaparHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function generarReporte(){
+    const temasCompletados = TEMAS.filter(t => progreso.temas[t.id].completado.every(Boolean)).length;
+    const logrosDesbloqueados = Object.keys(progreso.logros).length;
+    return {
+      tipo:'reporte-mate-secundaria', version:1,
+      codigoClase: ajustes.codigoClase || '',
+      nombre: ajustes.nombre || 'Alumno/a',
+      fecha: new Date().toISOString(),
+      xp: progreso.xp,
+      racha: progreso.racha,
+      totalCorrectas: progreso.totalCorrectas || 0,
+      temasCompletados, totalTemas: TEMAS.length,
+      logrosDesbloqueados, totalLogros: LOGROS.length
+    };
+  }
+  function textoCompartible(){
+    const r = generarReporte();
+    return `📊 Progreso de Mate Secundaria — ${r.nombre}\n` +
+      `Clase: ${r.codigoClase || 'sin código'}\n` +
+      `⭐ XP total: ${r.xp}\n` +
+      `🔥 Racha: ${r.racha} día${r.racha===1?'':'s'}\n` +
+      `✅ Temas completos: ${r.temasCompletados}/${r.totalTemas}\n` +
+      `🏅 Logros: ${r.logrosDesbloqueados}/${r.totalLogros}\n\n` +
+      `(no borres la línea de abajo: es para que tu profe importe este reporte)\n` +
+      `##MATESECU##${JSON.stringify(r)}##FIN##`;
+  }
+  async function copiarAlPortapapeles(texto){
+    try{
+      await navigator.clipboard.writeText(texto);
+      compartirEstado.textContent = 'Copiado al portapapeles. Pegalo donde quieras enviarlo.';
+    }catch(e){
+      compartirEstado.textContent = 'No se pudo copiar automáticamente. Seleccioná y copiá el resumen manualmente.';
+    }
+  }
+  async function compartirProgreso(){
+    const texto = textoCompartible();
+    compartirEstado.textContent = '';
+    if(navigator.share){
+      try{
+        await navigator.share({ title:'Mi progreso en Mate Secundaria', text: texto });
+        compartirEstado.textContent = '¡Compartido!';
+        return;
+      }catch(e){
+        if(e && e.name === 'AbortError') return; // el alumno canceló, no insistimos
+      }
+    }
+    await copiarAlPortapapeles(texto);
+  }
+  function procesarTextoClase(texto){
+    const regex = /##MATESECU##([\s\S]*?)##FIN##/g;
+    let match, encontrados = 0, invalidos = 0, agregados = 0, actualizados = 0;
+    while((match = regex.exec(texto)) !== null){
+      encontrados++;
+      let obj;
+      try{ obj = JSON.parse(match[1]); }catch(e){ invalidos++; continue; }
+      if(!obj || obj.tipo !== 'reporte-mate-secundaria' || !obj.nombre){ invalidos++; continue; }
+      const idx = reportesClase.findIndex(r => r.nombre === obj.nombre && r.codigoClase === obj.codigoClase);
+      if(idx === -1){
+        reportesClase.push(obj);
+        agregados++;
+      } else if(new Date(obj.fecha) >= new Date(reportesClase[idx].fecha)){
+        reportesClase[idx] = obj;
+        actualizados++;
+      }
+    }
+    guardarReportesClase();
+    return { encontrados, invalidos, agregados, actualizados };
+  }
+  function renderTablaClase(){
+    if(!claseTablaWrap) return;
+    if(reportesClase.length === 0){
+      claseTablaWrap.innerHTML = '<p class="clase-vacio">Todavía no importaste ningún reporte.</p>';
+      return;
+    }
+    const filas = [...reportesClase].sort((a,b) => b.xp - a.xp);
+    let html = '<div class="clase-tabla-scroll"><table class="clase-tabla"><thead><tr>' +
+      '<th>Alumno/a</th><th>Clase</th><th>XP</th><th>Racha</th><th>Temas</th><th>Logros</th>' +
+      '</tr></thead><tbody>';
+    filas.forEach(r => {
+      html += `<tr><td>${escaparHtml(r.nombre)}</td><td>${escaparHtml(r.codigoClase||'—')}</td><td>${r.xp}</td><td>${r.racha}</td><td>${r.temasCompletados}/${r.totalTemas}</td><td>${r.logrosDesbloqueados}/${r.totalLogros}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+    claseTablaWrap.innerHTML = html;
+  }
+
   // ===== Panel de estadísticas =====
   function obtenerUltimos7Dias(){
     const nombresDia = ['D','L','M','M','J','V','S'];
@@ -2032,7 +2183,7 @@
   // ===== Ajustes =====
   const TEMAS_DISPONIBLES = ['clasico','oscuro','menta','coral','contraste'];
   function cargarAjustes(){
-    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00' };
+    const base = { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00', codigoClase:'' };
     try{
       const raw = localStorage.getItem(AJUSTES_KEY);
       if(!raw) return base;
@@ -2076,6 +2227,7 @@
     if(chipVidas2) chipVidas2.style.display = ajustes.vidasActivadas ? '' : 'none';
     renderRecordatorioUI();
     if(inputNombre.value !== ajustes.nombre) inputNombre.value = ajustes.nombre;
+    if(inputCodigoClase.value !== ajustes.codigoClase) inputCodigoClase.value = ajustes.codigoClase;
     actualizarSaludo();
   }
   function guardarAjustes(){
@@ -2654,6 +2806,8 @@
   function cerrarModalLogros(){ cerrarModal(modalLogros); }
   function abrirModalStats(){ renderStats(); abrirModal(modalStats); }
   function cerrarModalStats(){ cerrarModal(modalStats); }
+  function abrirModalClase(){ renderTablaClase(); abrirModal(modalClase); }
+  function cerrarModalClase(){ cerrarModal(modalClase); }
 
   btnAjustes.addEventListener('click', abrirModalAjustes);
   btnCerrarAjustes.addEventListener('click', cerrarModalAjustes);
@@ -2664,6 +2818,28 @@
   btnStats.addEventListener('click', abrirModalStats);
   btnCerrarStats.addEventListener('click', cerrarModalStats);
   modalStats.addEventListener('click', (e) => { if(e.target===modalStats) cerrarModalStats(); });
+  btnCompartirProgreso.addEventListener('click', compartirProgreso);
+  btnAbrirClase.addEventListener('click', () => { cerrarModalAjustes(); abrirModalClase(); });
+  btnCerrarClase.addEventListener('click', cerrarModalClase);
+  modalClase.addEventListener('click', (e) => { if(e.target===modalClase) cerrarModalClase(); });
+  btnProcesarClase.addEventListener('click', () => {
+    const texto = textareaClase.value;
+    if(!texto.trim()){ claseResumen.textContent = 'Pegá primero el texto que te compartieron.'; return; }
+    const r = procesarTextoClase(texto);
+    claseResumen.textContent = r.encontrados === 0
+      ? 'No encontré ningún reporte válido en ese texto.'
+      : `Se agregaron ${r.agregados} nuevo(s) y se actualizaron ${r.actualizados}.${r.invalidos ? ` (${r.invalidos} bloque(s) inválido(s) ignorado(s))` : ''}`;
+    textareaClase.value = '';
+    renderTablaClase();
+  });
+  btnLimpiarClase.addEventListener('click', () => {
+    if(confirm('¿Borrar todos los reportes de la clase guardados en este dispositivo? Esta acción no se puede deshacer.')){
+      reportesClase = [];
+      guardarReportesClase();
+      renderTablaClase();
+      claseResumen.textContent = '';
+    }
+  });
 
   function alternarSwitch(switchEl, callback){
     const activarlo = () => {
@@ -2710,6 +2886,10 @@
     ajustes.nombre = inputNombre.value.trim();
     guardarAjustes();
     actualizarSaludo();
+  });
+  inputCodigoClase.addEventListener('input', () => {
+    ajustes.codigoClase = inputCodigoClase.value.trim();
+    guardarAjustes();
   });
   btnReiniciar.addEventListener('click', () => {
     if(confirm('¿Seguro que querés borrar todo tu progreso? Esta acción no se puede deshacer.')){
