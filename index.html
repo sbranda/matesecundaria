@@ -102,6 +102,8 @@
   .chip.racha{color:var(--marker-red);}
   .chip.vidas{color:var(--ink);}
   .chip.vidas.baja{color:var(--marker-red); border-color:var(--marker-red);}
+  .chip.cronometro{margin-top:10px; font-variant-numeric:tabular-nums;}
+  .chip.cronometro.urgente{color:var(--marker-red); border-color:var(--marker-red); animation:bump 1s ease infinite;}
   .vidas-bloqueo{
     background:var(--paper-alt); border:2.5px solid var(--marker-red); border-radius:var(--radius);
     padding:26px 20px; margin-top:12px; text-align:center;
@@ -524,6 +526,8 @@
       </div>
       <div class="hoja" id="hoja-practica">
         <div class="etiqueta-nivel" id="hoja-etiqueta">Nivel 1</div>
+        <div class="chip cronometro" id="chip-cronometro" style="display:none;" role="timer" aria-live="off">⏱️ 0:30</div>
+        <span class="visually-hidden" id="cronometro-anuncio" role="status" aria-live="polite"></span>
         <div class="enunciado" id="enunciado-txt">Cargando...</div>
         <div class="grafico-wrap" id="grafico-wrap" style="display:none;">
           <canvas id="grafico-canvas" width="280" height="200"></canvas>
@@ -631,6 +635,20 @@
     <div class="fila-ajuste">
       <span id="label-vidas">❤️ Vidas (más tensión)</span>
       <div class="switch" id="switch-vidas" role="switch" tabindex="0" aria-checked="true" aria-labelledby="label-vidas"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste">
+      <span id="label-cronometro">⏱️ Cronómetro (contrarreloj)</span>
+      <div class="switch" id="switch-cronometro" role="switch" tabindex="0" aria-checked="false" aria-labelledby="label-cronometro"><div class="bolita"></div></div>
+    </div>
+    <div class="fila-ajuste columna" id="cronometro-segundos-wrap" style="display:none; border-bottom:1px solid var(--grid); padding-bottom:12px;">
+      <label class="titulo-ajuste" for="select-cronometro-segundos" style="font-size:0.82em;">Tiempo por ejercicio</label>
+      <select id="select-cronometro-segundos" class="input-texto">
+        <option value="10">10 segundos</option>
+        <option value="20">20 segundos</option>
+        <option value="30" selected>30 segundos</option>
+        <option value="60">60 segundos</option>
+      </select>
+      <p style="font-size:0.72em; color:var(--ink-soft); margin:4px 0 0 0;">Si se acaba el tiempo, cuenta como respuesta incorrecta.</p>
     </div>
     <div class="fila-ajuste">
       <span id="label-recordatorio">🔔 Recordatorio diario</span>
@@ -763,6 +781,11 @@
   const switchSonido = document.getElementById('switch-sonido');
   const switchAnimaciones = document.getElementById('switch-animaciones');
   const switchVidas = document.getElementById('switch-vidas');
+  const switchCronometro = document.getElementById('switch-cronometro');
+  const cronometroSegundosWrap = document.getElementById('cronometro-segundos-wrap');
+  const selectCronometroSegundos = document.getElementById('select-cronometro-segundos');
+  const chipCronometro = document.getElementById('chip-cronometro');
+  const cronometroAnuncio = document.getElementById('cronometro-anuncio');
   const switchRecordatorio = document.getElementById('switch-recordatorio');
   const recordatorioHoraWrap = document.getElementById('recordatorio-hora-wrap');
   const inputRecordatorioHora = document.getElementById('input-recordatorio-hora');
@@ -2498,7 +2521,7 @@
   // ===== Ajustes =====
   const TEMAS_DISPONIBLES = ['clasico','oscuro','menta','coral','contraste'];
   function ajustesBase(){
-    return { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00', codigoClase:'', colorAcento:'#FFD23F' };
+    return { apariencia:'clasico', grande:false, sonido:false, movimientoReducido:false, nombre:'', vidasActivadas:true, recordatorioActivado:false, recordatorioHora:'19:00', codigoClase:'', colorAcento:'#FFD23F', cronometroActivado:false, cronometroSegundos:30 };
   }
   function cargarAjustes(){
     const base = ajustesBase();
@@ -2544,6 +2567,12 @@
     switchVidas.setAttribute('aria-checked', ajustes.vidasActivadas ? 'true' : 'false');
     if(chipVidas) chipVidas.style.display = ajustes.vidasActivadas ? '' : 'none';
     if(chipVidas2) chipVidas2.style.display = ajustes.vidasActivadas ? '' : 'none';
+    switchCronometro.classList.toggle('on', ajustes.cronometroActivado);
+    switchCronometro.setAttribute('aria-checked', ajustes.cronometroActivado ? 'true' : 'false');
+    cronometroSegundosWrap.style.display = ajustes.cronometroActivado ? '' : 'none';
+    if(String(selectCronometroSegundos.value) !== String(ajustes.cronometroSegundos)){
+      selectCronometroSegundos.value = ajustes.cronometroSegundos;
+    }
     renderRecordatorioUI();
     if(inputNombre.value !== ajustes.nombre) inputNombre.value = ajustes.nombre;
     if(inputCodigoClase.value !== ajustes.codigoClase) inputCodigoClase.value = ajustes.codigoClase;
@@ -2693,6 +2722,40 @@
     if(borradorWrapEl) borradorWrapEl.style.display = '';
     vidasBloqueo.style.display = 'none';
     if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
+  }
+
+  // ===== Cronómetro (modo contrarreloj) =====
+  let cronometroIntervalId = null;
+  let tiempoRestanteCronometro = 0;
+  function renderCronometro(){
+    if(!chipCronometro) return;
+    const mins = Math.floor(tiempoRestanteCronometro/60);
+    const secs = tiempoRestanteCronometro%60;
+    chipCronometro.textContent = mins>0 ? `⏱️ ${mins}:${String(secs).padStart(2,'0')}` : `⏱️ ${secs}s`;
+    chipCronometro.classList.toggle('urgente', tiempoRestanteCronometro <= 5 && tiempoRestanteCronometro > 0);
+    if(cronometroAnuncio && (tiempoRestanteCronometro===10 || tiempoRestanteCronometro===5)){
+      cronometroAnuncio.textContent = `${tiempoRestanteCronometro} segundos`;
+    }
+  }
+  function iniciarCronometro(){
+    detenerCronometro(false);
+    if(!ajustes.cronometroActivado || !chipCronometro) return;
+    tiempoRestanteCronometro = ajustes.cronometroSegundos || 30;
+    chipCronometro.style.display = '';
+    renderCronometro();
+    cronometroIntervalId = setInterval(() => {
+      tiempoRestanteCronometro--;
+      if(tiempoRestanteCronometro <= 0){
+        detenerCronometro(true);
+        comprobarRespuesta(true);
+        return;
+      }
+      renderCronometro();
+    }, 1000);
+  }
+  function detenerCronometro(ocultarChip){
+    if(cronometroIntervalId){ clearInterval(cronometroIntervalId); cronometroIntervalId = null; }
+    if(ocultarChip && chipCronometro) chipCronometro.style.display = 'none';
   }
 
   // ===== Recordatorio diario (notificaciones) =====
@@ -2961,6 +3024,7 @@
     actualizarVidas();
     renderVidas();
     if(ajustes.vidasActivadas && progreso.vidas <= 0){
+      detenerCronometro(true);
       mostrarBloqueoVidas();
       return;
     }
@@ -2981,14 +3045,18 @@
     btnComprobar.style.display = '';
     btnSiguiente.style.display = 'none';
     respuestaInput.focus();
+    iniciarCronometro();
   }
 
-  function comprobarRespuesta(){
+  function comprobarRespuesta(porTiempoAgotado){
+    detenerCronometro(true);
     const valorIngresado = respuestaInput.value.trim();
-    if(!valorIngresado) return;
+    if(!porTiempoAgotado && !valorIngresado) return;
     let esCorrecta = false;
 
-    if(problemaActual.tipo === 'fraccion'){
+    if(porTiempoAgotado){
+      esCorrecta = false;
+    } else if(problemaActual.tipo === 'fraccion'){
       const parsed = parseFraccionInput(valorIngresado);
       if(parsed) esCorrecta = fraccionesIguales(parsed, problemaActual.respuesta);
     } else {
@@ -3056,7 +3124,8 @@
       const explicacionHtml = problemaActual.explicacion
         ? `<div class="explicacion">💡 ${problemaActual.explicacion}</div>`
         : '';
-      feedbackBox.innerHTML = `No es correcto. La respuesta era: <strong>${respuestaMostrada}</strong>${explicacionHtml}`;
+      const prefijoTiempo = porTiempoAgotado ? '⏰ Se acabó el tiempo. ' : '';
+      feedbackBox.innerHTML = `${prefijoTiempo}No es correcto. La respuesta era: <strong>${respuestaMostrada}</strong>${explicacionHtml}`;
     }
     actualizarProgresoTxt();
   }
@@ -3073,7 +3142,7 @@
   }
 
   // ===== Eventos =====
-  btnComprobar.addEventListener('click', comprobarRespuesta);
+  btnComprobar.addEventListener('click', () => comprobarRespuesta());
   respuestaInput.addEventListener('keydown', (e) => {
     if(e.key === 'Enter'){
       if(btnComprobar.style.display !== 'none') comprobarRespuesta();
@@ -3084,6 +3153,7 @@
   btnVolverTema.addEventListener('click', () => { renderTemas(); mostrarVista('inicio'); });
   btnVolverPractica.addEventListener('click', () => {
     if(vidasIntervalId){ clearInterval(vidasIntervalId); vidasIntervalId = null; }
+    detenerCronometro(true);
     if(modoMixto){
       modoMixto = false;
       renderTemas();
@@ -3232,6 +3302,18 @@
     ajustes.vidasActivadas = !ajustes.vidasActivadas;
     aplicarAjustes(); guardarAjustes();
     if(vistaPractica.style.display !== 'none') nuevoProblema();
+  });
+  alternarSwitch(switchCronometro, () => {
+    ajustes.cronometroActivado = !ajustes.cronometroActivado;
+    aplicarAjustes(); guardarAjustes();
+    if(vistaPractica.style.display !== 'none'){
+      if(ajustes.cronometroActivado) iniciarCronometro(); else detenerCronometro(true);
+    }
+  });
+  selectCronometroSegundos.addEventListener('change', () => {
+    ajustes.cronometroSegundos = parseInt(selectCronometroSegundos.value, 10) || 30;
+    guardarAjustes();
+    if(ajustes.cronometroActivado && vistaPractica.style.display !== 'none') iniciarCronometro();
   });
   inputNombre.addEventListener('input', () => {
     ajustes.nombre = inputNombre.value.trim();
