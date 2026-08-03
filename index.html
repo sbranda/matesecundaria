@@ -455,6 +455,7 @@
         <div class="topbar-acciones">
           <button class="icon-btn" id="btn-stats" aria-label="Estadísticas">📊</button>
           <button class="icon-btn" id="btn-logros" aria-label="Logros">🏅</button>
+          <button class="icon-btn" id="btn-clase" aria-label="Modo clase">🎓</button>
           <button class="icon-btn" id="btn-ajustes" aria-label="Ajustes">⚙️</button>
         </div>
       </div>
@@ -608,16 +609,6 @@
     </div>
     <p id="recordatorio-estado" style="font-size:0.78em; color:var(--marker-red); margin:-4px 0 8px 0;"></p>
 
-    <div class="fila-ajuste columna" style="border-top:2px dashed var(--grid); padding-top:12px;">
-      <label class="titulo-ajuste" for="input-codigo-clase">🎓 Código de clase (opcional)</label>
-      <input type="text" id="input-codigo-clase" class="input-texto" maxlength="20" placeholder="Ej: 8B-2026" autocomplete="off">
-      <div class="clase-botones">
-        <button type="button" class="btn-mini" id="btn-compartir-progreso">📤 Compartir mi progreso</button>
-        <button type="button" class="btn-mini" id="btn-abrir-clase">👩‍🏫 Ver reportes de la clase</button>
-      </div>
-      <p id="compartir-estado" class="clase-estado"></p>
-    </div>
-
     <div class="fila-ajuste" style="border-bottom:none;">
       <span>Reiniciar progreso</span>
       <button class="btn-secundario" style="width:auto; margin-top:0; padding:8px 14px; font-size:0.85em;" id="btn-reiniciar">Reiniciar</button>
@@ -629,8 +620,20 @@
 <!-- MODAL CLASE -->
 <div class="modal-fondo" id="modal-clase">
   <div class="modal modal-ancho" role="dialog" aria-modal="true" aria-labelledby="clase-titulo">
-    <h3 id="clase-titulo">👩‍🏫 Reportes de la clase</h3>
-    <p class="clase-ayuda">Pegá acá los mensajes que te compartieron tus alumnos con el botón "Compartir mi progreso" (podés pegar varios juntos, incluso mezclados con otros mensajes de WhatsApp).</p>
+    <h3 id="clase-titulo">🎓 Modo clase</h3>
+
+    <h4 class="stats-subtitulo" style="margin-top:0;">Tu progreso (alumno/a)</h4>
+    <div class="fila-ajuste columna" style="border-bottom:none; padding-top:0;">
+      <label class="titulo-ajuste" for="input-codigo-clase">Código de clase (opcional)</label>
+      <input type="text" id="input-codigo-clase" class="input-texto" maxlength="20" placeholder="Ej: 8B-2026" autocomplete="off">
+      <div class="clase-botones">
+        <button type="button" class="btn-mini" id="btn-compartir-progreso">📤 Compartir mi progreso</button>
+      </div>
+      <p id="compartir-estado" class="clase-estado"></p>
+    </div>
+
+    <h4 class="stats-subtitulo">👩‍🏫 Para docentes</h4>
+    <p class="clase-ayuda">Pegá acá los mensajes que te compartieron tus alumnos con el botón de arriba (podés pegar varios juntos, incluso mezclados con otros mensajes de WhatsApp).</p>
     <label for="textarea-clase" class="visually-hidden">Pegar reportes de alumnos</label>
     <textarea id="textarea-clase" class="input-texto clase-textarea" rows="4" placeholder="Pegá acá los mensajes..."></textarea>
     <button class="btn-primario" style="width:100%; margin-top:8px;" id="btn-procesar-clase">Procesar</button>
@@ -717,7 +720,7 @@
   const inputCodigoClase = document.getElementById('input-codigo-clase');
   const btnCompartirProgreso = document.getElementById('btn-compartir-progreso');
   const compartirEstado = document.getElementById('compartir-estado');
-  const btnAbrirClase = document.getElementById('btn-abrir-clase');
+  const btnClase = document.getElementById('btn-clase');
   const modalClase = document.getElementById('modal-clase');
   const btnCerrarClase = document.getElementById('btn-cerrar-clase');
   const textareaClase = document.getElementById('textarea-clase');
@@ -2819,7 +2822,7 @@
   btnCerrarStats.addEventListener('click', cerrarModalStats);
   modalStats.addEventListener('click', (e) => { if(e.target===modalStats) cerrarModalStats(); });
   btnCompartirProgreso.addEventListener('click', compartirProgreso);
-  btnAbrirClase.addEventListener('click', () => { cerrarModalAjustes(); abrirModalClase(); });
+  btnClase.addEventListener('click', abrirModalClase);
   btnCerrarClase.addEventListener('click', cerrarModalClase);
   modalClase.addEventListener('click', (e) => { if(e.target===modalClase) cerrarModalClase(); });
   btnProcesarClase.addEventListener('click', () => {
